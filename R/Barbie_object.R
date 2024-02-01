@@ -15,6 +15,8 @@ Barbie <- list(
 
 # Step2: create a constructor function
 createBarbie <- function(counts, metadata, color_panel, ...) {
+  counts[is.na(counts)] <- 0 #value the NAs by 0
+
   prop <- (t(counts) / colSums(counts)) |> t()
   CPM <- prop * 1000000
   presence <- CPM >= 1 +1 -1
