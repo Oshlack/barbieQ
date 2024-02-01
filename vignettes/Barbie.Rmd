@@ -1,24 +1,29 @@
 ---
-title: "Barbie Instruction"
+title: "Barbie"
 author: "LF"
-date: "2024-01-31"
+date: "`r Sys.Date()`"
 output:
-  html_document: 
+  rmarkdown::html_vignette:
+    df_print: kable
     toc: true
     toc_depth: 4
-    toc_float: 
-      collapsed: false
-      smooth_scroll: false
-      float: false
+vignette: >
+  %\VignetteIndexEntry{Barbie}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  comment = "#>")
 ```
 
 # Load Library
 
-```{r load library, echo=FALSE}
+```{r load library, results='hide'}
 library(here)
 library(magrittr)
 library(knitr)
@@ -74,9 +79,32 @@ example_bb <- createBarbie(counts = counts,
 
 - If your barcode count table includes samples such as negative controls or time-0 controls that you wish to exclude from the correlation analysis, please proceed with data trimming.
 
+```{r pre-filter, include=FALSE}
+# trim rows
+flag <- rowSums(example_bb$presence) >= 2
+example_bb <- trimRow(Barbie = example_bb, 
+                      keep_rows = flag)
+
+# trim unwanted samples
+example_bb <- trimObjectByMetadata(Barbie = example_bb, 
+                                   condition = "time", 
+                                   specified = c("week4","week8")) # or use function: trimColumn
+
+# YOUR BARBIE <- trimColumn(Barbie = YOUR BARBIE,
+#                           keep_columns = YOUR ARRAY)
+
+# select top contributing barcodes
+example_bb <- getTopBar(Barbie = example_bb)
+
+# trim rows by "is_top"
+example_bb <- trimRow(Barbie = example_bb, 
+                      keep_rows = example_bb$is_top)
+```
+
+
 ## Predict Correlating Barcodes
 
-```{r collapse correlating barcodes}
+```{r collapse correlating barcodes, fig.width=6, fig.height=4.5}
 # group.vec is meant to pass the "ground truth" of known correlating barcodes from the same clones
 plot_bar_pair_cor <- plotBarcodePairCor_Count(count.mx = example_bb$assay, # this is your barcode count table (make sure barcodes in rows)
                                               # group.vec = ADD YOUR OWN GROUP OR LEAVE IT AS NULL, # this is a vector of known barcode groups
@@ -102,6 +130,11 @@ kable(head(proposed_bar_pair))
 
 proposed_bar_pair_list <- lapply(proposed_bar_pair$barID, function(x) strsplit(x, split = "\\.") %>% unlist())
 
+barcode_clone_ref <- createBarcodeCloneRef(new_pairlist = proposed_bar_pair_list)
+
+# If you have an old barcode-clone reference list, go for this:
+# updateBarcodeCloneRef(old_reflist = OLD LIST,
+#                       new_pairlist = proposed_bar_pair_list)
 ```
 
 ## Collapse Barcodes by Correlating List
@@ -125,7 +158,7 @@ example_bb <- createBarbie(counts = collapsed_bb$assay,
 
 # Filter Barcodes
 
-```{r filter}
+```{r filter, fig.width=5, fig.height=4}
 # trim rows
 flag <- rowSums(example_bb$presence) >= 2
 example_bb <- trimRow(Barbie = example_bb, 

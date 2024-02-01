@@ -156,33 +156,52 @@ plotBarcodePairCor_Count <- function(count.mx, group.vec = NULL, plot = "mean") 
   )
 }
 
+# Create new barcode-clone list
+createBarcodeCloneRef <- function(new_pairlist) {
+  # old_reflist is the old barcode-clone reference list
+  # new_pairlist is the new determined pairwise correlated barcode list
 
+  total_list <- new_pairlist
+
+  g <- igraph::graph_from_edgelist(do.call(rbind, total_list), directed = F)
+
+  plot(g, vertex.label.cex=0.4)
+
+  groups <- igraph::clusters(g)$membership
+
+  groups_list <- split(names(groups), groups)
+
+  return(groups_list)
+}
+
+
+# make new or update barcode-clone reference list
 updateBarcodeCloneRef <- function(old_reflist, new_pairlist) {
   # old_reflist is the old barcode-clone reference list
   # new_pairlist is the new determined pairwise correlated barcode list
 
-  # remove single points in ovbar
-  ovbar2 <- old_reflist[lengths(old_reflist) >= 2]
+    # remove single points in ovbar
+    ovbar2 <- old_reflist[lengths(old_reflist) >= 2]
 
-  # convert groups into pairs
-  ovbar_df <- lapply(names(ovbar2), function(x) {
-    data.frame(Node = ovbar2[[x]],
-               Group = rep(x, length(ovbar2[[x]])))
-  })
+    # convert groups into pairs
+    ovbar_df <- lapply(names(ovbar2), function(x) {
+      data.frame(Node = ovbar2[[x]],
+                 Group = rep(x, length(ovbar2[[x]])))
+    })
 
-  ovbar_df2 <- do.call(rbind, ovbar_df)
+    ovbar_df2 <- do.call(rbind, ovbar_df)
 
-  #function to create pairwise relationships
-  create_pairwise <- function(group_data) {
-    edges <- combn(group_data, 2)
-    split_list <- lapply(seq_len(ncol(edges)), function(i) edges[,i])
-  }
+    #function to create pairwise relationships
+    create_pairwise <- function(group_data) {
+      edges <- combn(group_data, 2)
+      split_list <- lapply(seq_len(ncol(edges)), function(i) edges[,i])
+    }
 
-  pairwise_list <- tapply(ovbar_df2$Node, ovbar_df2$Group, create_pairwise)
+    pairwise_list <- tapply(ovbar_df2$Node, ovbar_df2$Group, create_pairwise)
 
-  pairwise_list2 <- do.call(c, pairwise_list) # bind all the sublists
+    pairwise_list2 <- do.call(c, pairwise_list) # bind all the sublists
 
-  total_list <- c(pairwise_list2, new_pairlist) # bind the list with pool
+    total_list <- c(pairwise_list2, new_pairlist) # bind the list with pool
 
   g <- igraph::graph_from_edgelist(do.call(rbind, total_list), directed = F)
 
