@@ -1,3 +1,20 @@
+## ----dummy, include=FALSE-----------------------------------------------------
+# dummy data
+data <- data.frame(
+  METRIC = paste('var', 1:10),
+  VAL = runif(10),
+  stringsAsFactors = FALSE
+)
+
+## ----results = 'asis', include=FALSE------------------------------------------
+# automatically generate <style> block of css for each tab
+tab_number <- 1:nrow(data)
+tab_color <- "#CCCCCC"
+css <- sprintf(".color-tabs>.nav-pills>li:nth-child(%d){background:%s;}", tab_number, tab_color)
+css <- paste(css, collapse = "\n")
+css <- paste("<style>", css, "</style>")
+cat(css)
+
 ## ----setup, include=FALSE-----------------------------------------------------
 knitr::opts_chunk$set(
   echo = TRUE,
@@ -21,12 +38,15 @@ library(ComplexHeatmap)
 library(eulerr)
 library(colorRamp2)
 library(igraph)
+library(htmlwidgets)
 
 source(here::here("R", "Barbie_object.R")) # create Barbie object
 source(here::here("R", "Pair_Correlation.R")) # predict correlating barcodes
 source(here::here("R", "Pareto_contribution.R")) # visualize barcode contribution
 source(here::here("R", "Sankey_contribution.R"))
 source(here::here("R", "Bar_contribution.R"))
+source(here::here("R", "Get_Potential.R")) # test barcode potential (bias)
+source(here::here("R", "CountHP.R")) # plot complexheatmap
 
 
 ## ----read data----------------------------------------------------------------
@@ -138,4 +158,38 @@ example_top <- trimRow(Barbie = example_bb,
 
 # plot top barcode contribution
 PlotBarContribution(Barbie = example_top)
+
+## ----contingency table bias test----------------------------------------------
+# trim samples as you need. 
+example_test <- trimObjectByMetadata(Barbie = example_top, 
+                                    condition = "treat", specified = "IT", 
+                                    keep = FALSE) # exclude "IT" samples
+example_test <- trimObjectByMetadata(Barbie = example_test, 
+                                    condition = "lineage", specified = "immature", 
+                                    keep = FALSE) # exclude "immature" celltype from samples
+
+# customize sample groups as you need.
+Vector_customized <- example_test$metadata$lineage
+Vector_customized[Vector_customized %in% c("Bcell", "Tcell")] <- "Lymphoid"# group samples
+
+# Generate tables and create the list
+c_tables <- GetContingencyTable(example_test, Vector_customized = Vector_customized)
+#print the first 5 contingency table
+lapply(c_tables[1:5], function(x) {knitr::kable(x)})
+
+## ----apply bias test----------------------------------------------------------
+# Apply test, and get Bias group
+example_test <- GetFisherBiasGroup(Barbie = example_test, contingency_table_ls = c_tables)
+
+## ----visualize bias test, fig.width=5, fig.height=4---------------------------
+# Visualize Bias group of barcodes
+PlotBiasVsRank(Barbie = example_test, passing_data = "output")
+
+PlotBiasVsRank(Barbie = example_test, passing_data = "rank")
+
+PlotBiasVsRank(Barbie = example_test, passing_data = "rank_var")
+
+PlotCpmHP_0(Barbie = example_test, show_bias = TRUE, Vector_customized = Vector_customized) 
+
+PlotPreHP_0(Barbie = example_test, show_bias = TRUE, Vector_customized = Vector_customized) 
 
