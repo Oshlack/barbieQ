@@ -205,6 +205,11 @@ example_bb <- trimObjectByMetadata(Barbie = example_bb,
 # YOUR BARBIE <- trimColumn(Barbie = YOUR BARBIE,
 #                           keep_columns = YOUR ARRAY)
 
+# Hi Enid, if you let specified = "week4" as the following code, you will get the same resuults as I got for week4 data.
+# example_bb <- trimObjectByMetadata(Barbie = example_bb, 
+#                                    condition = "time", 
+#                                    specified = "week4")
+
 # select top contributing barcodes
 example_bb <- getTopBar(Barbie = example_bb)
 
