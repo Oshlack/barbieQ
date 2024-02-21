@@ -39,14 +39,20 @@ library(eulerr)
 library(colorRamp2)
 library(igraph)
 library(htmlwidgets)
+library(speckle)
+library(limma)
+library(edgeR)
+library(pracma)
+library(WeightIt) # make full rank
 
 source(here::here("R", "Barbie_object.R")) # create Barbie object
 source(here::here("R", "Pair_Correlation.R")) # predict correlating barcodes
 source(here::here("R", "Pareto_contribution.R")) # visualize barcode contribution
 source(here::here("R", "Sankey_contribution.R"))
 source(here::here("R", "Bar_contribution.R"))
-source(here::here("R", "Get_Potential.R")) # test barcode potential (bias)
-source(here::here("R", "CountHP.R")) # plot complexheatmap
+source(here::here("R", "Get_OccBias.R")) # test barcode occurrence bias
+source(here::here("R", "Get_PropBias0.R")) # test barcode proportion bias
+source(here::here("R", "CountHP0.R")) # plot complexheatmap
 
 
 ## ----read data----------------------------------------------------------------
@@ -137,59 +143,134 @@ example_bb <- trimRow(Barbie = example_bb,
                       keep_rows = flag)
 
 # trim unwanted samples
-example_bb <- trimObjectByMetadata(Barbie = example_bb, 
-                                   condition = "time", 
-                                   specified = c("week4","week8")) # or use function: trimColumn
+# example_bb <- trimObjectByMetadata(Barbie = example_bb, 
+#                                    condition = "time", 
+#                                    specified = c("week4","week8")) # or use function: trimColumn
 
 # YOUR BARBIE <- trimColumn(Barbie = YOUR BARBIE,
 #                           keep_columns = YOUR ARRAY)
 
+# Hi Enid, if you let specified = "week4" as the following code, you will get the same results as I got for week4 data.
+week4_bb <- trimObjectByMetadata(
+  Barbie = example_bb,
+  condition = "time",
+  specified = "week4"
+  )
+
 # select top contributing barcodes
-example_bb <- getTopBar(Barbie = example_bb)
+week4_bb <- getTopBar(Barbie = week4_bb)
 
 # plot barcode contribution
-PlotCircularContribution(Barbie = example_bb)
+PlotCircularContribution(Barbie = week4_bb)
 
-PlotTotalContribution(Barbie = example_bb)
+PlotTotalContribution(Barbie = week4_bb)
 
 # trim rows by "is_top"
-example_top <- trimRow(Barbie = example_bb, 
-                      keep_rows = example_bb$is_top)
+week4_top <- trimRow(Barbie = week4_bb, 
+                      keep_rows = week4_bb$is_top)
 
 # plot top barcode contribution
-PlotBarContribution(Barbie = example_top)
+PlotBarContribution(Barbie = week4_top)
+
+## ----collapse samples---------------------------------------------------------
+# create a group vector that identify samples of different conditions. 
+# samples of PCR reps are in the same group in this vector.
+vector_PCRrep <- week4_top$metadata %>% 
+  with(
+    paste(mouse, tissue, celltype, sep = ".")
+  )
+
+# collapse the columns in Barbie Object by the group vector.
+# count / prop / PCM data takes the average, presence data takes the max.
+week4_top_coll <- CollapseColumn(Barbie = week4_top, group_array = vector_PCRrep)
 
 ## ----contingency table bias test----------------------------------------------
 # trim samples as you need. 
-example_test <- trimObjectByMetadata(Barbie = example_top, 
+week4_test <- trimObjectByMetadata(Barbie = week4_top_coll, 
                                     condition = "treat", specified = "IT", 
                                     keep = FALSE) # exclude "IT" samples
-example_test <- trimObjectByMetadata(Barbie = example_test, 
+week4_test <- trimObjectByMetadata(Barbie = week4_test, 
                                     condition = "lineage", specified = "immature", 
                                     keep = FALSE) # exclude "immature" celltype from samples
 
 # customize sample groups as you need.
-Vector_customized <- example_test$metadata$lineage
+Vector_customized <- week4_test$metadata$lineage
 Vector_customized[Vector_customized %in% c("Bcell", "Tcell")] <- "Lymphoid"# group samples
 
 # Generate tables and create the list
-c_tables <- GetContingencyTable(example_test, Vector_customized = Vector_customized)
+c_tables <- GetContingencyTable(week4_test, Vector_customized = Vector_customized)
 #print the first 5 contingency table
 lapply(c_tables[1:5], function(x) {knitr::kable(x)})
 
 ## ----apply bias test----------------------------------------------------------
 # Apply test, and get Bias group
-example_test <- GetFisherBiasGroup(Barbie = example_test, contingency_table_ls = c_tables)
+week4_test <- GetOccBiasGroup(Barbie = week4_test, contingency_table_ls = c_tables)
 
-## ----visualize bias test, fig.width=5, fig.height=4---------------------------
+kableExtra::kable(week4_test$Bias_Occ)
+
+## ----visualize occ bias test, fig.width=6, fig.height=4-----------------------
 # Visualize Bias group of barcodes
-PlotBiasVsRank(Barbie = example_test, passing_data = "output")
+PlotBiasVsRank(Barbie = week4_test, passing_data = "contribution")
 
-PlotBiasVsRank(Barbie = example_test, passing_data = "rank")
+PlotBiasVsRank(Barbie = week4_test, passing_data = "output")
 
-PlotBiasVsRank(Barbie = example_test, passing_data = "rank_var")
+PlotBiasVsRank(Barbie = week4_test, passing_data = "rank")
 
-PlotCpmHP_0(Barbie = example_test, show_bias = TRUE, Vector_customized = Vector_customized) 
+PlotBiasVsRank(Barbie = week4_test, passing_data = "rank_var")
 
-PlotPreHP_0(Barbie = example_test, show_bias = TRUE, Vector_customized = Vector_customized) 
+PlotCpmHP_0(Barbie = week4_test, show_bias = TRUE, Vector_customized = Vector_customized, split_by = Vector_customized) 
+
+PlotPreHP_0(Barbie = week4_test, show_bias = TRUE, Vector_customized = Vector_customized, split_by = Vector_customized) 
+
+## ----design matrix for porp bias test-----------------------------------------
+# trim samples as you need. 
+week4_test <- trimObjectByMetadata(Barbie = week4_top, 
+                                    condition = "treat", specified = "IT", 
+                                    keep = FALSE) # exclude "IT" samples
+week4_test <- trimObjectByMetadata(Barbie = week4_test, 
+                                    condition = "lineage", specified = "immature", 
+                                    keep = FALSE) # exclude "immature" celltype from samples
+
+# customize sample groups as you need for comparison in the following test.
+Vector_customized <- week4_test$metadata$lineage
+Vector_customized[Vector_customized %in% c("Bcell", "Tcell")] <- "Lymphoid"# group samples
+
+# make your own targets and design matrix
+  # targets
+  mytargets <- data.frame(week4_test$metadata, category = Vector_customized)
+
+  # model design matrix
+  mydesign <- mytargets %>%
+    with(model.matrix(~0 + category + treat + mouse + tissue))
+
+# apply test for Bias_Prop
+week4_test <- getPropBiasGroup(Barbie = week4_test, mydesign = mydesign)
+
+kableExtra::kable(week4_test$Bias_Prop)
+
+## ----visualize prop bias test, fig.width=6, fig.height=4----------------------
+# Visualize Bias group of barcodes
+PlotBiasVsRank(Barbie = week4_test, passing_data = "contribution", 
+               bias_group = week4_test$Bias_Prop$group,
+               bias_pvalue = week4_test$Bias_Prop$pvalue)
+
+PlotBiasVsRank(Barbie = week4_test, passing_data = "output", 
+               bias_group = week4_test$Bias_Prop$group,
+               bias_pvalue = week4_test$Bias_Prop$pvalue)
+
+PlotBiasVsRank(Barbie = week4_test, passing_data = "rank", 
+               bias_group = week4_test$Bias_Prop$group,
+               bias_pvalue = week4_test$Bias_Prop$pvalue)
+
+PlotBiasVsRank(Barbie = week4_test, passing_data = "rank_var", 
+               bias_group = week4_test$Bias_Prop$group,
+               bias_pvalue = week4_test$Bias_Prop$pvalue)
+
+PlotCpmHP_0(Barbie = week4_test, show_bias = TRUE, 
+            Vector_customized = Vector_customized, split_by = Vector_customized, 
+            bias_group = week4_test$Bias_Prop$group) 
+
+PlotPreHP_0(Barbie = week4_test, show_bias = TRUE, 
+            Vector_customized = Vector_customized, split_by = Vector_customized,
+            bias_group = week4_test$Bias_Prop$group) 
 

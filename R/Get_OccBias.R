@@ -187,7 +187,7 @@ PotentialHP <- function(Barbie, potential, dataFormat = "CPM") {
 }
 
 # Get Fisher test result
-GetFisherBiasGroup <- function(Barbie, contingency_table_ls) {
+GetOccBiasGroup <- function(Barbie, contingency_table_ls) {
 
   fisher_table <- lapply(contingency_table_ls,  function(x) x[1:2, 1:2]) #remove the "total" column and "total" row.
   fisher_Pvalue <- lapply(fisher_table, function(x) fisher.test(x)$p.value) |> unlist()#default: two.sided
@@ -200,34 +200,36 @@ GetFisherBiasGroup <- function(Barbie, contingency_table_ls) {
   LymGrMye <- fisher_Pvalue.gr < 0.05
   MyeGrLym <- fisher_Pvalue.le < 0.05
 
-  Bias <- data.frame(Lymphoid = LymGrMye,
+  Bias_Fisher <- data.frame(Lymphoid = LymGrMye,
                      Myeloid = MyeGrLym,
                      Unbiased = LymGrMye == FALSE & MyeGrLym == FALSE)
   #check
-  all(rowSums(Bias) == 1)
+  all(rowSums(Bias_Fisher) == 1)
 
-  Bias_group <- numeric(length = nrow(Bias))
-  for (i in 1:nrow(Bias)) {
-    tp <- as.matrix(Bias)
-    Bias_group[i] <- colnames(tp)[tp[i,]]
+  Bias_Fisher_group <- numeric(length = nrow(Bias_Fisher))
+  for (i in 1:nrow(Bias_Fisher)) {
+    tp <- as.matrix(Bias_Fisher)
+    Bias_Fisher_group[i] <- colnames(tp)[tp[i,]]
   }
 
-  Barbie$Bias <- data.frame(pvalue = fisher_Pvalue,
+  Barbie$Bias_Occ <- data.frame(pvalue = fisher_Pvalue,
                             pvalue.LymGrMye = fisher_Pvalue.gr,
                             pvalue.MyeGrLym = fisher_Pvalue.le,
-                            group = Bias_group)
+                            group = Bias_Fisher_group)
 
-  Barbie$color_panel$bias_group <- c("Lymphoid" = "#33AAFF", "Myeloid" = "#FF5959", "Unbiased" = "#FFC000")
-
-  print(knitr::kable(Barbie$Bias))
+  if(is.null(Barbie$color_panel$bias_group)) {
+    Barbie$color_panel$bias_group <- c("Lymphoid" = "#33AAFF", "Myeloid" = "#FF5959", "Unbiased" = "#FFC000")
+  }
 
   return(Barbie)
 
 }
 
+GetFisherBiasGroup <- GetOccBiasGroup
+
 # Plot clone as vs average Rank colored by bias group.
 
-PlotBiasVsRank <- function(Barbie, passing_data = "rank") {
+PlotBiasVsRank <- function(Barbie, passing_data = "rank", bias_group = NULL, bias_pvalue = NULL) {
   # Define a custom color/shape palette for groups
   custom_shape <- c("Lymphoid" = 21, "Myeloid" = 24, "Unbiased" = 23)
 
@@ -241,20 +243,30 @@ PlotBiasVsRank <- function(Barbie, passing_data = "rank") {
   avgRank_reorder <- rowMeans(rank_reorder)
   varRank_reorder <- apply(rank_reorder, 1, var)
 
-  df <- data.frame(bias = -log10(Barbie$Bias$pvalue),
+  df <- data.frame(# bias = -log10(Barbie$Bias_Fisher$pvalue),
                    output = output,
                    rank = avgRank,
                    rank_fixed = avgRank_reorder,
                    rank_fixed_var = varRank_reorder,
-                   group = Barbie$Bias$group,
-                   clone = rownames(Barbie$Bias))
+                   # group = Barbie$Bias_Occ$group,
+                   clone = rownames(Barbie$CPM),
+                   meanprop = log2(rowMeans((Barbie$CPM + 1)))
+                   )
+
+  if(is.null(bias_group)) {
+    df$group <- Barbie$Bias_Occ$group # default
+    df$bias <- -log10(Barbie$Bias_Occ$pvalue)
+  } else {
+    df$group <- bias_group
+    df$bias <- -log10(bias_pvalue)
+  }
 
   if(passing_data == "output") {
     p <- ggplot(df, aes(x = output, y = bias, text = clone)) +
       geom_point(aes(color = group, shape = group, fill = group), size = 4, stroke = 1) +
       theme_classic() +
       theme(aspect.ratio = 1) +
-      labs(title = "Lym vs Mye, two.sided fisher.test",
+      labs(title = "Lym vs Mye",
            y = "Bias = -log10(p.value)",
            x = "Output = number of samples in which clone is detected") +
       geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "grey") +
@@ -267,7 +279,7 @@ PlotBiasVsRank <- function(Barbie, passing_data = "rank") {
       geom_point(aes(color = group, shape = group, fill = group), size = 4, stroke = 1) +
       theme_classic() +
       theme(aspect.ratio = 1) +
-      labs(title = "Lym vs Mye, two.sided fisher.test",
+      labs(title = "Lym vs Mye",
            y = "Bias = -log10(p.value)",
            x = paste0("Genral Contribution = ", nrow(df), " - average rank of contributions across samples")) +
       geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "grey") +
@@ -283,6 +295,19 @@ PlotBiasVsRank <- function(Barbie, passing_data = "rank") {
       labs(title = "Mean-Variance of clone ranks",
            y = "Variance of rank",
            x = paste0(nrow(df), " - Mean of rank")) +
+      scale_color_manual(values = Barbie$color_panel$bias_group) +
+      scale_shape_manual(values = custom_shape) +
+      scale_fill_manual(values = alpha(Barbie$color_panel$bias_group, 0.2))
+  } else if(passing_data == "contribution") {
+    p <- ggplot(df, aes(x = meanprop, y = bias, text = clone)) +
+      geom_point(aes(color = group, shape = group, fill = group), size = 4, stroke = 1) +
+      theme_classic() +
+      theme(aspect.ratio = 1) +
+      labs(title = "Lym vs Mye",
+           y = "Bias = -log10(p.value)",
+           x = "log Average Clone Contribution across Samples") +
+      geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "grey") +
+      annotate("text", x = max(df$meanprop)*0.9, y = -log10(0.05), label = "p.value = 0.05", vjust = 1.5, hjust = 1) +
       scale_color_manual(values = Barbie$color_panel$bias_group) +
       scale_shape_manual(values = custom_shape) +
       scale_fill_manual(values = alpha(Barbie$color_panel$bias_group, 0.2))

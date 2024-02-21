@@ -154,6 +154,59 @@ trimColumn <- function(Barbie, keep_columns) {
   return(trimmedObject)
 }
 
+reorderColumn <- function(Barbie, order_array) {
+  orderedObject <- list(
+    assay = Barbie$assay[,order_array],
+    metadata = Barbie$metadata[order_array,],
+    prop = Barbie$prop[,order_array],
+    CPM = Barbie$CPM[,order_array],
+    presence = Barbie$presence[,order_array],
+    rank = Barbie$rank[,order_array],
+    is_top = Barbie$is_top,
+    clusters = Barbie$clusters[order_array],
+    color_panel = Barbie$color_panel
+    # Add other components as needed
+  )
+
+  # Include existing elements in the orderedObject
+  for (element_name in names(Barbie)) {
+    if (!(element_name %in% names(orderedObject))) {
+      orderedObject[[element_name]] <- Barbie[[element_name]]
+    }
+  }
+
+  return(orderedObject)
+}
+
+combineColumn <- function(Barbie_1, Barbie_2) {
+  combinedObject <- list(
+    assay = cbind(Barbie_1$assay, Barbie_2$assay) %>% as.data.frame(),
+    metadata = rbind(Barbie_1$metadata, Barbie_2$metadata) %>% as.data.frame(),
+    prop = cbind(Barbie_1$prop, Barbie_2$prop),
+    CPM = cbind(Barbie_1$CPM, Barbie_2$CPM),
+    presence = cbind(Barbie_1$presence, Barbie_2$presence),
+    rank = cbind(Barbie_1$rank, Barbie_2$rank),
+    is_top = Barbie_1$is_top | Barbie_2$is_top,
+    clusters = cbind(Barbie_1$clusters, Barbie_2$clusters),
+    color_panel = Barbie$color_panel
+    # Add other components as needed
+  )
+
+  # Include existing elements in the combinedObject
+  for (element_name in names(Barbie_1)) {
+    if (!(element_name %in% names(combinedObject))) {
+      combinedObject[[element_name]] <- Barbie_1[[element_name]]
+    }
+  }
+  for (element_name in names(Barbie_2)) {
+    if (!(element_name %in% names(combinedObject))) {
+      combinedObject[[element_name]] <- Barbie_2[[element_name]]
+    }
+  }
+
+  return(combinedObject)
+}
+
 trimRow <- function(Barbie, keep_rows) {
 
   trimmedObject <- list(
@@ -260,10 +313,10 @@ CollapseColumn <- function(Barbie, group_array) {
     metadata = Barbie$metadata %>% t() %>%
       collapse_cols_by_array(group_array = group_array, methods = function(x) {
         check_dup <- duplicated(x)
-        if(length(check_dup) -1 == sum(check_dup))
-          paste(x, collapse = ".")
-      })
-         %>% t() %>%
+        ifelse(length(check_dup) -1 == sum(check_dup),
+               x[[1]],
+               paste(x, collapse = "."))
+      }) %>% t() %>%
       as.data.frame(),
     prop = Barbie$prop %>% collapse_cols_by_array(group_array = group_array),
     CPM = Barbie$CPM %>% collapse_cols_by_array(group_array = group_array),
