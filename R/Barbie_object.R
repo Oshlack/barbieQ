@@ -296,7 +296,7 @@ collapse_cols_by_array <- function(mat, group_array, methods = mean) {
     })
 
     collapsed_mat <- do.call(cbind, c_mat)
-  } else if(is.vector(mat) | is.factor(mat)) { # mat is a vector
+  } else if(is.vector(mat) | is.factor(mat) | is.array(mat)) { # mat is a vector
     c_mat <- tapply(seq_along(mat), group_array, function(indices) {
       mat[indices] %>% methods
     })

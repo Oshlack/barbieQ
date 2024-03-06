@@ -51,10 +51,18 @@ getPropBiasGroup <- function(Barbie, mydesign = NULL, group_vector = NULL){
   Group <- dplyr::recode(as.vector(myresults), "1" = "Lymphoid", "-1" = "Myeloid", "0" = "Unbiased")
   names(Group) <- rownames(myresults)
 
-  p.value <- as.vector(myfit3$p.value)
+  # Extract the moderated p-values
+  moderated_pvalues <- myfit3$p.value %>% as.vector()
 
   Barbie$Bias_Prop <- data.frame(group = Group,
-                                 pvalue = p.value)
+                                 pvalue = moderated_pvalues)
+
+  # # Extract adjusted p-values using topTable
+  top_bars <- limma::topTable(myfit3, number = Inf)  # Set number to Inf to get all barcodes
+  adjusted_pvalues <- top_bars[rownames(Barbie$Bias_Prop),]$adj.P.Val
+
+  Barbie$Bias_Prop <- data.frame(group = Group,
+                                 pvalue = adjusted_pvalues)
 
   if(is.null(Barbie$color_panel$bias_group)) {
     Barbie$color_panel$bias_group <- c("Lymphoid" = "#33AAFF", "Myeloid" = "#FF5959", "Unbiased" = "#FFC000")

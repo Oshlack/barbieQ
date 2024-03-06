@@ -192,17 +192,28 @@ GetOccBiasGroup <- function(Barbie, contingency_table_ls) {
   fisher_table <- lapply(contingency_table_ls,  function(x) x[1:2, 1:2]) #remove the "total" column and "total" row.
   fisher_Pvalue <- lapply(fisher_table, function(x) fisher.test(x)$p.value) |> unlist()#default: two.sided
 
+  # Extract p-values and log-odds ratios
+  fisher_Pvalue <- sapply(fisher_results, function(x) x$p.value)
+  fisher_Odds_Ratio <- sapply(fisher_results, function(x) x$estimate)
+
   fisher_Pvalue.gr <- lapply(fisher_table, function(x) fisher.test(x, alternative = "greater")$p.value) |> unlist()#default: two.sided
 
   fisher_Pvalue.le <- lapply(fisher_table, function(x) fisher.test(x, alternative = "less")$p.value) |> unlist()#default: two.sided
 
   #figure out bias
-  LymGrMye <- fisher_Pvalue.gr < 0.05
-  MyeGrLym <- fisher_Pvalue.le < 0.05
+  # LymGrMye <- fisher_Pvalue.gr < 0.05
+  # MyeGrLym <- fisher_Pvalue.le < 0.05
+  #
+  # Bias_Fisher <- data.frame(Lymphoid = LymGrMye,
+  #                    Myeloid = MyeGrLym,
+  #                    Unbiased = LymGrMye == FALSE & MyeGrLym == FALSE
+  )
 
-  Bias_Fisher <- data.frame(Lymphoid = LymGrMye,
-                     Myeloid = MyeGrLym,
-                     Unbiased = LymGrMye == FALSE & MyeGrLym == FALSE)
+  Bias_Fisher <- data.frame(
+    Lymphoid = (fisher_Pvalue < 0.05) & (fisher_Odds_Ratio > 1),
+    Myeloid = (fisher_Pvalue < 0.05) & (fisher_Odds_Ratio < 1),
+    Unbiased = fisher_Pvalue >= 0.05
+  )
   #check
   all(rowSums(Bias_Fisher) == 1)
 
