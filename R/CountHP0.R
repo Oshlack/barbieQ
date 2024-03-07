@@ -8,7 +8,7 @@ PlotCpmHP_0 <- function(Barbie, show_bias = FALSE, row_ha = NULL, split_by = NUL
                                 col = list(Sample_Group = Barbie$color_panel$bias_group)
   )
 
-  mat <- log2(Barbie$assay +1) %>% as.matrix()
+  mat <- log2(Barbie$CPM +1) %>% as.matrix()
   mat_name <- "logCPM"
   col_fun <- circlize::colorRamp2(c(min(mat), median(mat), max(mat)), c("blue", "white", "red"))
 
