@@ -190,7 +190,7 @@ PotentialHP <- function(Barbie, potential, dataFormat = "CPM") {
 GetOccBiasGroup <- function(Barbie, contingency_table_ls) {
 
   fisher_table <- lapply(contingency_table_ls,  function(x) x[1:2, 1:2]) #remove the "total" column and "total" row.
-  fisher_Pvalue <- lapply(fisher_table, function(x) fisher.test(x)$p.value) |> unlist()#default: two.sided
+  fisher_results <- lapply(fisher_table, function(x) fisher.test(x)) #default: two.sided
 
   # Extract p-values and log-odds ratios
   fisher_Pvalue <- sapply(fisher_results, function(x) x$p.value)
@@ -204,10 +204,10 @@ GetOccBiasGroup <- function(Barbie, contingency_table_ls) {
   # LymGrMye <- fisher_Pvalue.gr < 0.05
   # MyeGrLym <- fisher_Pvalue.le < 0.05
   #
-  # Bias_Fisher <- data.frame(Lymphoid = LymGrMye,
-  #                    Myeloid = MyeGrLym,
-  #                    Unbiased = LymGrMye == FALSE & MyeGrLym == FALSE
-  )
+  # Bias_Fisher <- data.frame(
+  #   Lymphoid = LymGrMye,
+  #   Myeloid = MyeGrLym,
+  #   Unbiased = LymGrMye == FALSE & MyeGrLym == FALSE)
 
   Bias_Fisher <- data.frame(
     Lymphoid = (fisher_Pvalue < 0.05) & (fisher_Odds_Ratio > 1),
@@ -264,9 +264,11 @@ PlotBiasVsRank <- function(Barbie, passing_data = "rank", bias_group = NULL, bia
                    meanprop = log2(rowMeans((Barbie$CPM + 1)))
                    )
 
+  # p_oneside_min <- apply(Barbie$Bias_Occ[, 2:3], 1, min)
+
   if(is.null(bias_group)) {
     df$group <- Barbie$Bias_Occ$group # default
-    df$bias <- -log10(Barbie$Bias_Occ$pvalue)
+    df$bias <- -log10(Barbie$Bias_Occ$pvalue) # p_oneside_min
   } else {
     df$group <- bias_group
     df$bias <- -log10(bias_pvalue)

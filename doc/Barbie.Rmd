@@ -229,8 +229,7 @@ PlotCircularContribution(Barbie = week4_bb)
 PlotTotalContribution(Barbie = week4_bb)
 
 # trim rows by "is_top"
-week4_top <- trimRow(Barbie = week4_bb, 
-                      keep_rows = week4_bb$is_top)
+week4_top <- trimRow(Barbie = week4_bb, keep_rows = week4_bb$is_top)
 
 # plot top barcode contribution
 PlotBarContribution(Barbie = week4_top)
