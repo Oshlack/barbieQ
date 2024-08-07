@@ -1,0 +1,4 @@
+"0",""
+"0","# If you have an old barcode-clone reference list, go for this:"
+"0","# updateBarcodeCloneRef(old_reflist = OLD LIST,"
+"0","#                       new_pairlist = proposed_bar_pair_list)"

@@ -1,0 +1,7 @@
+"0","# group.vec is meant to pass the ""ground truth"" of known correlating barcodes from the same clones"
+"0","plot_bar_pair_cor <- plotBarcodePairCor_Count(count.mx = example_bb$assay, # this is your barcode count table (make sure barcodes in rows)"
+"0","                                              # group.vec = ADD YOUR OWN GROUP OR LEAVE IT AS NULL, # this is a vector of known barcode groups"
+"0","                                              plot = ""mean"") # options for plotting, including ""mean"", ""max"", ""histogram"", and ""table"""
+"0",""
+"0","# plot the pairwise correlation of barcodes"
+"0","plot_bar_pair_cor "

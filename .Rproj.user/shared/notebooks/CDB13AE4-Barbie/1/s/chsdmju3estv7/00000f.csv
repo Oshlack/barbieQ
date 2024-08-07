@@ -1,0 +1,8 @@
+"0","counts <- read.csv(here::here(""inst"", ""extdata"", ""barcodes_example.csv""), row.names = 1) "
+"0","# make sure ""counts"" is a numeric count table with barcodes in rows and samples in columns"
+"0",""
+"0","targets <- read.table(here::here(""inst"", ""extdata"", ""targets_example.txt""))"
+"0","# make sure ""targets"" is a table saving experiment designs with samples in rows and factors/conditions in columns"
+"0",""
+"0","colors <- readRDS(here::here(""inst"", ""extdata"", ""colors_example.RDS""))"
+"0","# ""colors"" is a list of color palette you designed for different conditions of samples."
