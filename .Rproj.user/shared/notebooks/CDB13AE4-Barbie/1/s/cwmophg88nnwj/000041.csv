@@ -1,7 +1,0 @@
-"0",""
-"0","# trim rows by ""is_top"""
-"0","week4_top <- trimRow(Barbie = week4_bb, "
-"0","                      keep_rows = week4_bb$is_top)"
-"0",""
-"0","# plot top barcode contribution"
-"0","PlotBarContribution(Barbie = week4_top)"

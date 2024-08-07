@@ -1,3 +1,0 @@
-"0","example_bb <- createBarbie(counts = counts, "
-"0","                           metadata = targets, "
-"0","                           color_panel = colors) # no need to pass color_panel if you don't have it."

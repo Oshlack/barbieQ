@@ -1,2 +1,0 @@
-ebi <- readMM("/Users/feiliyang/Downloads/E-MTAB-6386-quantification-raw-files/E-MTAB-6386.aggregated_filtered_counts.mtx")
-head(ebi)

@@ -1,4 +1,0 @@
-"0","# Visualize Bias group of barcodes"
-"0","PlotBiasVsRank(Barbie = week4_test, passing_data = ""contribution"", "
-"0","               bias_group = week4_test$Bias_Prop$group,"
-"0","               bias_pvalue = week4_test$Bias_Prop$pvalue)"

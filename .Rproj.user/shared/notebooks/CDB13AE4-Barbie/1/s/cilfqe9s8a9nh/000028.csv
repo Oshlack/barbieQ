@@ -1,4 +1,0 @@
-"0",""
-"0","proposed_bar_pair_list <- lapply(proposed_bar_pair$barID, function(x) strsplit(x, split = ""\\."") %>% unlist())"
-"0",""
-"0","barcode_clone_ref <- createBarcodeCloneRef(new_pairlist = proposed_bar_pair_list)"

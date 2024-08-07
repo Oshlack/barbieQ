@@ -1,2 +1,0 @@
-"0","# Apply test, and get Bias group"
-"0","example_test <- GetFisherBiasGroup(Barbie = example_test, contingency_table_ls = c_tables)"
