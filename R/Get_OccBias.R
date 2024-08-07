@@ -214,6 +214,10 @@ GetOccBiasGroup <- function(Barbie, contingency_table_ls) {
     Myeloid = (fisher_Pvalue < 0.05) & (fisher_Odds_Ratio < 1),
     Unbiased = fisher_Pvalue >= 0.05
   )
+
+  con_name <- colnames(fisher_table[[1]])[1:2]
+  colnames(Bias_Fisher)[1:2] <- con_name
+
   #check
   all(rowSums(Bias_Fisher) == 1)
 
@@ -229,7 +233,8 @@ GetOccBiasGroup <- function(Barbie, contingency_table_ls) {
                             group = Bias_Fisher_group)
 
   if(is.null(Barbie$color_panel$bias_group)) {
-    Barbie$color_panel$bias_group <- c("Lymphoid" = "#33AAFF", "Myeloid" = "#FF5959", "Unbiased" = "#FFC000")
+    Barbie$color_panel$bias_group <- c("C1" = "#33AAFF", "C2" = "#FF5959", "Unbiased" = "#FFC000")
+    names(Barbie$color_panel$bias_group)[1:2] <- con_name
   }
 
   return(Barbie)
@@ -242,7 +247,8 @@ GetFisherBiasGroup <- GetOccBiasGroup
 
 PlotBiasVsRank <- function(Barbie, passing_data = "rank", bias_group = NULL, bias_pvalue = NULL) {
   # Define a custom color/shape palette for groups
-  custom_shape <- c("Lymphoid" = 21, "Myeloid" = 24, "Unbiased" = 23)
+  custom_shape <- c("C1" = 21, "C2" = 24, "Unbiased" = 23)
+  names(custom_shape) <- names(Barbie$color_panel$bias_group)
 
   output <- Barbie$presence |> rowSums()
   avgRank <- Barbie$rank |> rowMeans()

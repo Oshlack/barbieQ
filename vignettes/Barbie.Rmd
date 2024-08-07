@@ -56,6 +56,7 @@ devtools::build_vignettes()
 # Load Library
 
 ```{r load library, results='hide'}
+# data manipulation
 library(here)
 library(magrittr)
 library(knitr)
@@ -63,6 +64,8 @@ library(grid)
 library(tidyverse)
 library(dplyr)
 library(plyr)
+
+# visualization
 library(ggplot2)
 library(ggbreak)
 library(patchwork)
@@ -72,6 +75,8 @@ library(eulerr)
 library(colorRamp2)
 library(igraph)
 library(htmlwidgets)
+
+# statistics
 library(speckle)
 library(limma)
 library(edgeR)
@@ -107,8 +112,8 @@ colors <- readRDS(here::here("inst", "extdata", "colors_example.RDS"))
 # Create Barbie Object
 
 ```{r create barbie}
-example_bb <- createBarbie(counts = counts, 
-                           metadata = targets, 
+example_bb <- createBarbie(object = counts, 
+                           target = targets, 
                            color_panel = colors) # no need to pass color_panel if you don't have it.
 ```
 
@@ -122,7 +127,7 @@ example_bb <- createBarbie(counts = counts,
 
 ```{r pre-filter, include=FALSE}
 # trim rows
-flag <- rowSums(example_bb$presence) >= 2
+flag <- rowSums(example_bb$occurrence) >= 2
 example_bb <- trimRow(Barbie = example_bb, 
                       keep_rows = flag)
 
@@ -201,7 +206,7 @@ example_bb <- createBarbie(counts = collapsed_bb$assay,
 
 ```{r filter, fig.width=5, fig.height=4}
 # trim rows
-flag <- rowSums(example_bb$presence) >= 2
+flag <- rowSums(example_bb$occurrence) >= 2
 example_bb <- trimRow(Barbie = example_bb, 
                       keep_rows = flag)
 
@@ -246,7 +251,7 @@ vector_PCRrep <- week4_top$metadata %>%
   )
 
 # collapse the columns in Barbie Object by the group vector.
-# count / prop / PCM data takes the average, presence data takes the max.
+# count / prop / PCM data takes the average, occurrence data takes the max.
 week4_top_coll <- CollapseColumn(Barbie = week4_top, group_array = vector_PCRrep)
 ```
 

@@ -1,7 +1,7 @@
 library(limma)
 library(WeightIt)
 
-getPropBiasGroup <- function(Barbie, mydesign = NULL, group_vector = NULL){
+getPropBiasGroup <- function(Barbie, mydesign = NULL, group_vector = NULL, myblock = NULL, mytargets = NULL){
 
   # # targets
   # mytargets <- data.frame(Barbie$metadata, category = group_vector)
@@ -18,8 +18,8 @@ getPropBiasGroup <- function(Barbie, mydesign = NULL, group_vector = NULL){
   print(paste("Design matrix full rank?", is_full_rank2))
 
   # set up groups for correction of sample duplication
-  myblock <- mytargets %>%
-    with(paste(treat, mouse, tissue, category))
+  # myblock <- mytargets %>%
+  #   with(paste(treat, mouse, tissue, category))
 
   # arcsin squreroot transformation for data
   mydata <- Barbie$prop %>% sqrt() %>% asin()
@@ -33,7 +33,7 @@ getPropBiasGroup <- function(Barbie, mydesign = NULL, group_vector = NULL){
 
   # set up contrast
   mycontrasts <- mytargets %>%
-    with(limma::makeContrasts(Bias = categoryLymphoid - categoryMyeloid,
+    with(limma::makeContrasts(Bias = groupgroup1 - groupgroup2,
                               levels = colnames(mydesign2)))
 
   # fit limma model
@@ -48,7 +48,7 @@ getPropBiasGroup <- function(Barbie, mydesign = NULL, group_vector = NULL){
   # apply test
   myresults <- limma::decideTests(myfit3)
 
-  Group <- dplyr::recode(as.vector(myresults), "1" = "Lymphoid", "-1" = "Myeloid", "0" = "Unbiased")
+  Group <- dplyr::recode(as.vector(myresults), "1" = "group1", "-1" = "group2", "0" = "Unbiased")
   names(Group) <- rownames(myresults)
 
   # Extract the moderated p-values
@@ -65,7 +65,7 @@ getPropBiasGroup <- function(Barbie, mydesign = NULL, group_vector = NULL){
                                  pvalue = adjusted_pvalues)
 
   if(is.null(Barbie$color_panel$bias_group)) {
-    Barbie$color_panel$bias_group <- c("Lymphoid" = "#33AAFF", "Myeloid" = "#FF5959", "Unbiased" = "#FFC000")
+    Barbie$color_panel$bias_group <- c("group1" = "#33AAFF", "group2" = "#FF5959", "Unbiased" = "#FFC000")
   }
 
   return(Barbie)
