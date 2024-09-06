@@ -1,12 +1,3 @@
-#' Building a central data structure-based object similar to Seurat object.
-
-#' Create a Barbie object
-#'
-#' @param object A data frame or matrix containing barcode counts.
-#' @param target Optional parameter for experimental information.
-#' @param color_panel Optional color panel for the Barbie object.
-#' @param ... Additional arguments.
-#' @return A list with the Barbie object structure.
 
 createBarbie <- function(object, target = NULL, color_panel = NULL, ...) {
 # define the object structure
@@ -355,7 +346,7 @@ trimRow <- function(Barbie, keep_rows) {
     CPM = Barbie$CPM[keep_rows,,drop=FALSE],
     occurrence = Barbie$occurrence[keep_rows,,drop=FALSE],
     rank = Barbie$rank[keep_rows,,drop=FALSE],
-    is_top = Barbie$is_top[keep_rows,drop=FALSE],s
+    is_top = Barbie$is_top[keep_rows,drop=FALSE],
     clusters = Barbie$clusters,
     color_panel = Barbie$color_panel
     # Add other components as needed

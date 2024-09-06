@@ -53,7 +53,7 @@ knitr::opts_chunk$set(
 
 devtools::build_vignettes()
 
-# Load Library
+# Load Dependency Library
 
 ```{r load library, results='hide'}
 # data manipulation
@@ -83,15 +83,12 @@ library(edgeR)
 library(pracma)
 library(WeightIt) # make full rank
 
-source(here::here("R", "Barbie_object.R")) # create Barbie object
-source(here::here("R", "Pair_Correlation.R")) # predict correlating barcodes
-source(here::here("R", "Pareto_contribution.R")) # visualize barcode contribution
-source(here::here("R", "Sankey_contribution.R"))
-source(here::here("R", "Bar_contribution.R"))
-source(here::here("R", "Get_OccBias.R")) # test barcode occurrence bias
-source(here::here("R", "Get_PropBias0.R")) # test barcode proportion bias
-source(here::here("R", "CountHP0.R")) # plot complexheatmap
+```
 
+# Load Barbie
+
+```{r load Barbie}
+library(Barbie)
 ```
 
 
