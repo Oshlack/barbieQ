@@ -54,7 +54,7 @@ createBarbie <- function(object, target=NULL, factorColors=NULL) {
             now creating a pseudo uni-group with a homogeneous setting in 'Barbie$metadata'.")
   } else {
     ## now target is provided by either @param target or Barbie$metadata, check target format
-    if(is.vector(target)) target <- matrix(target, ncol = 1)
+    if(is.vector(target) || is.factor(target)) target <- matrix(target, ncol = 1)
     else if(!(inherits(target, "data.frame") || inherits(target, "matrix")))
       stop("'target' should be a vector, matrix or data.frame describing sample conditions.")
   }

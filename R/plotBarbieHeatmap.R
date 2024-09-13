@@ -1,28 +1,28 @@
 # plot heatmap of CPM or pre
-PlotCpmHP_0 <- function(Barbie, show_bias = FALSE, row_ha = NULL, split_by = NULL,
-                        Vector_customized = NULL, bias_group = NULL) {
+plotBarbieHeatmap <- function(Barbie, showTest = FALSE, rowHA = NULL, splitBy = NULL,
+                        groupBy = NULL, biasDirection = NULL) {
 
-  column_ha = HeatmapAnnotation(Sample_Group = Vector_customized,
+  column_ha = HeatmapAnnotation(Sample_Group = groupBy,
                                 annotation_name_side = "left",
                                 annotation_name_gp = gpar(fontsize = 10),
-                                col = list(Sample_Group = Barbie$color_panel$bias_group)
+                                col = list(Sample_Group = Barbie$color_panel$biasDirection)
   )
 
   mat <- log2(Barbie$CPM +1) %>% as.matrix()
   mat_name <- "logCPM"
   col_fun <- circlize::colorRamp2(c(min(mat), median(mat), max(mat)), c("blue", "white", "red"))
 
-  if(is.null(bias_group)){
-    bias_group <- Barbie$Bias_Occ$group
+  if(is.null(biasDirection)){
+    biasDirection <- Barbie$Bias_Occ$group
   }
 
-  if(!show_bias) {
-    row_ha <- NULL
-  } else if (is.null(row_ha)) {
-    row_ha <- rowAnnotation(Bias = bias_group,
+  if(!showTest) {
+    rowHA <- NULL
+  } else if (is.null(rowHA)) {
+    rowHA <- rowAnnotation(Bias = biasDirection,
                             annotation_name_side = "top",
                             annotation_name_gp = gpar(fontsize = 10),
-                            col = list(Bias = Barbie$color_panel$bias_group),
+                            col = list(Bias = Barbie$color_panel$biasDirection),
                             show_legend = TRUE,
                             show_annotation_name = TRUE)
   }
@@ -34,9 +34,9 @@ PlotCpmHP_0 <- function(Barbie, show_bias = FALSE, row_ha = NULL, split_by = NUL
                 show_row_names = FALSE, show_column_names = FALSE,
                 column_title = "Samples", row_title = paste(nrow(mat), " Top Clones"),
                 # col = col_fun,
-                right_annotation = row_ha,
+                right_annotation = rowHA,
                 top_annotation = column_ha,
-                column_split = split_by,
+                column_split = splitBy,
                 cluster_column_slices = FALSE
   )
 
@@ -44,13 +44,13 @@ PlotCpmHP_0 <- function(Barbie, show_bias = FALSE, row_ha = NULL, split_by = NUL
 }
 
 # plot presence
-PlotPreHP_0 <- function(Barbie, show_bias = FALSE, row_ha = NULL, split_by = NULL,
-                        Vector_customized = NULL, bias_group = NULL) {
+PlotPreHP_0 <- function(Barbie, showTest = FALSE, rowHA = NULL, splitBy = NULL,
+                        groupBy = NULL, biasDirection = NULL) {
 
-  column_ha = HeatmapAnnotation(Sample_Group = Vector_customized,
+  column_ha = HeatmapAnnotation(Sample_Group = groupBy,
                                 annotation_name_side = "left",
                                 annotation_name_gp = gpar(fontsize = 10),
-                                col = list(Sample_Group = Barbie$color_panel$bias_group)
+                                col = list(Sample_Group = Barbie$color_panel$biasDirection)
   )
 
 
@@ -58,17 +58,17 @@ PlotPreHP_0 <- function(Barbie, show_bias = FALSE, row_ha = NULL, split_by = NUL
   mat_name <- "Presence"
   col_fun <- structure(c(2,4), names = c("1","0"))
 
-  if(is.null(bias_group)){
-    bias_group <- Barbie$Bias_Occ$group
+  if(is.null(biasDirection)){
+    biasDirection <- Barbie$Bias_Occ$group
   }
 
-  if(!show_bias) {
-    row_ha <- NULL
-  } else if (is.null(row_ha)) {
-    row_ha <- rowAnnotation(Bias = bias_group,
+  if(!showTest) {
+    rowHA <- NULL
+  } else if (is.null(rowHA)) {
+    rowHA <- rowAnnotation(Bias = biasDirection,
                             annotation_name_side = "top",
                             annotation_name_gp = gpar(fontsize = 10),
-                            col = list(Bias = Barbie$color_panel$bias_group),
+                            col = list(Bias = Barbie$color_panel$biasDirection),
                             show_legend = TRUE,
                             show_annotation_name = TRUE)
   }
@@ -79,8 +79,8 @@ PlotPreHP_0 <- function(Barbie, show_bias = FALSE, row_ha = NULL, split_by = NUL
                 show_row_names = FALSE, show_column_names = FALSE,
                 column_title = "Samples", row_title = paste(nrow(mat), " Top Clones"),
                 col = col_fun,
-                right_annotation = row_ha,
-                column_split = split_by,
+                right_annotation = rowHA,
+                column_split = splitBy,
                 top_annotation = column_ha,
                 cluster_column_slices = FALSE
   )

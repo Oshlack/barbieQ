@@ -60,3 +60,78 @@ returnNumMat <- function(object) {
   return(objectUpdated)
 }
 
+checkBarbieDimensions <- function(Barbie) {
+  ## check Barbie$assay's format
+  if(is.data.frame(Barbie$assay) || is.matrix(Barbie$assay))
+    NumDim <- dim(Barbie$assay)
+  else {stop("Barbie$assay isn't in right format.
+             use createBarbie() to generate Barbie.")}
+  ## check Barbie$metadata's format and dimension
+  if(is.data.frame(Barbie$metadata) || is.matrix(Barbie$metadata)) {
+    if(nrow(Barbie$metadata) != NumDim[2])
+      stop("row dimension of Barbie$metadata doesn't match column dimention of Barbie$assay.
+             use createBarbie() to generate the right components.")
+  } else {stop("Barbie$assay isn't in right format.
+             use createBarbie() to generate Barbie.")}
+  ## check other components' format dimensions
+  elements <- c("proportion", "CPM", "occurrence", "rank")
+  for(elem in elements) {
+    if(is.data.frame(Barbie[[elem]]) || is.matrix(Barbie[[elem]])) {
+      elemDim <- dim(Barbie[[elem]])
+      if(any(elemDim != NumDim))
+        stop("dimensions of Barbie component-", elem, "don't match dimentions of Barbie$assay.
+             use createBarbie() to generate the components.")
+    } else {stop("Barbie component-", elem, " isn't in right format.
+                 use createBarbie() to generate the right components.")}
+  }
+  ## check Barbie$isTop format and dimensions
+  if(!is.null(Barbie$isTop$vec)) {
+    if(is.vector(Barbie$isTop$vec)) {
+      if(length(Barbie$isTop$vec) != NumDim[1])
+        stop("length of Barbie$isTop$vec doesn't match row dimention of Barbie$assay.
+             use tagTopBarcodes() to generate the right component.")
+    } else {stop("Barbie$isTop$vec isn't in right format.
+                 use tagTopBarcodes() to generate the right component.")}
+  }
+  if(!is.null(Barbie$isTop$mat)) {
+    if(is.matrix(Barbie$isTop$mat) || is.data.frame(Barbie$isTop$mat)) {
+      if(nrow(Barbie$isTop$mat) != NumDim[1])
+        stop("row dimension Barbie$isTop$mat doesn't match row dimention of Barbie$assay.
+             use tagTopBarcodes() to generate the right component.")
+    } else {stop("Barbie$isTop$mat isn't in right format.
+                 use tagTopBarcodes() to generate the right component.")}
+  }
+
+  return(TRUE)
+}
+
+# Function to check dimensions of list elements, including isTop$mat
+check_dimensions <- function(obj) {
+  elements <- c("assay", "metadata", "proportion", "CPM", "occurrence", "rank")
+  for (elem in elements) {
+    cat(elem, ": ")
+    if (!is.null(obj[[elem]])) {
+      if (is.matrix(obj[[elem]]) || is.data.frame(obj[[elem]])) {
+        print(dim(obj[[elem]]))
+      } else {
+        cat("Not a matrix/data frame or no dimensions available\n")
+      }
+    } else {
+      cat("NULL\n")
+    }
+  }
+
+  # Check isTop$mat separately
+  cat("isTop$mat: ")
+  if (!is.null(obj$isTop$mat)) {
+    if (is.matrix(obj$isTop$mat) || is.data.frame(obj$isTop$mat)) {
+      print(dim(obj$isTop$mat))
+    } else {
+      cat("Not a matrix/data frame or no dimensions available\n")
+    }
+  } else {
+    cat("NULL\n")
+  }
+}
+
+
