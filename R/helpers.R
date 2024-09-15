@@ -60,6 +60,14 @@ returnNumMat <- function(object) {
   return(objectUpdated)
 }
 
+#' check whether components of Barbie object have identical sample dimensions and Barcode dimensions.
+#'
+#' @param Barbie 'Barbie' object created by createBarbie()
+#'
+#' @return a logical value
+#'
+#' @examples
+#' checkBarbieDimensions(Barbie)
 checkBarbieDimensions <- function(Barbie) {
   ## check Barbie$assay's format
   if(is.data.frame(Barbie$assay) || is.matrix(Barbie$assay))
@@ -104,34 +112,4 @@ checkBarbieDimensions <- function(Barbie) {
 
   return(TRUE)
 }
-
-# Function to check dimensions of list elements, including isTop$mat
-check_dimensions <- function(obj) {
-  elements <- c("assay", "metadata", "proportion", "CPM", "occurrence", "rank")
-  for (elem in elements) {
-    cat(elem, ": ")
-    if (!is.null(obj[[elem]])) {
-      if (is.matrix(obj[[elem]]) || is.data.frame(obj[[elem]])) {
-        print(dim(obj[[elem]]))
-      } else {
-        cat("Not a matrix/data frame or no dimensions available\n")
-      }
-    } else {
-      cat("NULL\n")
-    }
-  }
-
-  # Check isTop$mat separately
-  cat("isTop$mat: ")
-  if (!is.null(obj$isTop$mat)) {
-    if (is.matrix(obj$isTop$mat) || is.data.frame(obj$isTop$mat)) {
-      print(dim(obj$isTop$mat))
-    } else {
-      cat("Not a matrix/data frame or no dimensions available\n")
-    }
-  } else {
-    cat("NULL\n")
-  }
-}
-
 

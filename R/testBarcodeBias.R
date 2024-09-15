@@ -200,5 +200,7 @@ testBarcodeBias <- function(Barbie, method="diffProp",
       c(contrastLevels[1], contrastLevels[2], "n.s."))
   }
 
+  ## visualize test results by Heatmap and dotplots
+
   return(Barbie)
 }
