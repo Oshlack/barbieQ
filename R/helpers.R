@@ -67,6 +67,14 @@ returnNumMat <- function(object) {
 #' @return a logical value
 #'
 #' @examples
+#' Block <- c(1,1,2,3,3,4,1,1,2,3,3,4)
+#' Treat <- factor(rep(1:2, each=6))
+#' Time <- rep(rep(1:2, each=3), 2)
+#' nbarcodes <- 50
+#' nsamples <- 12
+#' count <- matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples) %>% abs()
+#' rownames(count) <- paste0("Barcode", 1:nbarcodes)
+#' Barbie <- Barbie::createBarbie(count, data.frame(Treat=Treat, Time=Time))
 #' checkBarbieDimensions(Barbie)
 checkBarbieDimensions <- function(Barbie) {
   ## check Barbie$assay's format

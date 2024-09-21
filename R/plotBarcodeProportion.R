@@ -1,4 +1,4 @@
-library(colorRamp2)
+# @import colorRamp2
 
 # plot a histogram contribution
 

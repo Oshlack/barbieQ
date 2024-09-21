@@ -24,7 +24,7 @@
 #' nbarcodes <- 50
 #' nsamples <- 12
 #' count <- matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples) %>% abs()
-#' rownames(y) <- paste0("Barcode", 1:nbarcodes)
+#' rownames(count) <- paste0("Barcode", 1:nbarcodes)
 #' Barbie <- Barbie::createBarbie(count, data.frame(Treat=Treat, Time=Time))
 
 # myblock <- mytargets %>%
@@ -50,7 +50,7 @@ testBarcodeBias <- function(Barbie, method="diffProp",
       } else {
     ## case when targets is still NULL or not in right format
     ## if group is a vector or factor of correct length, add it to targets
-    if(is.vector(groupBy) || is.factor(groupBy)) {
+    if((is.vector(groupBy) || is.factor(groupBy))  && length(groupBy) > 1L) {
       ## check groupBy length
       if(length(groupBy) != ncol(Barbie$assay)) {
         stop("the length of 'groupBy' doesn't match the column dimention (sample size) of 'Barbie$assay'.")
@@ -62,14 +62,15 @@ testBarcodeBias <- function(Barbie, method="diffProp",
       stop("target not properly specified; Barbie$metadata not provided; groupBy not properly specified.
            at least one of them is needed in right format.")}
       }
+
   ## now targets should be a matrix or data.frame already
   ## check groupBy: if 'groupBy' is a specified effector name, extract the entire vector
-  if(is.character(groupBy)) {
+  if(is.character(groupBy) && length(groupBy) == 1L) {
     if(groupBy %in% colnames(targets)) {
+      pointer <- which(colnames(targets) == groupBy)
       groupBy <- targets[,groupBy]
       mytargets <- targets
-      pointer <- which(colnames(mytargets) == groupBy)
-      message("found", groupBy, "as an effector in targets or Barbie$metadata.")
+      message("found '", colnames(targets)[pointer], "' as an effector in targets or Barbie$metadata.")
     } else {stop("the groupBy specified is a charactor value,
                  but it's not an effector name found in targets or Barbie$metadata.
                  make sure you spell it correctly.")}
@@ -82,23 +83,33 @@ testBarcodeBias <- function(Barbie, method="diffProp",
       message("binding 'groupBy' to 'targets'.")
     }
   } else {
-    groupBy <- rep(1, ncol(Barbie$assay)) %>% factor()
+    groupBy <- rep(1, ncol(Barbie$assay))
     mytargets <- data.frame(groupBy=groupBy, targets)
     pointer <- which(colnames(mytargets) == "groupBy")
     message("no properly specified 'groupBy'. setting samples by homogenenous group.")
   }
-
+  ## extract the groupTitle to be compared: groupBy
+  groupTitle <- colnames(mytargets)[pointer]
   ## confirm all effectors (columns) in 'mytargets' are factor() or numeric()
   ## convert columns that are neither factor nor numeric into factor
   nonFac <- sapply(mytargets, function(x) !(is.factor(x) | is.numeric(x)))
   for(col in seq(nonFac)[nonFac]) {
     mytargets[,col] <- factor(mytargets[,col])
   }
+  ## remove factor columns with only one level - will be problematic in model.matrix
+  oneLevelFactors <- sapply(mytargets, function(x) is.factor(x) && length(unique(x)) == 1)
+  if(any(oneLevelFactors)) {
+    mytargets <- mytargets[, !oneLevelFactors]
+    message("removing effectors with only one level from targets: ",
+            paste0(colnames(mytargets)[oneLevelFactors], collapse = ", "))
+  }
 
   ## import 'design' using tidy evaluation
   ## if designFormula not specified, taking all effectors from 'mytargets' into account
+  ## prioritize the column of groupBy to be compared
   if (is.null(designFormula)) {
-    designFormula <- paste("~0", paste0("+ ", colnames(mytargets), collapse = " ")) %>%
+    designFormula <- paste("~0 + ",
+                           paste(groupTitle, paste0("+ ", setdiff(colnames(mytargets), groupTitle), collapse = " "))) %>%
       as.formula()
   }
   ## check designFormula format
@@ -160,11 +171,11 @@ testBarcodeBias <- function(Barbie, method="diffProp",
     } else {
       stop("'contrastLevels' argument should be a vector indicating levels in the 'groupBy' column in 'targets' or 'Barbie$metadata'.")
     }
+
     ## now 'contrastLevels' should be a vector indicating levels in the 'groupBy' column
     ## 'contrastLevels' has one, two, or several levels.
     if(length(contrastLevels) == 2L) {
       ## create contrast for the first two levels of 'groupBy'
-      groupTitle <- colnames(mytargets)[pointer]
       contrastFormula <- paste0(groupTitle, contrastLevels[2], " - ", groupTitle, contrastLevels[1])
       ## generate contrast for designMatrix
       mycontrasts <- limma::makeContrasts(contrasts = contrastFormula,
@@ -176,26 +187,37 @@ testBarcodeBias <- function(Barbie, method="diffProp",
   } else if(is.numeric(mytargets[, pointer])) {
     ## case when groupBy column is numeric
     ## generate contrast for designMatrix
-    mycontrasts <- limma::makeContrasts(contrasts = colnames(mytargets)[pointer],
+    mycontrasts <- limma::makeContrasts(contrasts = groupTitle,
                                         levels = colnames(designMatrix))
+    contrastLevels <- c("decrease", "increase")
   }
 
   ## dispatch test functions based on the specified method
   ## default setting is "diffProp"
   if(method == "diffProp") {
-    Barbie <- testDiffProp(Barbie = Barbie, mycontrasts = mycontrasts,
-                           contrastLevels = contrastLevels, designMatrix = designMatrix,
-                           block = block)
+    BarcodeBiasProp <- testDiffProp(
+      Barbie = Barbie, transformation="asin-sqrt",
+      mycontrasts = mycontrasts, contrastLevels = contrastLevels,
+      designMatrix = designMatrix, block = block
+      )
+    elementName <- paste0("diffProp.", groupTitle)
+    Barbie[[elementName]] <- BarcodeBiasProp
+    message("testing Barcode differential proportion.")
   } else if(method == "diffOcc") {
     ## logistic regression, default regularization is "firth"
-    Barbie <- testDiffOcc(Barbie, regularization="firth",
-                          mycontrasts = mycontrasts, contrastLevels = contrastLevels,
-                          designMatrix = designMatrix)
+    BarcodeBiasOcc <- testDiffOcc(
+      Barbie, regularization="firth",
+      mycontrasts = mycontrasts, contrastLevels = contrastLevels,
+      designMatrix = designMatrix
+      )
+    elementName <- paste0("diffOcc.", groupTitle)
+    Barbie[[elementName]] <- BarcodeBiasOcc
+    message("testing Barcode differential occurrene.")
   } else {stop("please choose test method from 'diffProp' or 'diffOcc'.")}
 
   ## assign colors for the test results
-  if(is.null(Barbie$factorColors[[colnames(mytargets)[pointer]]])) {
-    Barbie$factorColors[[colnames(mytargets)[pointer]]] <- setNames(
+  if(is.null(Barbie$factorColors[[groupTitle]])) {
+    Barbie$factorColors[[groupTitle]] <- setNames(
       c("#33AAFF", "#FF5959", "#FFC000"),
       c(contrastLevels[1], contrastLevels[2], "n.s."))
   }
