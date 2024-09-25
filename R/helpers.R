@@ -121,3 +121,74 @@ checkBarbieDimensions <- function(Barbie) {
   return(TRUE)
 }
 
+#' extracting targets and primary factor based on the imported arguments
+#'
+#' @param Barbie a Barbie object created by createBarbie()
+#' @param targets a matrix or data.frame storing sample conditions
+#' @param groupBy a string, or a vector of sample conditions indicating the primary effector to be tested
+#'
+#' @return a list including a data.frame of targets (sample factors) and a vector indicating which column in the targets is the primary factor
+#'
+#' @examples
+#' Block <- c(1,1,2,3,3,4,1,1,2,3,3,4)
+#' Treat <- factor(rep(1:2, each=6))
+#' Time <- rep(rep(1:2, each=3), 2)
+#' nbarcodes <- 50
+#' nsamples <- 12
+#' count <- matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples) %>% abs()
+#' rownames(count) <- paste0("Barcode", 1:nbarcodes)
+#' Barbie <- Barbie::createBarbie(count, data.frame(Treat=Treat, Time=Time))
+#' extarctTargetsAndPrimaryFactor(Barbie = Barbie, groupBy = "Treat")
+extarctTargetsAndPrimaryFactor <- function(Barbie, targets=NULL, groupBy=NULL) {
+  ## check targets: if 'targets' is not specified, assign Barbie$metadata (could still be NULL)
+  if(is.null(targets)) targets <- Barbie$metadata
+  ## case when targets is specified or provided by Barbie$metadata in right format
+  if(is.vector(targets) || is.factor(targets)) {
+    targets <- data.frame(V1=targets)
+  } else if(is.matrix(targets) || is.data.frame(targets)) {
+    if(nrow(targets) != ncol(Barbie$assay))
+      stop("the row dimension of 'targets' doesn't match the column dimension (sample size) of 'Barbie$assay'.")
+  } else {
+    ## case when targets is still NULL or not in right format
+    ## if group is a vector or factor of correct length, add it to targets
+    if((is.vector(groupBy) || is.factor(groupBy))  && length(groupBy) > 1L) {
+      ## check groupBy length
+      if(length(groupBy) != ncol(Barbie$assay)) {
+        stop("the length of 'groupBy' doesn't match the column dimention (sample size) of 'Barbie$assay'.")
+      } else {
+        mytargets <- data.frame(groupBy=groupBy)
+        pointer <- which(colnames(mytargets) == "groupBy")
+        message("adding groupBy to targets.")}
+    } else {
+      stop("target not properly specified; Barbie$metadata not provided; groupBy not properly specified.
+           at least one of them is needed in right format.")}
+  }
+
+  ## now targets should be a matrix or data.frame already
+  ## check groupBy: if 'groupBy' is a specified effector name, extract the entire vector
+  if(is.character(groupBy) && length(groupBy) == 1L) {
+    if(groupBy %in% colnames(targets)) {
+      pointer <- which(colnames(targets) == groupBy)
+      groupBy <- targets[,groupBy]
+      mytargets <- targets
+      message("setting ", colnames(targets)[pointer], " as the primary effector of sample conditions.")
+    } else {stop("groupBy not correspond to an effector name of sample conditionss. please ensure it is spelled correctly.")}
+  } else if(is.vector(groupBy) || is.factor(groupBy)) {
+    if(length(groupBy) != ncol(Barbie$assay)) {
+      stop("the length of 'groupBy' doesn't match the column dimention (sample size) of 'targets' or'Barbie$assay'.")
+    } else {
+      mytargets <- data.frame(groupBy=groupBy, targets)
+      pointer <- which(colnames(mytargets) == "groupBy")
+      message("binding 'groupBy' to 'targets'.")
+    }
+  } else {
+    groupBy <- rep(1, ncol(Barbie$assay))
+    mytargets <- data.frame(groupBy=groupBy, targets)
+    pointer <- which(colnames(mytargets) == "groupBy")
+    message("no properly specified 'groupBy'. setting samples by homogenenous group.")
+  }
+
+  return(
+    list(mytargets = mytargets,
+         pointer = pointer))
+}

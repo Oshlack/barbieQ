@@ -32,62 +32,18 @@
 testBarcodeBias <- function(Barbie, method="diffProp",
                             targets=NULL, groupBy=NULL, contrastLevels=NULL,
                             designFormula=NULL, designMatrix=NULL,
-                            block=NULL, regularization="firth"){
+                            block=NULL,
+                            transformation="asin-sqrt", regularization="firth"){
   ## check Barbie dimensions
   if(!checkBarbieDimensions(Barbie))
     stop("Barbie components are not in right format or dimensions don't match.
          use createBarbie() and other functions in the 'Barbie' package to modify the object and don't do it manually.")
   ## check method: confirm method is chosen from "diffProp" and "diffOcc"
   method <- match.arg(method, c("diffProp", "diffOcc"))
-  ## check targets: if 'targets' is not specified, assign Barbie$metadata (could still be NULL)
-  if(is.null(targets)) targets <- Barbie$metadata
-  ## case when targets is specified or provided by Barbie$metadata in right format
-  if(is.vector(targets) || is.factor(targets)) {
-    targets <- data.frame(V1=targets)
-    } else if(is.matrix(targets) || is.data.frame(targets)) {
-      if(nrow(targets) != ncol(Barbie$assay))
-        stop("the row dimension of 'targets' doesn't match the column dimension (sample size) of 'Barbie$assay'.")
-      } else {
-    ## case when targets is still NULL or not in right format
-    ## if group is a vector or factor of correct length, add it to targets
-    if((is.vector(groupBy) || is.factor(groupBy))  && length(groupBy) > 1L) {
-      ## check groupBy length
-      if(length(groupBy) != ncol(Barbie$assay)) {
-        stop("the length of 'groupBy' doesn't match the column dimention (sample size) of 'Barbie$assay'.")
-      } else {
-        mytargets <- data.frame(groupBy=groupBy)
-        pointer <- which(colnames(mytargets) == "groupBy")
-        message("adding groupBy to targets.")}
-    } else {
-      stop("target not properly specified; Barbie$metadata not provided; groupBy not properly specified.
-           at least one of them is needed in right format.")}
-      }
-
-  ## now targets should be a matrix or data.frame already
-  ## check groupBy: if 'groupBy' is a specified effector name, extract the entire vector
-  if(is.character(groupBy) && length(groupBy) == 1L) {
-    if(groupBy %in% colnames(targets)) {
-      pointer <- which(colnames(targets) == groupBy)
-      groupBy <- targets[,groupBy]
-      mytargets <- targets
-      message("found '", colnames(targets)[pointer], "' as an effector in targets or Barbie$metadata.")
-    } else {stop("the groupBy specified is a charactor value,
-                 but it's not an effector name found in targets or Barbie$metadata.
-                 make sure you spell it correctly.")}
-  } else if(is.vector(groupBy) || is.factor(groupBy)) {
-    if(length(groupBy) != ncol(Barbie$assay)) {
-      stop("the length of 'groupBy' doesn't match the column dimention (sample size) of 'targets' or'Barbie$assay'.")
-    } else {
-      mytargets <- data.frame(groupBy=groupBy, targets)
-      pointer <- which(colnames(mytargets) == "groupBy")
-      message("binding 'groupBy' to 'targets'.")
-    }
-  } else {
-    groupBy <- rep(1, ncol(Barbie$assay))
-    mytargets <- data.frame(groupBy=groupBy, targets)
-    pointer <- which(colnames(mytargets) == "groupBy")
-    message("no properly specified 'groupBy'. setting samples by homogenenous group.")
-  }
+  ## extract targets and primary effector based on arguments
+  targetsInfo <- extarctTargetsAndPrimaryFactor(Barbie = Barbie, targets = targets, groupBy = groupBy)
+  mytargets <- targetsInfo$mytargets
+  pointer <- targetsInfo$pointer
   ## extract the groupTitle to be compared: groupBy
   groupTitle <- colnames(mytargets)[pointer]
   ## confirm all effectors (columns) in 'mytargets' are factor() or numeric()
@@ -192,35 +148,68 @@ testBarcodeBias <- function(Barbie, method="diffProp",
     contrastLevels <- c("decrease", "increase")
   }
 
+  ## store test information
+  testMethods <- list(
+    aim = "",
+    formula = designFormula,
+    method = "",
+    transformation = "",
+    regularization = "",
+    adjusted.p.value = "Benjamini-Hochberg false discovery rate",
+    contrastVector = groupTitle,
+    contrastLevels = contrastLevels
+  )
+
+  ## all test results will be saved in Barbie$testBarcodes
+  if(is.null(Barbie$testBarcodes)) Barbie$testBarcodes <- list()
+
   ## dispatch test functions based on the specified method
   ## default setting is "diffProp"
   if(method == "diffProp") {
     BarcodeBiasProp <- testDiffProp(
-      Barbie = Barbie, transformation="asin-sqrt",
+      Barbie = Barbie, transformation = transformation,
       mycontrasts = mycontrasts, contrastLevels = contrastLevels,
       designMatrix = designMatrix, block = block
       )
-    elementName <- paste0("diffProp.", groupTitle)
-    Barbie[[elementName]] <- BarcodeBiasProp
-    message("testing Barcode differential proportion.")
+    ## clarify test methods information
+    testMethods$aim <- "testing differential proportion"
+    testMethods$method <- "linear regression"
+    testMethods$transformation <- transformation
+    ## store test results and methods
+    elementName <- paste0("diffProp_", groupTitle)
+    if(!is.null(Barbie$testBarcodes[[elementName]]))
+      message("overwriting exsiting test results")
+    Barbie$testBarcodes[[elementName]] <- list(results = BarcodeBiasProp,
+                                               methods = testMethods,
+                                               targets = mytargets)
   } else if(method == "diffOcc") {
     ## logistic regression, default regularization is "firth"
     BarcodeBiasOcc <- testDiffOcc(
-      Barbie, regularization="firth",
+      Barbie, regularization = regularization,
       mycontrasts = mycontrasts, contrastLevels = contrastLevels,
       designMatrix = designMatrix
       )
-    elementName <- paste0("diffOcc.", groupTitle)
-    Barbie[[elementName]] <- BarcodeBiasOcc
-    message("testing Barcode differential occurrene.")
+    ## clarify test methods information
+    testMethods$aim <- "testing differential occurrence"
+    testMethods$method <- "logistic regression"
+    testMethods$regularization <- regularization
+    ## store test results and methods
+    elementName <- paste0("diffOcc_", groupTitle)
+    if(!is.null(Barbie$testBarcodes[[elementName]]))
+      message("overwriting exsiting test results")
+    Barbie$testBarcodes[[elementName]] <- list(results = BarcodeBiasOcc,
+                                               methods = testMethods,
+                                               targets = mytargets)
   } else {stop("please choose test method from 'diffProp' or 'diffOcc'.")}
 
   ## assign colors for the test results
-  if(is.null(Barbie$factorColors[[groupTitle]])) {
-    Barbie$factorColors[[groupTitle]] <- setNames(
+  if(is.null(Barbie$factorColors[[elementName]])) {
+    Barbie$factorColors[[elementName]] <- setNames(
       c("#33AAFF", "#FF5959", "#FFC000"),
       c(contrastLevels[1], contrastLevels[2], "n.s."))
   }
+
+  print(testMethods)
 
   ## visualize test results by Heatmap and dotplots
 

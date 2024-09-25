@@ -7,9 +7,9 @@
 testDiffOcc(
   Barbie,
   regularization = "firth",
-  mycontrasts = mycontrasts,
-  contrastLevels = contrastLevels,
-  designMatrix = designMatrix
+  mycontrasts = NULL,
+  contrastLevels = NULL,
+  designMatrix = NULL
 )
 }
 \arguments{

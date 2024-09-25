@@ -13,6 +13,7 @@ testBarcodeBias(
   designFormula = NULL,
   designMatrix = NULL,
   block = NULL,
+  transformation = "asin-sqrt",
   regularization = "firth"
 )
 }
@@ -48,6 +49,6 @@ Time <- rep(rep(1:2, each=3), 2)
 nbarcodes <- 50
 nsamples <- 12
 count <- matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples) \%>\% abs()
-rownames(y) <- paste0("Barcode", 1:nbarcodes)
+rownames(count) <- paste0("Barcode", 1:nbarcodes)
 Barbie <- Barbie::createBarbie(count, data.frame(Treat=Treat, Time=Time))
 }

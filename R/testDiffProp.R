@@ -76,9 +76,7 @@ testDiffProp <- function(Barbie, transformation="asin-sqrt",
     t = reorderedResults$t
     )
 
-  message("logFC is based on the data being tested, after being transformed.
-p.value is two-sided test based on t.
-adj.p.value is adjusted by 'Benjamini-Hochberg false discovery rate'.")
+  message("logFC is based on the data being tested, after being transformed.")
 
   return(BarcodeBiasProp)
 }

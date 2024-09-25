@@ -1,124 +1,87 @@
-
-# @import ComplexHeatmap
-
-# plot heatmap of CPM or pre
-plotBarbieHeatmap <- function(Barbie, value="proportion", showTest=FALSE, splitBy=NULL, groupBy=NULL,
-                              rowAnnotation=NULL, columnAnnotation=NULL,
-                              biasDirection=NULL) {
+#' plotting Barcode CPM (or occurrence) in a Heatmap with sample annotations
+#'
+#' @param Barbie a Barbie object created by createBarbie()
+#' @param value a string value choosing to present "CPM" or "occurrence"
+#' @param splitSamples a logical value deciding whether to split samples into slices
+#' @param targets a data.frame containing sample conditions - each effector is a column
+#' @param groupBy a vector or a string value indicating the primary effector in targets
+#' @param barcodeAnnotation a row Annotation object created by ComplexHeatmap::rowAnnotation()
+#' @param sampleAnnotation a column Annotation object created by ComplexHeatmap::HeatmapAnnotation()
+#'
+#' @return a "Heatmap" S4 object
+#' @export
+#'
+#' @import ComplexHeatmap
+#' @importFrom circlize colorRamp2
+#'
+#' @examples
+#' HSC <- Barbie::HSC
+#' plotBarbieHeatmap(Barbie = HSC)
+plotBarbieHeatmap <- function(Barbie, value="CPM", splitSamples=FALSE,
+                              targets=NULL, groupBy=NULL,
+                              barcodeAnnotation=NULL, sampleAnnotation=NULL) {
   ## check Barbie dimensions
   if(!checkBarbieDimensions(Barbie))
     stop("Barbie components are not in right format or dimensions don't match.
-         use createBarbie() and other functions in the 'Barbie' package to modify the object and don't do it manually.")
+please start with Barbie::createBarbie() and use proper functions to modify the object - don't do it manually.")
 
   ## check which value to visualize
-  value <- match.arg(value, c("proportion", "occurrence"))
+  value <- match.arg(value, c("CPM", "occurrence"))
 
-  ## check groupBy: if 'groupBy' is a specified effector name, extract the entire vector
-  if(is.character(groupBy)) {
-    if(groupBy %in% colnames(targets)) {
-      groupBy <- targets[,groupBy]
-      mytargets <- targets
-      pointer <- which(colnames(mytargets) == groupBy)
-      message("found", groupBy, "as an effector in targets or Barbie$metadata.")
-    } else {stop("the groupBy specified is a charactor value,
-                 but it's not an effector name found in targets or Barbie$metadata.
-                 make sure you spell it correctly.")}
-  } else if(is.vector(groupBy) || is.factor(groupBy)) {
-    if(length(groupBy) != ncol(Barbie$assay)) {
-      stop("the length of 'groupBy' doesn't match the column dimention (sample size) of 'targets' or'Barbie$assay'.")
-    } else {
-      mytargets <- data.frame(groupBy=groupBy, targets)
-      pointer <- which(colnames(mytargets) == "groupBy")
-      message("binding 'groupBy' to 'targets'.")
-    }
-  }
+  ## extract targets and primary effector based on arguments
+  targetsInfo <- extarctTargetsAndPrimaryFactor(Barbie=Barbie, targets=targets, groupBy=groupBy)
+  mytargets <- targetsInfo$mytargets
+  pointer <- targetsInfo$pointer
+  ## set the primary effector as sample splitter displaying at bottom
+  bottomTargets <- mytargets[, pointer, drop=FALSE]
+  ## the rest of effectors displayed at top
+  topTargets <- mytargets[, setdiff(seq_along(colnames(mytargets)), pointer), drop=FALSE]
 
-  columnHA = HeatmapAnnotation(
-    Sample_Group = groupBy,
+  sampleAnnotation = HeatmapAnnotation(
+    df = topTargets,
     annotation_name_side = "left",
     annotation_name_gp = gpar(fontsize = 10),
-    col = list(
-      Sample_Group = Barbie$colorFactors$biasDirection)
+    col = Barbie$factorColors
   )
 
-  mat <- log2(Barbie$CPM +1) %>% as.matrix()
-  mat_name <- "logCPM"
-  col_fun <- circlize::colorRamp2(c(min(mat), median(mat), max(mat)), c("blue", "white", "red"))
+  if(splitSamples) {
+      groupAnnotation = HeatmapAnnotation(
+        df = bottomTargets,
+        annotation_name_side = "left",
+        annotation_name_gp = gpar(fontsize = 10),
+        col = Barbie$factorColors
+      )
+    splitBy <- bottomTargets
+  } else {
+    groupAnnotation <- NULL
+    splitBy <- NULL}
 
-  if(is.null(biasDirection)){
-    biasDirection <- Barbie$Bias_Occ$group
-  }
-
-  if(!showTest) {
-    rowAnnotation <- NULL
-  } else if (is.null(rowAnnotation)) {
-    rowAnnotation <- rowAnnotation(Bias = biasDirection,
-                            annotation_name_side = "top",
-                            annotation_name_gp = gpar(fontsize = 10),
-                            col = list(Bias = Barbie$color_panel$biasDirection),
-                            show_legend = TRUE,
-                            show_annotation_name = TRUE)
-  }
-
-
-  hp <- Heatmap(mat,
-                name = mat_name, width = unit(6,"cm"), height = unit(6,"cm"),
-                cluster_rows = TRUE, cluster_columns = TRUE,
-                show_row_names = FALSE, show_column_names = FALSE,
-                column_title = "Samples", row_title = paste(nrow(mat), " Top Clones"),
-                # col = col_fun,
-                right_annotation = rowAnnotation,
-                top_annotation = columnHA,
-                column_split = splitBy,
-                cluster_column_slices = FALSE
-  )
-
-  return(hp)
-}
-
-# plot presence
-PlotPreHP_0 <- function(Barbie, showTest = FALSE, rowAnnotation = NULL, splitBy = NULL,
-                        groupBy = NULL, biasDirection = NULL) {
-
-  columnHA = HeatmapAnnotation(Sample_Group = groupBy,
-                                annotation_name_side = "left",
-                                annotation_name_gp = gpar(fontsize = 10),
-                                col = list(Sample_Group = Barbie$color_panel$biasDirection)
-  )
-
-
-  mat <- (Barbie$presence +1 -1) %>% as.matrix()
-  mat_name <- "Presence"
-  col_fun <- structure(c(2,4), names = c("1","0"))
-
-  if(is.null(biasDirection)){
-    biasDirection <- Barbie$Bias_Occ$group
-  }
-
-  if(!showTest) {
-    rowAnnotation <- NULL
-  } else if (is.null(rowAnnotation)) {
-    rowAnnotation <- rowAnnotation(Bias = biasDirection,
-                            annotation_name_side = "top",
-                            annotation_name_gp = gpar(fontsize = 10),
-                            col = list(Bias = Barbie$color_panel$biasDirection),
-                            show_legend = TRUE,
-                            show_annotation_name = TRUE)
+  ## choose values to be visualised
+  if(value == "CPM") {
+    mat <- log2(Barbie$CPM +1) %>% as.matrix()
+    matTitle <- "log2 CPM+1"
+    colorFun <- circlize::colorRamp2(
+      c(min(mat), mean(mat), max(mat)),
+      c("blue", "white", "red"))
+  } else {
+    mat <- (Barbie$occurrence +1 -1) %>% as.matrix()
+    matTitle <- "occurrence"
+    colorFun <- structure(c(2,4), names = c("1","0"))
   }
 
   hp <- Heatmap(mat,
-                name = mat_name, width = unit(6,"cm"), height = unit(6,"cm"),
+                name = matTitle, width = unit(6,"cm"), height = unit(6,"cm"),
                 cluster_rows = TRUE, cluster_columns = TRUE,
                 show_row_names = FALSE, show_column_names = FALSE,
-                column_title = "Samples", row_title = paste(nrow(mat), " Top Clones"),
-                col = col_fun,
-                right_annotation = rowAnnotation,
+                column_title = paste0(ncol(mat), " Samples"),
+                row_title = paste0(nrow(mat), " Barcodes"),
+                col = colorFun,
+                right_annotation = barcodeAnnotation,
+                top_annotation = sampleAnnotation,
+                bottom_annotation = groupAnnotation,
                 column_split = splitBy,
-                top_annotation = columnHA,
-                cluster_column_slices = FALSE
-  )
+                cluster_column_slices = FALSE)
 
   return(hp)
 }
-
 

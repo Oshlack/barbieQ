@@ -69,13 +69,15 @@ test_that("barcode test extracting correct arguments, dispatching right function
   testBB1 <- testBarcodeBias(Barbie, groupBy = "Treat")
   testBB11 <- testBarcodeBias(Barbie, groupBy = "Treat", contrastLevels = c("ctrl", "drug"))
   testBB111 <- testBarcodeBias(Barbie, groupBy = "Treat", contrastLevels = c("drug", "ctrl"))
-  expect_equal(testBB11$diffProp.Treat$direction, testBB111$diffProp.Treat$direction)
+  expect_equal(testBB11$testBarcodes$diffProp_Treat$results$direction,
+               testBB111$testBarcodes$diffProp_Treat$results$direction)
 
   testBB1111 <- testBarcodeBias(Barbie, groupBy = "Treat", contrastLevels = c("drug", "ctrl"),
                                 designFormula = formula("~0 + Treat + Time"))
   testBB11111 <- testBarcodeBias(Barbie, groupBy = "Treat", contrastLevels = c("drug", "ctrl"),
                                designMatrix = model.matrix(~0 + Treat + Time))
-  expect_equal(testBB1111$diffProp.Treat, testBB11111$diffProp.Treat)
+  expect_equal(testBB1111$testBarcodes$diffProp_Treat$result,
+               testBB11111$testBarcodes$diffProp_Treat$result)
 
   testBB2 <- testBarcodeBias(Barbie, groupBy = "Time")
 
@@ -85,8 +87,6 @@ test_that("barcode test extracting correct arguments, dispatching right function
 
   HSC <- Barbie::HSC
   BB <- createBarbie(object = HSC$assay, target = HSC$metadata)
-  rownames(BB$metadata) <- BB$metadata[,1]
-  BB$metadata <- BB$metadata[,-1]
   testBB4 <- testBarcodeBias(BB, groupBy = "treat", contrastLevels = c("IV", "IT"))
   testBB5 <- testBarcodeBias(Barbie = BB, groupBy = "mouse", contrastLevels = c("M13", "M14"))
 })
