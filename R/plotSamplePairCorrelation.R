@@ -3,33 +3,36 @@
 #' @param Barbie a Barbie object created by createBarbie()
 #' @param sampleOrder a charactor vector indicating samples ordered by which factor in targets
 #' @param targets a data.frame containing sample conditions - each effector is a column
-#' @param groupBy a vector or a string value indicating the primary effector in targets
+#' @param sampleGroups a vector or a string value indicating the primary effector in targets
 #' @param method a string value choose correlation method from "pearson" or "spearman"
 #'
 #' @return a "Heatmap" S4 obejct
 #' @export
 #'
 #' @import ComplexHeatmap
-#' @import circlize
+#' @importFrom circlize colorRamp2
 #' @import dplyr
+#' @import grid
+#' @importFrom magrittr %>%
 #'
 #' @examples
 #' HSC <- Barbie::HSC
 #' plotSamplePairCorrelation(Barbie = HSC)
 #'
 #' HSC$metadata$treat <- factor(HSC$metadata$treat, levels = c("IF", "IT", "IV"))
-#' HSC$metadata$lineage <- factor(HSC$metadata$lineage, levels = c("Bcell", "Tcell", "immature", "Myeloid"))
+#' HSC$metadata$lineage <- factor(HSC$metadata$lineage,
+#' levels = c("Bcell", "Tcell", "immature", "Myeloid"))
 #' sampleOrder <- c("time", "treat", "lineage", "celltype", "tissue", "mouse")
 #' plotSamplePairCorrelation(Barbie = HSC, sampleOrder = sampleOrder)
 plotSamplePairCorrelation <- function(Barbie, sampleOrder=NULL,
-                                      targets=NULL, groupBy=NULL,
+                                      targets=NULL, sampleGroups=NULL,
                                       method = "pearson") {
   ## check Barbie dimensions
   if(!checkBarbieDimensions(Barbie))
     stop("Barbie components are not in right format or dimensions don't match.
 please start with Barbie::createBarbie() and use proper functions to modify the object - don't do it manually.")
   ## extract targets and primary effector based on arguments
-  targetsInfo <- extarctTargetsAndPrimaryFactor(Barbie=Barbie, targets=targets, groupBy=groupBy)
+  targetsInfo <- extractTargetsAndPrimaryFactor(Barbie=Barbie, targets=targets, sampleGroups=sampleGroups)
   mytargets <- targetsInfo$mytargets
   pointer <- targetsInfo$pointer
   ## set the primary effector as sample splitter displaying at bottom
@@ -50,6 +53,10 @@ please start with Barbie::createBarbie() and use proper functions to modify the 
     mutate(rowNumber = row_number()) %>%
     arrange(across(all_of(sampleOrder))) %>%
     pull(rowNumber)
+  ## if sampleGroups column is automatically added, remove it
+  if(all(mytargets[,pointer] == 1) && colnames(mytargets)[pointer] == "sampleGroups") {
+    mytargets <- mytargets[ , -pointer, drop = FALSE]
+  }
   ## compute annotation obejct
   sampleAnnotationColumn = HeatmapAnnotation(
     df = mytargets,

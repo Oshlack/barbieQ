@@ -7,9 +7,9 @@
 subsetBarcodes(Barbie, retainedRows)
 }
 \arguments{
-\item{retainedRows}{a logical vector indicating each row to be retained or excluded}
+\item{Barbie}{an object created by the 'createBarbie()' function in the 'Barbie' package}
 
-\item{Barbiean}{object created by the 'createBarbie()' function in the 'Barbie' package}
+\item{retainedRows}{a logical vector indicating each row to be retained or excluded}
 }
 \value{
 an updated Barbie object with subsets of its components

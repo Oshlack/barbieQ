@@ -1,29 +1,58 @@
-## determine if each Barcode is 'top' based on its proportion across samples and store results in the 'Barbie' obejct.
-#' Title
+#' Tag each Barcode as being part of the major contributors or not
 #'
-#' @param Barbie an object created by the 'createBarbie()' function in the 'Barbie' package
-#' @param activeColumns a logical vector indicating which column (sample) should be considered when determining the 'top Barcodes'
+#' `tagTopBarcodes` is designed for better filtering out the background noise,
+#'  i.e., Barcodes that consistently have low contributions across samples.
+#'  Each Barcode is tagged as one of the major contributing Barcodes or not
+#'  in each sample, referred to *top* Barcodes. In the entire dataset,
+#'  a Barcode is considered *top* if it is tagged as *top*
+#'  in a number of samples passing a defined threshold
+#'  across all selected samples.
+#'
+#' @param Barbie an object created by the [createBarbie] function
+#' @param activeColumns a logical vector indicating which column (sample)
+#'  to be considered when determining the *top* Barcodes
 #' @param threshold a number ranging from 0 to 1 used for thresholding the Barcodes' contribution
 #' @param minTopAppearance An integer indicating the minimum times a barcode must be 'top' in each column to be considered a 'top barcode' across samples
 #'
-#' @return a 'Barbie' obejct updated with isTop information
+#' @return A 'Barbie' object, including components:
+#'  * `isTop` (updated): a list containing a vector `vec` and a matrix `mat`,
+#'    tagging each Barcode as being part of the major contributors or not.
+#'  * Other components inherited from the `Barbie` object passed into the
+#'    function. See `Barbie` structure in [createBarbie].
+#'
 #' @export
 #'
 #' @examples
-#' myBarbie <- createBarbie(mymat)
-#' myBarbie <- tagTopBarcodes(myBarbie)
-tagTopBarcodes <- function(Barbie, activeColumns=NULL, threshold=0.99, minTopAppearance=1){
+#' ## create a `Barbie` object
+#' ## sample conditions and color palettes
+#' sampleConditions <- data.frame(
+#'   Treat=factor(rep(c("ctrl", "drug"), each=6)),
+#'   Time=rep(rep(1:2, each=3), 2))
+#' conditionColor <- list(
+#'   Treat=c(ctrl="#999999", drug="#112233"),
+#'   Time=c("1"="#778899", "2"="#998877"))
+#' ## Barcode count data
+#' nbarcodes <- 50
+#' nsamples <- 12
+#' barcodeCount <- abs(matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples))
+#' rownames(barcodeCount) <- paste0("Barcode", 1:nbarcodes)
+#' ## create a `Barbie` object
+#' myBarbie <- createBarbie(barcodeCount, sampleConditions, conditionColor)
+#' ## tag top Barcodes
+#' tagTopBarcodes(myBarbie)
+tagTopBarcodes <- function(Barbie, activeColumns=NULL,
+                           threshold=0.99, minTopAppearance=1){
   mat <- Barbie$assay
   ## dispatch 'returnNumMat' function to ensure the object is a numeric matrix apart from NAs.
   if(inherits(mat, "data.frame") || inherits(mat, "matrix") || is.vector(mat))
     mat <- returnNumMat(mat)
-  else stop("'Barbie$assay' should be a data.frame, matrix or vector of Barcode counts.")
+  else stop("`Barbie$assay` should be a data.frame, matrix or vector of Barcode counts.")
   ## if 'activeColumns' is not specified, assume all columns are active.
   if(is.null(activeColumns)) activeColumns <- rep(TRUE, ncol(mat))
   ## dispatch 'tagTopEachColumn' to individully determine 'top Barcodes' in each column.
   topsInMat <- apply(mat, 2, function(col) tagTopEachColumn(col, threshold))
   ## select the active columns used to determine 'top Barcodes' out of the samples.
-  subTopMat <- topsInMat[,activeColumns,drop = FALSE]
+  subTopMat <- topsInMat[, activeColumns, drop = FALSE]
   ## determine the 'top Barcodes' based on the numbers of being true out of all 'active' samples.
   topOverall <- rowSums(subTopMat, na.rm = TRUE) >= minTopAppearance
   ## store
@@ -35,7 +64,7 @@ tagTopBarcodes <- function(Barbie, activeColumns=NULL, threshold=0.99, minTopApp
     CPM = Barbie$CPM,
     occurrence = Barbie$occurrence,
     rank = Barbie$rank,
-    ## update 'isTop' and 'topsInMat'
+    ## update `isTop`
     isTop = list(vec = topOverall,
                  mat = topsInMat),
     ## retain other components
@@ -51,17 +80,19 @@ tagTopBarcodes <- function(Barbie, activeColumns=NULL, threshold=0.99, minTopApp
   return(updatedObject)
 }
 
-## determine top Barcodes in each column.
-#' Title
+#' Tag top Barcodes in each column (sample).
 #'
 #' @param tempCol a numeric vector of Barcode counts in a sample, usually being a column in a count matrix
 #' @param threshold a number ranging from 0 to 1 used for thresholding the Barcodes' contribution
 #'
 #' @return a logical vector indicating whether each Barcode is considered as 'top' in this vector
 #'
+#' @noMd
+#'
+#' @import stats
 #' @examples
-#' myCount <- c(1,2,3,98,NA,NA)
-#' tagTopEachColumn(myCount,0.99)
+#' myCount <- c(1, 2, 3, 98, NA, NA)
+#' tagTopEachColumn(myCount, 0.99)
 tagTopEachColumn <- function(tempCol, threshold=0.99){
   ## need update this function: with a more robust threshold instead of empirical 0.99
 

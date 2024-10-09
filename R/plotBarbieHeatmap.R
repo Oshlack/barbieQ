@@ -4,7 +4,7 @@
 #' @param value a string value choosing to present "CPM" or "occurrence"
 #' @param splitSamples a logical value deciding whether to split samples into slices
 #' @param targets a data.frame containing sample conditions - each effector is a column
-#' @param groupBy a vector or a string value indicating the primary effector in targets
+#' @param sampleGroups a vector or a string value indicating the primary effector in targets
 #' @param barcodeAnnotation a row Annotation object created by ComplexHeatmap::rowAnnotation()
 #' @param sampleAnnotation a column Annotation object created by ComplexHeatmap::HeatmapAnnotation()
 #'
@@ -13,12 +13,13 @@
 #'
 #' @import ComplexHeatmap
 #' @importFrom circlize colorRamp2
+#' @import grid
 #'
 #' @examples
 #' HSC <- Barbie::HSC
 #' plotBarbieHeatmap(Barbie = HSC)
 plotBarbieHeatmap <- function(Barbie, value="CPM", splitSamples=FALSE,
-                              targets=NULL, groupBy=NULL,
+                              targets=NULL, sampleGroups=NULL,
                               barcodeAnnotation=NULL, sampleAnnotation=NULL) {
   ## check Barbie dimensions
   if(!checkBarbieDimensions(Barbie))
@@ -29,7 +30,7 @@ please start with Barbie::createBarbie() and use proper functions to modify the 
   value <- match.arg(value, c("CPM", "occurrence"))
 
   ## extract targets and primary effector based on arguments
-  targetsInfo <- extarctTargetsAndPrimaryFactor(Barbie=Barbie, targets=targets, groupBy=groupBy)
+  targetsInfo <- extractTargetsAndPrimaryFactor(Barbie=Barbie, targets=targets, sampleGroups=sampleGroups)
   mytargets <- targetsInfo$mytargets
   pointer <- targetsInfo$pointer
   ## set the primary effector as sample splitter displaying at bottom

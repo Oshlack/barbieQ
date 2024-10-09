@@ -2,7 +2,7 @@
 % Please edit documentation in R/tagTopBarcodes.R
 \name{tagTopEachColumn}
 \alias{tagTopEachColumn}
-\title{Title}
+\title{Tag top Barcodes in each column (sample).}
 \usage{
 tagTopEachColumn(tempCol, threshold = 0.99)
 }
@@ -15,9 +15,9 @@ tagTopEachColumn(tempCol, threshold = 0.99)
 a logical vector indicating whether each Barcode is considered as 'top' in this vector
 }
 \description{
-Title
+Tag top Barcodes in each column (sample).
 }
 \examples{
-myCount <- c(1,2,3,98,NA,NA)
-tagTopEachColumn(myCount,0.99)
+myCount <- c(1, 2, 3, 98, NA, NA)
+tagTopEachColumn(myCount, 0.99)
 }

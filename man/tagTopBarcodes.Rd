@@ -2,7 +2,7 @@
 % Please edit documentation in R/tagTopBarcodes.R
 \name{tagTopBarcodes}
 \alias{tagTopBarcodes}
-\title{Title}
+\title{Tag each Barcode as being part of the major contributors or not}
 \usage{
 tagTopBarcodes(
   Barbie,
@@ -12,21 +12,49 @@ tagTopBarcodes(
 )
 }
 \arguments{
-\item{Barbie}{an object created by the 'createBarbie()' function in the 'Barbie' package}
+\item{Barbie}{an object created by the \link{createBarbie} function}
 
-\item{activeColumns}{a logical vector indicating which column (sample) should be considered when determining the 'top Barcodes'}
+\item{activeColumns}{a logical vector indicating which column (sample)
+to be considered when determining the 'top Barcodes'}
 
 \item{threshold}{a number ranging from 0 to 1 used for thresholding the Barcodes' contribution}
 
 \item{minTopAppearance}{An integer indicating the minimum times a barcode must be 'top' in each column to be considered a 'top barcode' across samples}
 }
 \value{
-a 'Barbie' obejct updated with isTop information
+A 'Barbie' object, including components:
+\itemize{
+\item \code{isTop} (updated): a list containing a vector \code{vec} and a matrix \code{mat},
+tagging each Barcode as being part of the major contributors or not.
+\item Other components inherited from the \code{Barbie} object passed into the
+function. See \code{Barbie} structure in \link{createBarbie}.
+}
 }
 \description{
-Title
+\code{tagTopBarcodes} is designed for better filtering out the background noise,
+i.e., Barcodes that consistently have low contributions across samples.
+Each Barcode is tagged as one of the major contributing Barcodes or not
+in each sample, referred to \emph{top} Barcodes. In the entire dataset,
+a Barcode is considered \emph{top} if it is tagged as \emph{top}
+in a number of samples passing a defined threshold
+across all selected samples.
 }
 \examples{
-myBarbie <- createBarbie(mymat)
-myBarbie <- tagTopBarcodes(myBarbie)
+## create a `Barbie` object
+## sample conditions and color palettes
+sampleConditions <- data.frame(
+  Treat=factor(rep(c("ctrl", "drug"), each=6)),
+  Time=rep(rep(1:2, each=3), 2))
+conditionColor <- list(
+  Treat=c(ctrl="#999999", drug="#112233"),
+  Time=c("1"="#778899", "2"="#998877"))
+## Barcode count data
+nbarcodes <- 50
+nsamples <- 12
+barcodeCount <- abs(matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples))
+rownames(barcodeCount) <- paste0("Barcode", 1:nbarcodes)
+## create a `Barbie` object
+myBarbie <- createBarbie(barcodeCount, sampleConditions, conditionColor)
+## tag top Barcodes
+tagTopBarcodes(myBarbie)
 }

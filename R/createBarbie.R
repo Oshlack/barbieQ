@@ -1,18 +1,71 @@
-#' create an object-centred structure-a 'Barbie' object-based on the input Barcode count and other information.
+#' Extract Barcode count data and build into a `Barbie` object for
+#' subsequent analysis
 #'
-#'\code{createBarbie}
-#' @param object a numeric matrix or equivalent; or a Barbie object or equivalent
-#' @param target a matrix of sample conditions
-#' @param factorColors a list containing colour palettes corresponding to the factors in the target parameter
+#' `createbarbie()` constructs an object-centred list called `Barbie` object,
+#' which is designed to process Barcode count data gained from
+#' cell clonal tracking experiments.
 #'
-#' @return a Barbie object
+#' @param object A numeric matrix of Barcode counts, with Barcodes in rows
+#'  and samples in columns;
+#'  Alternatively, you can pass an existing `Barbie` object, from which
+#'  barcode counts, sample conditions, and color palettes will be inherited.
+#' @param target A `matrix` or `data.frame` of sample conditions,
+#'  with each factor in a separate column.
+#'  If a `Barbie` object is passed to `object`, the sample conditions
+#'  in `Barbie` will be updated by `target`.
+#'  If not specified, all samples are assigned the same condition.
+#' @param factorColors A `list` of colour palettes corresponding to
+#'  the factors in `target`.
+#'  If a `Barbie` object is passed to `object`, the color palettes
+#'  in `Barbie`will be updated by `factorColors`.
+#'  If not specified, defaults to NULL.
+#'
+#' @return A `Barbie` object, including several components:
+#'  * `assay`: a `data.frame` containing Barcode counts across samples.
+#'  * `metadata`: a `data.frame` representing sample conditions,
+#'    organized by various experimental factors.
+#'  * `factorColors`: a `list` of color palettes corresponding to
+#'    the sample conditions.
+#'  * Matrices of `proportion`, `CPM`, `occurrence`, and `rank` representing
+#'    the proportion, Counts Per Million (CPM), presence or absence, and ranking
+#'    of Barcodes in each sample, based on the Barcode counts in `assay`.
+#'  * `isTop`: a list containing a vector `vec` and a matrix `mat`, tagging
+#'    each Barcode as being part of the major contributors or not,
+#'    by calling the function [tagTopBarcodes].
+#'  * Additional processed information for further analysis.
+#'
 #' @export
 #'
-#' @examples
-#' createBarbie(mymat)
-#' createBarbie(mymat, mytarget)
-#' createBarbie(mymat, mytarget, mycolors)
+#' @importFrom utils menu
 #'
+#' @examples
+#' ## Sample conditions and color palettes
+#' sampleConditions <- data.frame(
+#'   Treat=factor(rep(c("ctrl", "drug"), each=6)),
+#'   Time=rep(rep(1:2, each=3), 2))
+#' conditionColor <- list(
+#'   Treat=c(ctrl="#999999", drug="#112233"),
+#'   Time=c("1"="#778899", "2"="#998877"))
+#'
+#' ## Barcode count data
+#' nbarcodes <- 50
+#' nsamples <- 12
+#' barcodeCount <- abs(matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples))
+#' rownames(barcodeCount) <- paste0("Barcode", 1:nbarcodes)
+#'
+#' ## Passing `object`, `target` and `factorColors`
+#' createBarbie(object=barcodeCount)
+#' createBarbie(object=barcodeCount, target=sampleConditions)
+#' createBarbie(
+#'   object=barcodeCount, target=sampleConditions, factorColors=conditionColor)
+#'
+#' ## Updating a `Barbie` object by passing new `target` and `factorColors`
+#' myBarbie <- createBarbie(barcodeCount, sampleConditions, conditionColor)
+#' createBarbie(object=myBarbie, target=data.frame(Mouse=rep(1:4, each=3)))
+#' createBarbie(
+#'   object=myBarbie, target=data.frame(Mouse=rep(1:4, each=3)),
+#'   factorColors=list(
+#'     Mouse=c("1"="#111199", "2"="#112200", "3"="#441111", "4"="#000000")))
 createBarbie <- function(object, target=NULL, factorColors=NULL) {
   ## define the Barbie object structure
   Barbie <- list(
@@ -29,29 +82,36 @@ createBarbie <- function(object, target=NULL, factorColors=NULL) {
     ## factorColors stores color palettes corresponding to the factors in 'metadata'.
     factorColors=NULL
   )
-  ## extract Barcode counts from @param object
-  ## dispatch 'returnNumMat' function to ensure the object is a numeric matrix apart from NAs.
-  if(inherits(object, "data.frame") || inherits(object, "matrix") || is.vector(object))
+
+  ## extract Barcode counts from `object`
+  ## dispatch `returnNumMat` function to ensure the object is a numeric matrix apart from NAs.
+  if (inherits(object, "data.frame") ||
+      inherits(object, "matrix") ||
+      is.vector(object) && !(is.list(object))) {
     Barbie$assay <- returnNumMat(object)
-  else{
-    ###$
-    # extract barcode counts from objects. Need a function for it.
+    } else if (is.list(object)) {
+      ## inherit components if a `Barbie` object is passed to `object`
+      if (checkBarbieDimensions(object)) {
+        Barbie <- object
+      }
+    ## extract barcode counts from other objects. Need a function for it.
     # if Seurat, extract assay and metadata.
     # if BARtab object, extract ...
-    # if Matrix object, ...
-    # if Barbie itself, ...[get target and factorColors]
   }
-  if(!nrow(Barbie$assay)) stop("Barcode count matrix extracted from 'object' has zero rows.")
-  if(anyNA(Barbie$assay)) warning("Barcode count matrix extracted from 'object' includes NAs.")
-
-  ## extract metadata from @param target
-  ## if @param target is not provided, inherit metadata from the 'Barbie' object created.
+  if (!nrow(Barbie$assay)) {
+    stop("Barcode count matrix extracted from 'object' has zero rows.")
+  }
+  if (anyNA(Barbie$assay)) {
+    warning("Barcode count matrix extracted from 'object' includes NAs.")
+  }
+  ## extract metadata from `target`
+  ## if `target` not specified, inherit metadata from the passed `Barbie` object
   if(is.null(target)) target <- Barbie$metadata
   ## if 'Barbie$metadata' is NULL either, assume a homogeneous setting in the metadata.
   if(is.null(target)) {
     target <- as.data.frame(matrix(1, ncol(Barbie$assay), 1))
     message("no 'target' provided.
-            now creating a pseudo uni-group with a homogeneous setting in 'Barbie$metadata'.")
+now creating a pseudo uni-group with a homogeneous setting in 'Barbie$metadata'.")
   } else {
     ## now target is provided by either @param target or Barbie$metadata, check target format
     if(is.vector(target) || is.factor(target)) target <- matrix(target, ncol = 1)
@@ -66,7 +126,7 @@ createBarbie <- function(object, target=NULL, factorColors=NULL) {
     ## if sample sizes don't match, create a homogeneous setting in metadata.
     Barbie$metadata <- as.data.frame(matrix("1", ncol(Barbie$assay), 1))
     warning("sample size of 'target' (or 'Barbie$metadata') doesn't match sample size of Barcode count extracted in 'object'!
-            now creating a pseudo uni-group with a homogeneous setting in 'Barbie$metadata'.")
+now creating a pseudo uni-group with a homogeneous setting in 'Barbie$metadata'.")
   }
   if(anyNA(Barbie$metadata)) warning("Barbie$metadata includes NAs.")
 
@@ -98,7 +158,7 @@ createBarbie <- function(object, target=NULL, factorColors=NULL) {
     } else if(choice == 2) {
       ## proceed without preprocessing calculations
       message("NAs are retained. Barbie object is created without preprocessing.
-              note that NAs may cause issues in subsequent analyses.")
+note that NAs may cause issues in subsequent analyses.")
     } else {
       stop("please address the NAs in the 'object' parameter first.")
     }

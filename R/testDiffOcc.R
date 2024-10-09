@@ -7,7 +7,8 @@
 #' @param designMatrix a numeric matrix indicating sample conditions
 #'
 #' @import logistf
-#' @import magrittr
+#' @importFrom magrittr %>%
+#' @import stats
 #'
 #' @return an updated Barbie object storing test results
 #'
@@ -15,6 +16,11 @@
 #' Barbie <- testDiffOcc(Barbie, regularization="firth",
 #' mycontrasts = mycontrasts, contrastLevels = contrastLevels,
 #' designMatrix = designMatrix)
+#' Barbie:::testDiffOcc(
+#'   Barbie = Barbie,
+#'   mycontrasts = c(-1, 1, 0),
+#'   contrastLevels = c("ctrl", "drug"),
+#'   designMatrix = model.matrix(~0 + Treat + Time))
 testDiffOcc <- function(Barbie, regularization="firth",
                         mycontrasts = NULL, contrastLevels = NULL,
                         designMatrix = NULL) {

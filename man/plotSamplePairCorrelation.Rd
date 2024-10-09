@@ -8,7 +8,7 @@ plotSamplePairCorrelation(
   Barbie,
   sampleOrder = NULL,
   targets = NULL,
-  groupBy = NULL,
+  sampleGroups = NULL,
   method = "pearson"
 )
 }
@@ -19,7 +19,7 @@ plotSamplePairCorrelation(
 
 \item{targets}{a data.frame containing sample conditions - each effector is a column}
 
-\item{groupBy}{a vector or a string value indicating the primary effector in targets}
+\item{sampleGroups}{a vector or a string value indicating the primary effector in targets}
 
 \item{method}{a string value choose correlation method from "pearson" or "spearman"}
 }
@@ -34,7 +34,8 @@ HSC <- Barbie::HSC
 plotSamplePairCorrelation(Barbie = HSC)
 
 HSC$metadata$treat <- factor(HSC$metadata$treat, levels = c("IF", "IT", "IV"))
-HSC$metadata$lineage <- factor(HSC$metadata$lineage, levels = c("Bcell", "Tcell", "immature", "Myeloid"))
+HSC$metadata$lineage <- factor(HSC$metadata$lineage,
+levels = c("Bcell", "Tcell", "immature", "Myeloid"))
 sampleOrder <- c("time", "treat", "lineage", "celltype", "tissue", "mouse")
 plotSamplePairCorrelation(Barbie = HSC, sampleOrder = sampleOrder)
 }

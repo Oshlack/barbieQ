@@ -22,7 +22,7 @@ test_that("check Barbie dimensions works", {
   expect_error(checkBarbieDimensions(Barbie3))
 })
 
-test_that("extarcting targets and groupBy works", {
+test_that("extracting targets and sampleGroups works", {
   Block <- c(1,1,2,3,3,4,1,1,2,3,3,4)
   Treat <- factor(rep(1:2, each=6))
   Time <- rep(rep(1:2, each=3), 2)
@@ -33,24 +33,24 @@ test_that("extarcting targets and groupBy works", {
   Barbie <- Barbie::createBarbie(count, data.frame(Treat=Treat, Time=Time))
 
   expect_message(
-    extarctTargetsAndPrimaryFactor(Barbie = Barbie),
-    "no properly specified 'groupBy'. setting samples by homogenenous group.")
+    extractTargetsAndPrimaryFactor(Barbie = Barbie),
+    "no properly specified 'sampleGroups'. setting samples by homogenenous group.")
   expect_message(
-    extarctTargetsAndPrimaryFactor(Barbie = Barbie,
+    extractTargetsAndPrimaryFactor(Barbie = Barbie,
                                    targets = data.frame(Treat=Treat, Time=Time, Block = Block)),
-    "no properly specified 'groupBy'. setting samples by homogenenous group."
+    "no properly specified 'sampleGroups'. setting samples by homogenenous group."
   )
   expect_message(
-    extarctTargetsAndPrimaryFactor(Barbie = Barbie, groupBy = "Treat"),
+    extractTargetsAndPrimaryFactor(Barbie = Barbie, sampleGroups = "Treat"),
     "setting Treat as the primary effector of sample conditions."
   )
   expect_equal(
-    extarctTargetsAndPrimaryFactor(Barbie = Barbie,
+    extractTargetsAndPrimaryFactor(Barbie = Barbie,
                                    targets = data.frame(Treat=Treat, Time=Time, Block = Block),
-                                   groupBy = "Treat"),
+                                   sampleGroups = "Treat"),
     list(mytargets = data.frame(Treat=Treat, Time=Time, Block = Block),
          pointer = 1)
     )
-  expect_error(extarctTargetsAndPrimaryFactor(Barbie = Barbie, groupBy = "treat"))
-  expect_error(extarctTargetsAndPrimaryFactor(Barbie = Barbie, groupBy = c(1:6)))
+  expect_error(extractTargetsAndPrimaryFactor(Barbie = Barbie, sampleGroups = "treat"))
+  expect_error(extractTargetsAndPrimaryFactor(Barbie = Barbie, sampleGroups = c(1:6)))
 })

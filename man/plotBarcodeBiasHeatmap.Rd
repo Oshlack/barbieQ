@@ -28,6 +28,6 @@ plotting test results of Barcodes by Heatmap
 }
 \examples{
 HSC <- Barbie::HSC
-HSC <- testBarcodeBias(HSC , groupBy = "treat", contrastLevels = c("IV", "IT"))
+HSC <- testBarcodeBias(HSC , sampleGroups = "treat", contrastLevels = c("IV", "IT"))
 plotBarcodeBiasHeatmap(HSC)
 }

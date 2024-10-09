@@ -7,7 +7,7 @@
 plotBarcodeSankey(Barbie)
 }
 \arguments{
-\item{Barbie}{}
+\item{Barbie}{a Barbie object created by createBarbie()}
 }
 \value{
 a "ggplot" S3 class object

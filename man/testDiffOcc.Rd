@@ -33,4 +33,9 @@ differential occurrence test on Barcodes across sample groups
 Barbie <- testDiffOcc(Barbie, regularization="firth",
 mycontrasts = mycontrasts, contrastLevels = contrastLevels,
 designMatrix = designMatrix)
+Barbie:::testDiffOcc(
+  Barbie = Barbie,
+  mycontrasts = c(-1, 1, 0),
+  contrastLevels = c("ctrl", "drug"),
+  designMatrix = model.matrix(~0 + Treat + Time))
 }

@@ -34,7 +34,6 @@ HSC <- Barbie::HSC
 BB <- createBarbie(object = HSC$assay, target = HSC$metadata)
 rownames(BB$metadata) <- BB$metadata[,1]
 BB$metadata <- BB$metadata[,-1]
-testBB <- testBarcodeBias(BB, groupBy = "treat", contrastLevels = c("IV", "IT"))
-
+testBB <- testBarcodeBias(BB, sampleGroups = "treat", contrastLevels = c("IV", "IT"))
 plotBarcodeBiasScatterPlot(Barbie = testBB)
 }

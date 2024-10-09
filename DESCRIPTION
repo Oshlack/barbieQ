@@ -17,6 +17,19 @@ Suggests:
 RoxygenNote: 7.3.2
 Config/testthat/edition: 3
 Imports: 
-    magrittr
+    magrittr,
+    tidyr,
+    dplyr,
+    grid,
+    circlize,
+    ComplexHeatmap,
+    ggplot2,
+    logistf,
+    limma,
+    stats,
+    igraph,
+    utils
 Depends: 
-    R (>= 2.10)
+    R (>= 3.5.0)
+Roxygen: list(markdown = TRUE)
+

@@ -1,11 +1,13 @@
 #' plotting relative Barcode total contribution in Sankey plot - top vs bottom Barcodes
 #'
-#' @param Barbie
+#' @param Barbie a Barbie object created by createBarbie()
 #'
 #' @return a "ggplot" S3 class object
 #' @export
 #'
 #' @import tidyr
+#' @importFrom magrittr %>%
+#' @import ggplot2
 #'
 #' @examples
 #' HSC <- Barbie::HSC

@@ -3,20 +3,21 @@
 #' @param Barbie a Barbie object created by createBarbie()
 #' @param method a string, options: "diffProp" and "diffOcc", choosing test method
 #' @param targets a matrix or data.frame storing sample conditions
-#' @param groupBy a string, or a vector of sample conditions indicating the primary effector to be tested
-#' @param contrastLevels a charactor vector indicating the levels in specified groupBy
+#' @param sampleGroups a string, or a vector of sample conditions indicating the primary effector to be tested
+#' @param contrastLevels a charactor vector indicating the levels in specified 'sampleGroups'
 #' @param designFormula a formula to compute the designMatrix
 #' @param designMatrix a numaric matrix to standardize 'targets'
 #' @param block a vector of indicating sample duplicates
+#' @param transformation a string, choosing transformation method in "diffProp" test
 #' @param regularization a string, options: "firth" and "none", choosing regularization method in "diffOcc" test
 #'
 #' @return an updated Barbie object storing test results
 #' @export
 #'
 #' @import limma
-#' @import magrittr
+#' @importFrom magrittr %>%
 #' @import logistf
-#'
+#' @import stats
 #' @examples
 #' Block <- c(1,1,2,3,3,4,1,1,2,3,3,4)
 #' Treat <- factor(rep(1:2, each=6))
@@ -26,11 +27,9 @@
 #' count <- matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples) %>% abs()
 #' rownames(count) <- paste0("Barcode", 1:nbarcodes)
 #' Barbie <- Barbie::createBarbie(count, data.frame(Treat=Treat, Time=Time))
-
-# myblock <- mytargets %>%
-#   with(paste(treat, mouse, tissue, group))
+#' testBarcodeBias(Barbie, groupBy = "Treat")
 testBarcodeBias <- function(Barbie, method="diffProp",
-                            targets=NULL, groupBy=NULL, contrastLevels=NULL,
+                            targets=NULL, sampleGroups=NULL, contrastLevels=NULL,
                             designFormula=NULL, designMatrix=NULL,
                             block=NULL,
                             transformation="asin-sqrt", regularization="firth"){
@@ -41,10 +40,10 @@ testBarcodeBias <- function(Barbie, method="diffProp",
   ## check method: confirm method is chosen from "diffProp" and "diffOcc"
   method <- match.arg(method, c("diffProp", "diffOcc"))
   ## extract targets and primary effector based on arguments
-  targetsInfo <- extarctTargetsAndPrimaryFactor(Barbie = Barbie, targets = targets, groupBy = groupBy)
+  targetsInfo <- extractTargetsAndPrimaryFactor(Barbie = Barbie, targets = targets, sampleGroups = sampleGroups)
   mytargets <- targetsInfo$mytargets
   pointer <- targetsInfo$pointer
-  ## extract the groupTitle to be compared: groupBy
+  ## extract the groupTitle to be compared: sampleGroups
   groupTitle <- colnames(mytargets)[pointer]
   ## confirm all effectors (columns) in 'mytargets' are factor() or numeric()
   ## convert columns that are neither factor nor numeric into factor
@@ -62,7 +61,7 @@ testBarcodeBias <- function(Barbie, method="diffProp",
 
   ## import 'design' using tidy evaluation
   ## if designFormula not specified, taking all effectors from 'mytargets' into account
-  ## prioritize the column of groupBy to be compared
+  ## prioritize the column of sampleGroups to be compared
   if (is.null(designFormula)) {
     designFormula <- paste("~0 + ",
                            paste(groupTitle, paste0("+ ", setdiff(colnames(mytargets), groupTitle), collapse = " "))) %>%
@@ -113,8 +112,8 @@ testBarcodeBias <- function(Barbie, method="diffProp",
       stop("the length of 'block' doesn't match the row dimention (sample size) of specified 'targets' or 'Barbie$metadata'.")
   }
 
-  ## 'pointer' indicates which column relates to 'groupBy': either a imported 'groupBy' column or a column name specified by 'groupBy' like 'Treat'
-  ## case when groupBy column is factor
+  ## 'pointer' indicates which column relates to 'sampleGroups': either a imported 'sampleGroups' column or a column name specified by 'sampleGroups' like 'Treat'
+  ## case when sampleGroups column is factor
   if(is.factor(mytargets[, pointer])) {
     ## make group contrast, extract levels if not specified
     if(is.null(contrastLevels)) {
@@ -122,26 +121,26 @@ testBarcodeBias <- function(Barbie, method="diffProp",
     } else if (is.vector(contrastLevels)){
       missingLevels <- setdiff(contrastLevels, levels(mytargets[, pointer]))
       if(length(missingLevels) > 0) {
-        stop("'contrastLevels' constains levels: ", missingLevels, " missing from the 'groupBy' column in 'targets' or 'Barbie$metadata'.")
+        stop("'contrastLevels' constains levels: ", missingLevels, " missing from the 'sampleGroups' column in 'targets' or 'Barbie$metadata'.")
       }
     } else {
-      stop("'contrastLevels' argument should be a vector indicating levels in the 'groupBy' column in 'targets' or 'Barbie$metadata'.")
+      stop("'contrastLevels' argument should be a vector indicating levels in the 'sampleGroups' column in 'targets' or 'Barbie$metadata'.")
     }
 
-    ## now 'contrastLevels' should be a vector indicating levels in the 'groupBy' column
+    ## now 'contrastLevels' should be a vector indicating levels in the 'sampleGroups' column
     ## 'contrastLevels' has one, two, or several levels.
     if(length(contrastLevels) == 2L) {
-      ## create contrast for the first two levels of 'groupBy'
+      ## create contrast for the first two levels of 'sampleGroups'
       contrastFormula <- paste0(groupTitle, contrastLevels[2], " - ", groupTitle, contrastLevels[1])
       ## generate contrast for designMatrix
       mycontrasts <- limma::makeContrasts(contrasts = contrastFormula,
                                           levels = colnames(designMatrix))
     } else {
-      stop("'contrastLevels' has ", length(contrastLevels), " level(s), it should contain two levels for the 'groupBy' factor in 'targets' or 'Barbie$metadata'.")
+      stop("'contrastLevels' has ", length(contrastLevels), " level(s), it should contain two levels for the 'sampleGroups' factor in 'targets' or 'Barbie$metadata'.")
     }
 
   } else if(is.numeric(mytargets[, pointer])) {
-    ## case when groupBy column is numeric
+    ## case when sampleGroups column is numeric
     ## generate contrast for designMatrix
     mycontrasts <- limma::makeContrasts(contrasts = groupTitle,
                                         levels = colnames(designMatrix))

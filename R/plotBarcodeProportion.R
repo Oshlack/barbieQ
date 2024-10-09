@@ -9,6 +9,7 @@
 #'
 #' @import ggplot2
 #' @importFrom circlize colorRamp2
+#' @import dplyr
 #'
 #' @examples
 #' HSC <- Barbie::HSC
@@ -41,7 +42,8 @@ please start with Barbie::createBarbie() and use proper functions to modify the 
   }
 
   p <- ggplot(data, aes(x=rank, y=percentage)) +
-    geom_bar(stat="identity", alpha= 1, color = alpha(barColor, 0.2), fill = barColor, size = 1) +
+    geom_bar(stat="identity", alpha= 1, color = alpha(barColor, 0.2),
+             fill = barColor, linewidth = 1) +
     labs(title = "Barcode Contribution",
          x = paste0(nrow(data), " Barcodes"),
          y = "Relative Average Barcode Proportion (%)") +
@@ -59,71 +61,4 @@ please start with Barbie::createBarbie() and use proper functions to modify the 
   }
 
   return(p)
-}
-
-
-# plot two sets of contribution
-PlotBarContribution_Double <- function(BarbieA, BarbieB, coord = FALSE) {
-  contributionA <- BarbieA$CPM
-  contributionB <- BarbieB$CPM
-
-  valueA <- rowSums(contributionA) / sum(rowSums(contributionA)) *100
-  valueB <- rowSums(contributionB) / sum(rowSums(contributionB)) *100
-
-  dfA <- data.frame(rownames = rownames(contributionA), valueA = valueA, stringsAsFactors = FALSE)
-  dfB <- data.frame(rownames = rownames(contributionB), valueB = valueB, stringsAsFactors = FALSE)
-
-  contribution <- merge(dfA, dfB, by = "rownames", all = TRUE)
-  rownames(contribution) <- contribution$rownames
-  contribution <- contribution[,-1]
-  contribution[is.na(contribution)] <- 0
-
-  contribution$mean <- rowMeans(contribution)
-
-  rank <- rank(-contribution$valueA, ties.method = "first")
-
-  contribution$ranking <- rank
-
-  # contribution = contribution %>% arrange(-contribution$mean)
-  # contribution$id <- nrow(contribution) |> seq()
-
-  color_palette <- colorRamp2(c(min(contribution$valueA), max(contribution$valueA)),
-                              c("#FFC1E0", "#FF3399")) #FF99CC
-
-  color_group <- color_palette(contribution$valueA)
-
-  names(color_group) <- rownames(contribution)
-
-  color_group[! rownames(contribution) %in% rownames(contributionB)] <- "#3CDA2D" #A only
-
-  color_group[! rownames(contribution) %in% rownames(contributionA)] <- "#7833FF" #B only
-
-  data <- contribution
-
-  p <- ggplot(data) +
-    geom_bar(aes(x=ranking, y=valueA),
-             stat="identity", alpha=1, color = alpha(color_group, 0.2), fill = color_group, size = 1) +
-    geom_bar(aes(x=ranking, y=-valueB),
-             stat="identity", alpha=1, color = alpha(color_group, 0.2), fill = color_group, size = 1) +
-    labs(title = "Contribution of Top Clones",
-         x = paste0(nrow(data), " Clones"),
-         y = "% Contribution") +
-    theme_minimal() +
-    theme(axis.ticks = element_blank(),
-          panel.background = element_blank(),  # Remove plot background
-          panel.grid = element_blank(),
-          axis.text.x = element_blank() # Remove x-axis tick labels
-    ) +
-    geom_hline(yintercept = 0, linetype = "solid", color = "white", size = 0.1)  # Add horizontal line at x = 0
-
-  if(coord){
-    p <- p + coord_fixed()
-  }
-
-  if(!coord){
-    p <- p + theme(aspect.ratio = 1)
-  }
-
-  return(p)
-
 }

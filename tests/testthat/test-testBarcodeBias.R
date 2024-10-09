@@ -66,27 +66,27 @@ test_that("barcode test extracting correct arguments, dispatching right function
   rownames(count) <- paste0("Barcode", 1:nbarcodes)
   Barbie <- Barbie::createBarbie(count, data.frame(Treat=Treat, Time=Time))
 
-  testBB1 <- testBarcodeBias(Barbie, groupBy = "Treat")
-  testBB11 <- testBarcodeBias(Barbie, groupBy = "Treat", contrastLevels = c("ctrl", "drug"))
-  testBB111 <- testBarcodeBias(Barbie, groupBy = "Treat", contrastLevels = c("drug", "ctrl"))
+  testBB1 <- testBarcodeBias(Barbie, sampleGroups = "Treat")
+  testBB11 <- testBarcodeBias(Barbie, sampleGroups = "Treat", contrastLevels = c("ctrl", "drug"))
+  testBB111 <- testBarcodeBias(Barbie, sampleGroups = "Treat", contrastLevels = c("drug", "ctrl"))
   expect_equal(testBB11$testBarcodes$diffProp_Treat$results$direction,
                testBB111$testBarcodes$diffProp_Treat$results$direction)
 
-  testBB1111 <- testBarcodeBias(Barbie, groupBy = "Treat", contrastLevels = c("drug", "ctrl"),
+  testBB1111 <- testBarcodeBias(Barbie, sampleGroups = "Treat", contrastLevels = c("drug", "ctrl"),
                                 designFormula = formula("~0 + Treat + Time"))
-  testBB11111 <- testBarcodeBias(Barbie, groupBy = "Treat", contrastLevels = c("drug", "ctrl"),
+  testBB11111 <- testBarcodeBias(Barbie, sampleGroups = "Treat", contrastLevels = c("drug", "ctrl"),
                                designMatrix = model.matrix(~0 + Treat + Time))
   expect_equal(testBB1111$testBarcodes$diffProp_Treat$result,
                testBB11111$testBarcodes$diffProp_Treat$result)
 
-  testBB2 <- testBarcodeBias(Barbie, groupBy = "Time")
+  testBB2 <- testBarcodeBias(Barbie, sampleGroups = "Time")
 
-  testBB3 <- testBarcodeBias(Barbie, groupBy = "Treat", method = "diffOcc")
+  testBB3 <- testBarcodeBias(Barbie, sampleGroups = "Treat", method = "diffOcc")
 
-  testBB <- testBarcodeBias(Barbie, groupBy = rep(1:4, each = 3))
+  testBB <- testBarcodeBias(Barbie, sampleGroups = rep(1:4, each = 3))
 
   HSC <- Barbie::HSC
   BB <- createBarbie(object = HSC$assay, target = HSC$metadata)
-  testBB4 <- testBarcodeBias(BB, groupBy = "treat", contrastLevels = c("IV", "IT"))
-  testBB5 <- testBarcodeBias(Barbie = BB, groupBy = "mouse", contrastLevels = c("M13", "M14"))
+  testBB4 <- testBarcodeBias(BB, sampleGroups = "treat", contrastLevels = c("IV", "IT"))
+  testBB5 <- testBarcodeBias(Barbie = BB, sampleGroups = "mouse", contrastLevels = c("M13", "M14"))
 })

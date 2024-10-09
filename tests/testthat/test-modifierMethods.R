@@ -83,3 +83,25 @@ test_that("collapsing columns works", {
   colnames(expectedMat) <- c(8,9)
   expect_equal(collapsedMat, expectedMat)
 })
+
+test_that("collapsing Barbie Barcodes works", {
+  myBarbie <- createBarbie(
+    object=matrix(1:30, nrow=6, ncol=5),
+    target=data.frame(fac=letters[1:5]))
+  collapsedBarbie <- collapseBarcodes(Barbie = myBarbie, groupArray = c(8,8,8,9,9,9))
+  expect_equal(collapsedBarbie$metadata, myBarbie$metadata)
+  expectMat <- matrix(c(3,9,15,21,27,6,12,18,24,30), ncol=2, nrow=5) %>%
+    t() %>% as.data.frame()
+  expect_equal(collapsedBarbie$assay, expectMat, ignore_attr=TRUE)
+  myBarbie <- tagTopBarcodes(myBarbie)
+  collapsedBarbie <- collapseBarcodes(Barbie = myBarbie, groupArray = c(7,8,8,9,9,9))
+  expect_equal(collapsedBarbie$isTop$vec, rep(TRUE,3), ignore_attr=TRUE)
+  expect_equal(collapsedBarbie$isTop$mat, matrix(TRUE, nrow=3, ncol=5), ignore_attr=TRUE)
+})
+
+test_that("collapsing rows works", {
+  mymatrix <- matrix(1:30, nrow=6, ncol=5)
+  collapsedMat <- collapseRowsByArray(mymatrix, groupArray=c(8,8,8,9,9,9), method=mean)
+  expectedMat <- matrix(c(2,8,14,20,26,5,11,17,23,29), nrow=5, ncol=2) %>% t()
+  expect_equal(collapsedMat, expectedMat, ignore_attr=TRUE)
+})

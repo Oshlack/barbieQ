@@ -2,26 +2,77 @@
 % Please edit documentation in R/createBarbie.R
 \name{createBarbie}
 \alias{createBarbie}
-\title{create an object-centred structure-a 'Barbie' object-based on the input Barcode count and other information.}
+\title{Extract Barcode count data and build into a \code{Barbie} object for
+subsequent analysis}
 \usage{
 createBarbie(object, target = NULL, factorColors = NULL)
 }
 \arguments{
-\item{object}{a numeric matrix or equivalent; or a Barbie object or equivalent}
+\item{object}{A numeric matrix of Barcode counts, with Barcodes in rows
+and samples in columns;
+Alternatively, you can pass an existing \code{Barbie} object, from which
+barcode counts, sample conditions, and color palettes will be inherited.}
 
-\item{target}{a matrix of sample conditions}
+\item{target}{A \code{matrix} or \code{data.frame} of sample conditions,
+with each factor in a separate column.
+If a \code{Barbie} object is passed to \code{object}, the sample conditions
+in \code{Barbie} will be updated by \code{target}.
+If not specified, all samples are assigned the same condition.}
 
-\item{factorColors}{a list containing colour palettes corresponding to the factors in the target parameter}
+\item{factorColors}{A \code{list} of colour palettes corresponding to
+the factors in \code{target}.
+If a \code{Barbie} object is passed to \code{object}, the color palettes
+in \code{Barbie}will be updated by \code{factorColors}.
+If not specified, defaults to NULL.}
 }
 \value{
-a Barbie object
+A \code{Barbie} object, including several components:
+\itemize{
+\item \code{assay}: a \code{data.frame} containing Barcode counts across samples.
+\item \code{metadata}: a \code{data.frame} representing sample conditions,
+organized by various experimental factors.
+\item \code{factorColors}: a \code{list} of color palettes corresponding to
+the sample conditions.
+\item Matrices of \code{proportion}, \code{CPM}, \code{occurrence}, and \code{rank} representing
+the proportion, Counts Per Million (CPM), presence or absence, and ranking
+of Barcodes in each sample, based on the Barcode counts in \code{assay}.
+\item \code{isTop}: a list containing a vector \code{vec} and a matrix \code{mat}, tagging
+each Barcode as being part of the major contributors or not,
+by calling the function \link{tagTopBarcodes}.
+\item Additional processed information for further analysis.
+}
 }
 \description{
-\code{createBarbie}
+\code{createbarbie()} constructs an object-centred list called \code{Barbie} object,
+which is designed to process Barcode count data gained from
+cell clonal tracking experiments.
 }
 \examples{
-createBarbie(mymat)
-createBarbie(mymat, mytarget)
-createBarbie(mymat, mytarget, mycolors)
+## Sample conditions and color palettes
+sampleConditions <- data.frame(
+  Treat=factor(rep(c("ctrl", "drug"), each=6)),
+  Time=rep(rep(1:2, each=3), 2))
+conditionColor <- list(
+  Treat=c(ctrl="#999999", drug="#112233"),
+  Time=c("1"="#778899", "2"="#998877"))
 
+## Barcode count data
+nbarcodes <- 50
+nsamples <- 12
+barcodeCount <- abs(matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples))
+rownames(barcodeCount) <- paste0("Barcode", 1:nbarcodes)
+
+## Passing `object`, `target` and `factorColors`
+createBarbie(object=barcodeCount)
+createBarbie(object=barcodeCount, target=sampleConditions)
+createBarbie(
+  object=barcodeCount, target=sampleConditions, factorColors=conditionColor)
+
+## Updating a `Barbie` object by passing new `target` and `factorColors`
+myBarbie <- createBarbie(barcodeCount, sampleConditions, conditionColor)
+createBarbie(object=myBarbie, target=data.frame(Mouse=rep(1:4, each=3)))
+createBarbie(
+  object=myBarbie, target=data.frame(Mouse=rep(1:4, each=3)),
+  factorColors=list(
+    Mouse=c("1"="#111199", "2"="#112200", "3"="#441111", "4"="#000000")))
 }

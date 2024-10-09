@@ -9,14 +9,15 @@
 #' @return a "ggplot" S3 class object
 #' @export
 #' @import ggplot2
+#' @import dplyr
+#' @import stats
 #'
 #' @examples
 #' HSC <- Barbie::HSC
 #' BB <- createBarbie(object = HSC$assay, target = HSC$metadata)
 #' rownames(BB$metadata) <- BB$metadata[,1]
 #' BB$metadata <- BB$metadata[,-1]
-#' testBB <- testBarcodeBias(BB, groupBy = "treat", contrastLevels = c("IV", "IT"))
-#'
+#' testBB <- testBarcodeBias(BB, sampleGroups = "treat", contrastLevels = c("IV", "IT"))
 #' plotBarcodeBiasScatterPlot(Barbie = testBB)
 plotBarcodeBiasScatterPlot <- function(Barbie, elementName = NULL,
                                        reorderRank = FALSE, pValuesAdjusted = TRUE,
@@ -31,7 +32,7 @@ plotBarcodeBiasScatterPlot <- function(Barbie, elementName = NULL,
   methodLs <- testInfo$methods
   ## define a custom color/shape palette for test results
   customShape <- setNames(c(21, 24, 23), c(methodLs$contrastLevels, "n.s."))
-  customColor <- Barbie$factorColors[[methodLs$contrastVector]]
+  customColor <- Barbie$factorColors[[elementName]]
   ## y axis will be p.value
   ## x axis will be optional: total occurrence, average rank, average log CPM
   ## reorder Barcode rank within samples.
@@ -100,10 +101,12 @@ plotBarcodeBiasScatterPlot <- function(Barbie, elementName = NULL,
 #' @export
 #'
 #' @import ComplexHeatmap
+#' @import grid
+#' @import stats
 #'
 #' @examples
 #' HSC <- Barbie::HSC
-#' HSC <- testBarcodeBias(HSC , groupBy = "treat", contrastLevels = c("IV", "IT"))
+#' HSC <- testBarcodeBias(HSC , sampleGroups = "treat", contrastLevels = c("IV", "IT"))
 #' plotBarcodeBiasHeatmap(HSC)
 plotBarcodeBiasHeatmap <- function(Barbie, value="CPM", elementName = NULL,
                                    sampleAnnotation=NULL) {
@@ -142,7 +145,7 @@ plotBarcodeBiasHeatmap <- function(Barbie, value="CPM", elementName = NULL,
     value = value,
     splitSamples = TRUE,
     targets = modelTargets,
-    groupBy = methodLs$contrastVector,
+    sampleGroups = methodLs$contrastVector,
     barcodeAnnotation = barcodeAnnotation,
     sampleAnnotation = sampleAnnotation
   )

@@ -24,7 +24,7 @@ subsetSamplesByMetadata <- function(Barbie, factor, specifiedConditions, keep = 
   retainedColumns <- if(keep) specifiedColumns
     else !specifiedColumns
   ## dispatch 'subsetColumns()' to update all components in the object based on the retained columns (samples).
-  subsetObject <- subsetColumns(Barbie=Barbie, retainedColumns=retainedColumns)
+  subsetObject <- subsetSamples(Barbie=Barbie, retainedColumns=retainedColumns)
 
   return(subsetObject)
 }
@@ -73,7 +73,7 @@ subsetSamples <- function(Barbie, retainedColumns) {
 #' @export
 #'
 #' @import dplyr
-#' @import magrittr
+#' @importFrom magrittr %>%
 #'
 #' @examples
 #' combineBarbies(Barbie1, Barbie2, Barbie3)
@@ -130,7 +130,7 @@ combineBarbies <- function(...) {
 #'
 #' @return a data.frame
 #'
-#' @import magrittr
+#' @importFrom magrittr %>%
 #'
 #' @examples
 #' mergeMetadata(Barbie1$metadata, Barbie2$metadata)
@@ -177,7 +177,6 @@ mergeMetadata <- function(...) {
 #'               c = c("u" = "#CCCCCC"))
 #' list3 <- list(b = c("x"="#999999"))
 #' mergeLists(list1, list2, list3)
-
 mergeLists <- function(...) {
   ## combine all lists into a single list of lists
   lists <- list(...)
@@ -204,7 +203,7 @@ mergeLists <- function(...) {
 
 #' Title make a subset of rows from all components of a 'Barbie' object based on specified rows
 #'
-#' @param Barbiean object created by the 'createBarbie()' function in the 'Barbie' package
+#' @param Barbie an object created by the 'createBarbie()' function in the 'Barbie' package
 #' @param retainedRows a logical vector indicating each row to be retained or excluded
 #'
 #' @return an updated Barbie object with subsets of its components
@@ -242,25 +241,28 @@ subsetBarcodes <- function(Barbie, retainedRows) {
   return(subsetObject)
 }
 
-#' Title collapse a 'Barbie' object by sample groups
+#' collapse a 'Barbie' object by sample groups
 #'
 #' @param Barbie an object created by the 'createBarbie()' function in the 'Barbie' package
 #' @param groupArray a vector indication the group of each sample
+#' @param method function indicating the method for collapsing each sample in the subset matrix of each Barcode group
 #'
 #' @return a 'Barbie' object with samples collapsed by 'groupArray'
 #' @export
 #'
-#' @import magrittr
+#' @importFrom magrittr %>%
 #'
 #' @examples
 #' myBarbie <- createBarbie(
 #'   object=matrix(c(1:20), nrow=5, ncol=4),
 #'   target=data.frame(fac=c(1, 1, 2, 2)))
 #' collapseSamples(Barbie=myBarbie, groupArray=c(1,1,2,2))
-collapseSamples <- function(Barbie, groupArray) {
+collapseSamples <- function(Barbie, groupArray, method=mean) {
+  if(!(is.function(method))) {stop("method must be a function")}
   collapsedObject <- list(
     assay = Barbie$assay %>%
-      collapseColumnsByArray(groupArray=groupArray) %>% as.data.frame(),
+      collapseColumnsByArray(groupArray=groupArray, method = method) %>%
+      as.data.frame(),
     metadata = Barbie$metadata %>% t() %>%
       collapseColumnsByArray(groupArray=groupArray, method=function(x) {
         checkDup <- duplicated(x)
@@ -274,9 +276,10 @@ collapseSamples <- function(Barbie, groupArray) {
       collapseColumnsByArray(groupArray=groupArray, method=max),
     rank = Barbie$rank %>%
       collapseColumnsByArray(groupArray=groupArray, method=min),
-    isTop = list(vec = Barbie$isTop$vec,
-                 mat = Barbie$isTop$mat %>%
-                   collapseColumnsByArray(groupArray=groupArray, method=any)),
+    isTop = list(
+      vec = Barbie$isTop$vec,
+      mat = Barbie$isTop$mat %>%
+        collapseColumnsByArray(groupArray=groupArray, method=any)),
     clusters = Barbie$clusters,
     factorColors = Barbie$factorColors)
 
@@ -289,7 +292,7 @@ collapseSamples <- function(Barbie, groupArray) {
   return(collapsedObject)
 }
 
-#' Title collapse a matrix by column groups
+#' collapse a matrix by column groups
 #'
 #' @param mat a matrix, data.frame, or vector
 #' @param groupArray a vector indication the groups of each column in 'mat'
@@ -297,12 +300,13 @@ collapseSamples <- function(Barbie, groupArray) {
 #'
 #' @return a matrix, data.frame, or vector collapsed by column groups
 #'
-#' @import magrittr
+#' @importFrom magrittr %>%
 #'
 #' @examples
 #' mymatrix <- matrix(1:25, nrow=5, ncol=5)
 #' collapseColumnsByArray(mymatrix, groupArray=c(1,1,1,2,2), method=mean)
 collapseColumnsByArray <- function(mat, groupArray, method=mean) {
+  collapsedMat <- NULL
   if (is.matrix(mat) || is.data.frame(mat)) {
     subMat <- tapply(seq_len(ncol(mat)), groupArray, function(indices)
       apply(mat[, indices, drop=F], 1, method))
@@ -311,29 +315,48 @@ collapseColumnsByArray <- function(mat, groupArray, method=mean) {
       } else collapsedMat <- unlist(subMat)
   } else if(is.vector(mat) || is.factor(mat) || is.array(mat)) {
     subMat <- tapply(seq_along(mat), groupArray, function(indices)
-      mat[indices] %>% method)
+      {mat[indices] %>% method})
     collapsedMat <- unlist(subMat)
   }
 
   return(collapsedMat)
 }
 
-collapseBarcodes <- function(Barbie, groupArray) {
+#' collapse a 'Barbie' object by Barcode groups
+#'
+#' @param Barbie an object created by the 'createBarbie()' function in the 'Barbie' package
+#' @param groupArray a vector indication the group of each sample
+#' @param method a function choosing method for collapsing Barcode counts within Barcode groups
+#'
+#' @return a 'Barbie' object with samples collapsed by 'groupArray'
+#' @export
+#'
+#' @importFrom magrittr %>%
+#'
+#' @examples
+#' myBarbie <- createBarbie(
+#'   object=matrix(c(1:20), nrow=5, ncol=4),
+#'   target=data.frame(fac=c(1, 1, 2, 2)))
+#' collapseBarcodes(Barbie=myBarbie, groupArray=c(1,1,2,2,2))
+collapseBarcodes <- function(Barbie, groupArray, method=max) {
+  if(!(is.function(method))) {stop("method must be a function")}
   collapsedObject <- list(
     assay = Barbie$assay %>%
-      collapseRowsByArray(groupArray=groupArray) %>% as.data.frame(),
+      collapseRowsByArray(groupArray=groupArray, method = method) %>% as.data.frame(),
     metadata = Barbie$metadata,
     proportion = Barbie$proportion %>%
       collapseRowsByArray(groupArray=groupArray),
     CPM = Barbie$CPM %>%
       collapseRowsByArray(groupArray=groupArray),
     occurrence = Barbie$occurrence %>%
-      collapseRowsByArray(groupArray=groupArray),
+      collapseRowsByArray(groupArray=groupArray, method=any),
     rank = Barbie$rank %>%
-      collapseRowsByArray(groupArray=groupArray, methods=min),
-    isTop = list(vec = Barbie$isTop$vec,
-                 mat = Barbie$isTop$mat %>%
-                   collapseRowsByArray(groupArray=groupArray, method=any)),
+      collapseRowsByArray(groupArray=groupArray, method=min),
+    isTop = list(
+      vec=Barbie$isTop$vec %>%
+        collapseRowsByArray(groupArray=groupArray, method=any),
+      mat=Barbie$isTop$mat %>%
+        collapseRowsByArray(groupArray=groupArray, method=any)),
     clusters = Barbie$clusters,
     factorColors = Barbie$factorColors)
 
@@ -341,13 +364,27 @@ collapseBarcodes <- function(Barbie, groupArray) {
   for (elementName in names(Barbie)) {
     if (!(elementName %in% names(collapsedObject)))
       collapsedObject[[elementName]] <- Barbie[[elementName]] %>%
-        collapseRowsByArray(groupArray = groupArray, methods = function(x) x[[1]])
+        collapseRowsByArray(groupArray = groupArray, method = function(x) {x[[1]]})
   }
 
   return(collapsedObject)
 }
 
+#' collapse a matrix by column groups
+#'
+#' @param mat a matrix, data.frame, or vector
+#' @param groupArray a vector indication the groups of each column in 'mat'
+#' @param method function indicating the method for collapsing each sample in the subset matrix of each Barcode group
+#'
+#' @return a matrix, data.frame, or vector collapsed by column groups
+#'
+#' @importFrom magrittr %>%
+#'
+#' @examples
+#' mymatrix <- matrix(1:25, nrow=5, ncol=5)
+#' collapseRowsByArray(mymatrix, groupArray=c(1,1,1,2,2), method=mean)
 collapseRowsByArray <- function(mat, groupArray, method=max) {
+  collapsedMat <- NULL
   if (is.matrix(mat) || is.data.frame(mat)) {
     subMat <- tapply(seq_len(nrow(mat)), groupArray, function(indices) {
       apply(mat[indices, , drop = F], 2, method)

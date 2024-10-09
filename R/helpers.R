@@ -6,7 +6,7 @@
 #'
 #' @examples
 #' mat <- data.frame(id = letters[1:5], matrix(1:25,5,5))
-#' returnNumMat(mat)
+#' Barbie:::returnNumMat(mat)
 returnNumMat <- function(object) {
   ## if the object is a vector, treating it as a one-column matrix
   if(is.vector(object)){
@@ -67,28 +67,27 @@ returnNumMat <- function(object) {
 #' @return a logical value
 #'
 #' @examples
-#' Block <- c(1,1,2,3,3,4,1,1,2,3,3,4)
 #' Treat <- factor(rep(1:2, each=6))
 #' Time <- rep(rep(1:2, each=3), 2)
 #' nbarcodes <- 50
 #' nsamples <- 12
-#' count <- matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples) %>% abs()
+#' count <- abs(matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples))
 #' rownames(count) <- paste0("Barcode", 1:nbarcodes)
 #' Barbie <- Barbie::createBarbie(count, data.frame(Treat=Treat, Time=Time))
-#' checkBarbieDimensions(Barbie)
+#' Barbie:::checkBarbieDimensions(Barbie)
 checkBarbieDimensions <- function(Barbie) {
   ## check Barbie$assay's format
   if(is.data.frame(Barbie$assay) || is.matrix(Barbie$assay))
     NumDim <- dim(Barbie$assay)
   else {stop("Barbie$assay isn't in right format.
-             use createBarbie() to generate Barbie.")}
+use createBarbie() to generate Barbie.")}
   ## check Barbie$metadata's format and dimension
   if(is.data.frame(Barbie$metadata) || is.matrix(Barbie$metadata)) {
     if(nrow(Barbie$metadata) != NumDim[2])
       stop("row dimension of Barbie$metadata doesn't match column dimention of Barbie$assay.
-             use createBarbie() to generate the right components.")
+use createBarbie() to generate the right components.")
   } else {stop("Barbie$assay isn't in right format.
-             use createBarbie() to generate Barbie.")}
+use createBarbie() to generate Barbie.")}
   ## check other components' format dimensions
   elements <- c("proportion", "CPM", "occurrence", "rank")
   for(elem in elements) {
@@ -96,50 +95,55 @@ checkBarbieDimensions <- function(Barbie) {
       elemDim <- dim(Barbie[[elem]])
       if(any(elemDim != NumDim))
         stop("dimensions of Barbie component-", elem, "don't match dimentions of Barbie$assay.
-             use createBarbie() to generate the components.")
+use createBarbie() to generate the components.")
     } else {stop("Barbie component-", elem, " isn't in right format.
-                 use createBarbie() to generate the right components.")}
+use createBarbie() to generate the right components.")}
   }
   ## check Barbie$isTop format and dimensions
   if(!is.null(Barbie$isTop$vec)) {
     if(is.vector(Barbie$isTop$vec)) {
       if(length(Barbie$isTop$vec) != NumDim[1])
         stop("length of Barbie$isTop$vec doesn't match row dimention of Barbie$assay.
-             use tagTopBarcodes() to generate the right component.")
+use tagTopBarcodes() to generate the right component.")
     } else {stop("Barbie$isTop$vec isn't in right format.
-                 use tagTopBarcodes() to generate the right component.")}
+use tagTopBarcodes() to generate the right component.")}
   }
   if(!is.null(Barbie$isTop$mat)) {
     if(is.matrix(Barbie$isTop$mat) || is.data.frame(Barbie$isTop$mat)) {
       if(nrow(Barbie$isTop$mat) != NumDim[1])
         stop("row dimension Barbie$isTop$mat doesn't match row dimention of Barbie$assay.
-             use tagTopBarcodes() to generate the right component.")
+use tagTopBarcodes() to generate the right component.")
     } else {stop("Barbie$isTop$mat isn't in right format.
-                 use tagTopBarcodes() to generate the right component.")}
+use tagTopBarcodes() to generate the right component.")}
   }
 
   return(TRUE)
 }
 
-#' extracting targets and primary factor based on the imported arguments
+#' extracting targets and primary factor
 #'
-#' @param Barbie a Barbie object created by createBarbie()
+#' `extractTargetsAndPrimaryFactor` extracts targets data.frame
+#' and points to primary factor based on the imported arguments
+#'
+#' @param Barbie a `Barbie` object created by `createBarbie()`
 #' @param targets a matrix or data.frame storing sample conditions
-#' @param groupBy a string, or a vector of sample conditions indicating the primary effector to be tested
+#' @param sampleGroups a string, or a vector of sample conditions
+#' indicating the primary effector to be tested
 #'
-#' @return a list including a data.frame of targets (sample factors) and a vector indicating which column in the targets is the primary factor
+#' @return a list including a data.frame of targets (sample factors)
+#' and a vector indicating which column in the targets is the primary factor
 #'
 #' @examples
-#' Block <- c(1,1,2,3,3,4,1,1,2,3,3,4)
 #' Treat <- factor(rep(1:2, each=6))
 #' Time <- rep(rep(1:2, each=3), 2)
 #' nbarcodes <- 50
 #' nsamples <- 12
 #' count <- matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples) %>% abs()
 #' rownames(count) <- paste0("Barcode", 1:nbarcodes)
-#' Barbie <- Barbie::createBarbie(count, data.frame(Treat=Treat, Time=Time))
-#' extarctTargetsAndPrimaryFactor(Barbie = Barbie, groupBy = "Treat")
-extarctTargetsAndPrimaryFactor <- function(Barbie, targets=NULL, groupBy=NULL) {
+#' Barbie <- createBarbie(count, data.frame(Treat=Treat, Time=Time))
+#' Barbie:::extarctTargetsAndPrimaryFactor(
+#'   Barbie = Barbie, sampleGroups = "Treat")
+extractTargetsAndPrimaryFactor <- function(Barbie, targets=NULL, sampleGroups=NULL) {
   ## check targets: if 'targets' is not specified, assign Barbie$metadata (could still be NULL)
   if(is.null(targets)) targets <- Barbie$metadata
   ## case when targets is specified or provided by Barbie$metadata in right format
@@ -151,41 +155,41 @@ extarctTargetsAndPrimaryFactor <- function(Barbie, targets=NULL, groupBy=NULL) {
   } else {
     ## case when targets is still NULL or not in right format
     ## if group is a vector or factor of correct length, add it to targets
-    if((is.vector(groupBy) || is.factor(groupBy))  && length(groupBy) > 1L) {
-      ## check groupBy length
-      if(length(groupBy) != ncol(Barbie$assay)) {
-        stop("the length of 'groupBy' doesn't match the column dimention (sample size) of 'Barbie$assay'.")
+    if((is.vector(sampleGroups) || is.factor(sampleGroups))  && length(sampleGroups) > 1L) {
+      ## check sampleGroups length
+      if(length(sampleGroups) != ncol(Barbie$assay)) {
+        stop("the length of 'sampleGroups' doesn't match the column dimention (sample size) of 'Barbie$assay'.")
       } else {
-        mytargets <- data.frame(groupBy=groupBy)
-        pointer <- which(colnames(mytargets) == "groupBy")
-        message("adding groupBy to targets.")}
+        mytargets <- data.frame(sampleGroups=sampleGroups)
+        pointer <- which(colnames(mytargets) == "sampleGroups")
+        message("adding sampleGroups to targets.")}
     } else {
-      stop("target not properly specified; Barbie$metadata not provided; groupBy not properly specified.
+      stop("target not properly specified; Barbie$metadata not provided; sampleGroups not properly specified.
            at least one of them is needed in right format.")}
   }
 
   ## now targets should be a matrix or data.frame already
-  ## check groupBy: if 'groupBy' is a specified effector name, extract the entire vector
-  if(is.character(groupBy) && length(groupBy) == 1L) {
-    if(groupBy %in% colnames(targets)) {
-      pointer <- which(colnames(targets) == groupBy)
-      groupBy <- targets[,groupBy]
+  ## check sampleGroups: if 'sampleGroups' is a specified effector name, extract the entire vector
+  if(is.character(sampleGroups) && length(sampleGroups) == 1L) {
+    if(sampleGroups %in% colnames(targets)) {
+      pointer <- which(colnames(targets) == sampleGroups)
+      sampleGroups <- targets[,sampleGroups]
       mytargets <- targets
       message("setting ", colnames(targets)[pointer], " as the primary effector of sample conditions.")
-    } else {stop("groupBy not correspond to an effector name of sample conditionss. please ensure it is spelled correctly.")}
-  } else if(is.vector(groupBy) || is.factor(groupBy)) {
-    if(length(groupBy) != ncol(Barbie$assay)) {
-      stop("the length of 'groupBy' doesn't match the column dimention (sample size) of 'targets' or'Barbie$assay'.")
+    } else {stop("sampleGroups not correspond to an effector name of sample conditionss. please ensure it is spelled correctly.")}
+  } else if(is.vector(sampleGroups) || is.factor(sampleGroups)) {
+    if(length(sampleGroups) != ncol(Barbie$assay)) {
+      stop("the length of 'sampleGroups' doesn't match the column dimention (sample size) of 'targets' or'Barbie$assay'.")
     } else {
-      mytargets <- data.frame(groupBy=groupBy, targets)
-      pointer <- which(colnames(mytargets) == "groupBy")
-      message("binding 'groupBy' to 'targets'.")
+      mytargets <- data.frame(sampleGroups=sampleGroups, targets)
+      pointer <- which(colnames(mytargets) == "sampleGroups")
+      message("binding 'sampleGroups' to 'targets'.")
     }
   } else {
-    groupBy <- rep(1, ncol(Barbie$assay))
-    mytargets <- data.frame(groupBy=groupBy, targets)
-    pointer <- which(colnames(mytargets) == "groupBy")
-    message("no properly specified 'groupBy'. setting samples by homogenenous group.")
+    sampleGroups <- rep(1, ncol(Barbie$assay))
+    mytargets <- data.frame(sampleGroups=sampleGroups, targets)
+    pointer <- which(colnames(mytargets) == "sampleGroups")
+    message("no properly specified 'sampleGroups'. setting samples by homogenenous group.")
   }
 
   return(

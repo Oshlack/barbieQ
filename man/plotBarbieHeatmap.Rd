@@ -9,7 +9,7 @@ plotBarbieHeatmap(
   value = "CPM",
   splitSamples = FALSE,
   targets = NULL,
-  groupBy = NULL,
+  sampleGroups = NULL,
   barcodeAnnotation = NULL,
   sampleAnnotation = NULL
 )
@@ -23,7 +23,7 @@ plotBarbieHeatmap(
 
 \item{targets}{a data.frame containing sample conditions - each effector is a column}
 
-\item{groupBy}{a vector or a string value indicating the primary effector in targets}
+\item{sampleGroups}{a vector or a string value indicating the primary effector in targets}
 
 \item{barcodeAnnotation}{a row Annotation object created by ComplexHeatmap::rowAnnotation()}
 

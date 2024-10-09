@@ -8,7 +8,7 @@ testBarcodeBias(
   Barbie,
   method = "diffProp",
   targets = NULL,
-  groupBy = NULL,
+  sampleGroups = NULL,
   contrastLevels = NULL,
   designFormula = NULL,
   designMatrix = NULL,
@@ -24,15 +24,17 @@ testBarcodeBias(
 
 \item{targets}{a matrix or data.frame storing sample conditions}
 
-\item{groupBy}{a string, or a vector of sample conditions indicating the primary effector to be tested}
+\item{sampleGroups}{a string, or a vector of sample conditions indicating the primary effector to be tested}
 
-\item{contrastLevels}{a charactor vector indicating the levels in specified groupBy}
+\item{contrastLevels}{a charactor vector indicating the levels in specified 'sampleGroups'}
 
 \item{designFormula}{a formula to compute the designMatrix}
 
 \item{designMatrix}{a numaric matrix to standardize 'targets'}
 
 \item{block}{a vector of indicating sample duplicates}
+
+\item{transformation}{a string, choosing transformation method in "diffProp" test}
 
 \item{regularization}{a string, options: "firth" and "none", choosing regularization method in "diffOcc" test}
 }
@@ -51,4 +53,5 @@ nsamples <- 12
 count <- matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples) \%>\% abs()
 rownames(count) <- paste0("Barcode", 1:nbarcodes)
 Barbie <- Barbie::createBarbie(count, data.frame(Treat=Treat, Time=Time))
+testBarcodeBias(Barbie, groupBy = "Treat")
 }

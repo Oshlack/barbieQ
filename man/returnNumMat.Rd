@@ -17,5 +17,5 @@ extracting a numeric matrix out of the input object
 }
 \examples{
 mat <- data.frame(id = letters[1:5], matrix(1:25,5,5))
-returnNumMat(mat)
+Barbie:::returnNumMat(mat)
 }
