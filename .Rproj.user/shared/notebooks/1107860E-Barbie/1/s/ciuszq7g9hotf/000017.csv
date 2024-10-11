@@ -1,6 +1,0 @@
-"0","collapsed_bb <- collapseBarcodes(Barbie = example_bb, 
-                                 groupArray = example_bb$clone_group)
-"
-"2","Error in tapply(seq_along(mat), groupArray, function(indices) mat[indices] %>%  : 
-  arguments must have same length
-"

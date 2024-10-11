@@ -1,8 +1,0 @@
-test_that("clusstering correlating Barcodes works", {
-  nbarcodes <- 50
-  nsamples <- 12
-  count <- matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples) %>% abs()
-  rownames(count) <- paste0("Barcode", 1:nbarcodes)
-  myBarbie <- Barbie::createBarbie(count)
-  myBarbie <- clusterBarcodes(myBarbie)
-})
