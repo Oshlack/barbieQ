@@ -1,0 +1,116 @@
+#' plotting Barcode proportion by a circular bar plot
+#'
+#' @param Barbie a Barbie object created by createBarbie()
+#'
+#' @return a "ggplot" S3 class object
+#' @export
+#'
+#' @import dplyr
+#' @import ggplot2
+#'
+#' @examples
+#' HSC <- Barbie::HSC
+#' plotBarcodePareto(HSC)
+plotBarcodePareto <- function(Barbie) {
+  flag <- Barbie$isTop$vec
+  contribution <- Barbie$CPM
+  ## create dataset
+  ntop <- sum(flag)
+  nbottom <- sum(!flag)
+  topTag <- factor(flag, levels = c(TRUE, FALSE))
+  data <- data.frame(
+    individual=rownames(contribution),
+    group=topTag,
+    value=rowSums(contribution) / sum(rowSums(contribution)) *100
+  )
+  ## set a number of 'empty bar' to add at the end of each group
+  emptyBar <- 5
+  toAdd <- data.frame(matrix(NA, emptyBar*nlevels(data$group), ncol(data)))
+  colnames(toAdd) <- colnames(data)
+  toAdd$group <- rep(levels(data$group), each=emptyBar)
+  data <- rbind(data, toAdd)
+  ## order data
+  data <- data %>% arrange(group, -value)
+  data$id <- nrow(data) |> seq()
+  ## add label
+  labelData <- data
+  numberBar <- nrow(labelData)
+  angle <- 90 - 360*(labelData$id-0.5) / numberBar
+  labelData$hjust <- ifelse(angle < -90, 1, 0)
+  labelData$angle <- ifelse(angle < -90, angle+180, angle)
+
+  ## prepare a data frame for base lines
+  baseData <- data %>%
+    dplyr::group_by(group) %>%
+    dplyr::summarize(start = min(id), end = max(id) - emptyBar) %>%
+    dplyr::rowwise() %>%
+    dplyr::mutate(title = mean(c(start, end)))
+  ## calculate the number of clones for each group
+  baseData$labs <- ifelse(baseData$group == "TRUE", ntop, nbottom)
+  ## prepare a data frame for grid (scales)
+  gridData <- baseData
+  gridData$end <- gridData$end[c(nrow(gridData), 1:nrow(gridData)-1)] + 1
+  gridData$start <- gridData$start - 1
+  gridData <- gridData[-1,]
+  ## total length of all bars
+  pi <- max(data$id)
+
+  p <- ggplot(data, aes(x=as.factor(id), y=value)) +
+    ## add the bars with a blue color
+    geom_bar(stat="identity", alpha=1, color="#999966") +
+    ## add a val=100/75/50/25 lines - compute it first to make sure barplots are OVER it.
+    geom_segment(
+      data=gridData,
+      aes(x = -pi * 0.005, y = 20, xend = -pi * 0.001, yend = 20),
+      colour = "grey", alpha=1, linewidth=0.3 , inherit.aes = FALSE ) +
+    geom_segment(
+      data=gridData,
+      aes(x = -pi * 0.005, y = 15, xend = -pi * 0.001, yend = 15),
+      colour = "grey", alpha=1, linewidth=0.3 , inherit.aes = FALSE ) +
+    geom_segment(
+      data=gridData,
+      aes(x = -pi * 0.005, y = 10, xend = -pi * 0.001, yend = 10),
+      colour = "grey", alpha=1, linewidth=0.3 , inherit.aes = FALSE ) +
+    geom_segment(
+      data=gridData,
+      aes(x = -pi * 0.005, y = 5, xend = -pi * 0.001, yend = 5),
+      colour = "grey", alpha=1, linewidth=0.3 , inherit.aes = FALSE ) +
+    ## add text showing the value of each lines
+    annotate("text", x = c(rep(pi * 0.995, 4), pi * 0.05),
+             y = c(5, 10, 15, 20, 30),
+             label = c("5%", "10%", "15%", "20%", "relative mean Barcode Proportion") ,
+             color="#999966", size=3 , angle=0, fontface="bold", hjust=1) +
+    ## the negative value controls the size of the central circle, the positive to add size over each bar
+    ylim(-8,30) +
+    ## custom the theme: no axis title and no cartesian grid
+    theme_minimal() +
+    theme(
+      axis.text = element_blank(),
+      axis.title = element_blank(),
+      panel.grid = element_blank(),
+      ## remove unnecessary margin around plot
+      plot.margin = unit(rep(0,4), "cm"),
+      legend.title = element_text(size = 8),
+      legend.text = element_text(size = 8),
+      legend.position = c(0.9, 0.5)
+    ) +
+    ## make the coordinate polar instead of cartesian.
+    coord_polar(start = 0) +
+    ## add base line information
+    geom_segment(
+      data=baseData,
+      aes(x = start, y = -1, xend = end, yend = -1, color=group),
+      alpha=0.8, linewidth=2 , inherit.aes = FALSE)  +
+    geom_text(
+      data=baseData,
+      aes(x = title * 1.05, y = c(-4,-6), label=labs, color=group),
+      hjust=c(1,1), alpha=0.8, size=3, fontface="bold", inherit.aes = FALSE, show.legend = F) +
+    labs(color = "Num of Barcodes") +
+    scale_color_manual(
+      values = c("TRUE" = "#FF3399", "FALSE" = "#0066FF"),
+      labels = c("Top Barcodes", "Others")
+    )
+  message("to save the plot, call 'ggsave' setting width=8, height=6.")
+
+  return(p)
+}

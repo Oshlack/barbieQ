@@ -1,0 +1,5 @@
+"0","## Passing `object`, `target` and `factorColors`"
+"0","createBarbie("
+"0","   object=barcodeCount, target=sampleConditions, factorColors=conditionColor)"
+"1","$assay
+"

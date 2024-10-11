@@ -1,0 +1,6 @@
+"0","## visualize sample pair wise correlation"
+"0","plotSamplePairCorrelation(Barbie=exampleBB)  |> plot()"
+"2","setting Treat as the primary effector of sample conditions.
+"
+"2","displayingpearsoncorrelation of Barcode log2 CPM+1.
+"
