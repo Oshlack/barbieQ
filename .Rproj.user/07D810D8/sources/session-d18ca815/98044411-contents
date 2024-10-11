@@ -1,4 +1,5 @@
-*.Rhistory
-*.RData
-*.Ruserdata
+.Rhistory
+.RData
+.Ruserdata
 inst/doc
+**.DS_Store

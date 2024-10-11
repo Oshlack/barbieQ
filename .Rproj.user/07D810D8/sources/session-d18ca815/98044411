@@ -3,7 +3,7 @@
     "path": "~/Desktop/barbie/.gitignore",
     "project_path": ".gitignore",
     "type": "gitignore",
-    "hash": "1887790444",
+    "hash": "0",
     "contents": "",
     "dirty": false,
     "created": 1728621546794.0,
@@ -12,15 +12,15 @@
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "0,0",
+        "cursorPosition": "5,0",
         "scrollLine": "0"
     },
     "folds": "",
-    "lastKnownWriteTime": 1728626566,
+    "lastKnownWriteTime": 1728627605,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1728626566657,
+    "last_content_update": 1728627605781,
     "read_only": false,
     "read_only_alternatives": []
 }
