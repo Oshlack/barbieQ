@@ -2,24 +2,32 @@
 % Please edit documentation in R/modifierMethods.R
 \name{subsetSamples}
 \alias{subsetSamples}
-\title{Title make a subset of columns from all components of a 'Barbie' object based on specified columns}
+\title{Trim samples of a \code{Barbie} object based on specified columns}
 \usage{
-subsetSamples(Barbie, retainedColumns)
+subsetSamples(Barbie, retainedColumns = NULL)
 }
 \arguments{
-\item{Barbie}{an object created by the 'createBarbie()' function in the 'Barbie' package}
+\item{Barbie}{A \code{Barbie} object created by the \link{createBarbie} function.}
 
-\item{retainedColumns}{a logical vector indicating each column to be retained or excluded}
+\item{retainedColumns}{A logical vector indicating each column
+to be retained or excluded. Default to retaining all samples.}
 }
 \value{
-an updated Barbie object with subsets of its components
+A \code{Barbie} object with:
+\itemize{
+\item Updated components reflecting the subsetted samples, including \code{assay},
+\code{metadata}, \code{proportion}, \code{CPM}, \code{occurrence}, \code{rank}, and \code{isTop$mat}.
+\item Other components are inherited from the original \code{Barbie} object.
+}
 }
 \description{
-Title make a subset of columns from all components of a 'Barbie' object based on specified columns
+In the \code{matrix} and \code{data.frame} components of a \code{Barbie} object,
+samples are organized in columns and Barcodes in rows. \code{subsetSamples()}
+trims the columns based on specified \code{retainedColumns}.
 }
 \examples{
 myBarbie <- createBarbie(
   object=matrix(c(1:20), nrow=5, ncol=4),
   target=data.frame(fac=c(1, 1, 2, 2)))
-subsetColumns(Barbie=myBarbie, retainedColumns=c(TRUE, TRUE, FALSE, FALSE))
+subsetSamples(Barbie=myBarbie, retainedColumns=c(TRUE, TRUE, FALSE, FALSE))
 }

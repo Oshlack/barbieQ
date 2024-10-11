@@ -2,19 +2,43 @@
 % Please edit documentation in R/modifierMethods.R
 \name{combineBarbies}
 \alias{combineBarbies}
-\title{Title combining several 'Barbie' object by binding matrix components by samples and merging list components}
+\title{Merge several \code{Barbie} objects into one object organized by samples}
 \usage{
 combineBarbies(...)
 }
 \arguments{
-\item{...}{a list of 'Barbie' object}
+\item{...}{A list of \code{Barbie} objects created by the \link{createBarbie} function.}
 }
 \value{
-a 'Barbie' object
+A \code{Barbie} object including all the samples passed \code{Barbie} objects.
 }
 \description{
-Title combining several 'Barbie' object by binding matrix components by samples and merging list components
+\code{combineBarbies} merges multiple \code{Barbie} objects, aligning their components
+based on samples. Components such as \code{assay}, \code{metadata}, \code{proportion},
+\code{CPM}, \code{occurrence}, \code{rank}, and \code{isTop$mat} are combined by binding their
+columns (samples). The \code{isTop$vec} component is merged using a logical
+OR (\code{||}) operator, while other inherited components are passed unchanged.
+}
+\note{
+All input \code{Barbie} objects must have the same number of Barcodes
+(rows) in the same order.
 }
 \examples{
+Barbie1 <- createBarbie(
+object=matrix(c(1:20), nrow=5, ncol=4),
+target=data.frame(a=c("a", "a", "b", "b"),
+                  b=c("x", "x", "x", "x")),
+factorColors=list(a=c("a"="#FFFFFF", "b" = "#CCCCFF"),
+                  b=c("x"="#000099")))
+Barbie2 <- createBarbie(
+  object=matrix(c(21:30), nrow=5, ncol=2),
+  target=data.frame(a=c("a", "c"),
+                    c=c("u", "u")),
+  factorColors=list(a=c("a"="#FFFFFF", "c"="#000000"),
+                    c=c("u"="#CCCCCC")))
+Barbie3 <- createBarbie(
+  object=matrix(c(31:35), nrow=5, ncol=1),
+  target=data.frame(b=c("x")),
+  factorColors=list(b=c("x"="#999999")))
 combineBarbies(Barbie1, Barbie2, Barbie3)
 }

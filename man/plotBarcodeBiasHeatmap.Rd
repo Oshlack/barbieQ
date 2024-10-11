@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotBarcodeBias.R
 \name{plotBarcodeBiasHeatmap}
 \alias{plotBarcodeBiasHeatmap}
-\title{plotting test results of Barcodes by Heatmap}
+\title{Plot Barcodes categorized by significant change using a Heatmap}
 \usage{
 plotBarcodeBiasHeatmap(
   Barbie,
@@ -12,22 +12,38 @@ plotBarcodeBiasHeatmap(
 )
 }
 \arguments{
-\item{Barbie}{Barbie object created by createBarbie(), with test results stored by calling testBarcodeBias()}
+\item{Barbie}{A \code{Barbie} object created by the \link{createBarbie} function,
+updated with Barcode test results by calling the \link{testBarcodeBias} function.}
 
-\item{value}{a string value choosing to present "CPM" or "occurrence"}
+\item{value}{A string indicating what to visualize.
+Defaults to "CPM". Options include: "CPM" and "occurrence".}
 
-\item{elementName}{a string value indicating the test being conducted and stored in Barbie$testBarcode}
+\item{elementName}{A string indicating name of the test
+conducted and stored in \code{Barbie$testBarcode}. Default to the last
+test conducted and stored.}
 
-\item{sampleAnnotation}{a column Annotation object created by ComplexHeatmap::HeatmapAnnotation()}
+\item{sampleAnnotation}{A column Annotation object created by the
+\link[ComplexHeatmap:HeatmapAnnotation]{ComplexHeatmap::HeatmapAnnotation} function. Defaults to samples annotated
+by the groups to be compared.}
 }
 \value{
-a "Heatmap" S4 object
+A \code{Heatmap} S4 class object displaying the significance level
+of Barcodes in Heatmap annotations.
 }
 \description{
-plotting test results of Barcodes by Heatmap
+\code{plotBarcodeBiasHeatmap()} uses the Heatmap annotations to visualize the
+significance level of each Barcode in differential proportion or occurrence,
+as determined by the \link{testBarcodeBias} function.
 }
 \examples{
-HSC <- Barbie::HSC
-HSC <- testBarcodeBias(HSC , sampleGroups = "treat", contrastLevels = c("IV", "IT"))
-plotBarcodeBiasHeatmap(HSC)
+Block <- c(1,1,2,3,3,4,1,1,2,3,3,4)
+Treat <- factor(rep(c("ctrl", "drug"), each=6))
+Time <- rep(rep(1:2, each=3), 2)
+nbarcodes <- 50
+nsamples <- 12
+count <- abs(matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples))
+rownames(count) <- paste0("Barcode", 1:nbarcodes)
+Barbie <- createBarbie(count, data.frame(Treat=Treat, Time=Time))
+testBB <- testBarcodeBias(Barbie, sampleGroups = "Treat")
+plotBarcodeBiasHeatmap(Barbie = testBB, elementName = "diffProp_Treat")
 }

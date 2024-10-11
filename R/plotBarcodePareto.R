@@ -1,17 +1,52 @@
-#' plotting Barcode proportion by a circular bar plot
+#' Plot contributions of Barcodes split by \emph{top} v.s. \emph{bottom}
+#'  in a circular bar plot.
 #'
-#' @param Barbie a Barbie object created by createBarbie()
+#' After the [tagTopBarcodes] function tags Barcodes as either
+#'  \emph{top} or \emph{bottom}, `plotBarcodePareto()` visualizes the
+#'  proportion of each Barcode and separates them by these tags
+#'  in a circular bar plot, also known as a Pareto plot.
 #'
-#' @return a "ggplot" S3 class object
+#' @param Barbie A `Barbie` object created by the [createBarbie] function.
+#'
+#' @return A `ggplot` S3 class object displaying a circular bar plot,
+#'  highlighting the relative total proportion of each Barcode across samples.
+#'
+#' @note To save the plot with its original aspect ratio, use the
+#'  `ggplot2::ggsave` function and set `width = 8` and `height = 6`,
+#'  or an equivalent size.
+#'
 #' @export
 #'
-#' @import dplyr
-#' @import ggplot2
+#' @importFrom dplyr arrange
+#' @importFrom dplyr group_by
+#' @importFrom dplyr summarize
+#' @importFrom dplyr rowwise
+#' @importFrom dplyr mutate
 #' @importFrom magrittr %>%
+#' @importFrom graphics title
+#' @importFrom stats end
+#' @importFrom stats start
+#' @import ggplot2
+#' @import data.table
 #'
 #' @examples
-#' HSC <- Barbie::HSC
-#' plotBarcodePareto(HSC)
+#' ## sample conditions and color palettes
+#' sampleConditions <- data.frame(
+#'   Treat=factor(rep(c("ctrl", "drug"), each=6)),
+#'   Time=rep(rep(1:2, each=3), 2))
+#' conditionColor <- list(
+#'   Treat=c(ctrl="#999999", drug="#112233"),
+#'   Time=c("1"="#778899", "2"="#998877"))
+#' ## Barcode count data
+#' nbarcodes <- 50
+#' nsamples <- 12
+#' barcodeCount <- abs(matrix(10, nbarcodes, nsamples))
+#' barcodeCount[21:50,] <- 0.0001
+#' rownames(barcodeCount) <- paste0("Barcode", 1:nbarcodes)
+#' ## create a `Barbie` object
+#' myBarbie <- createBarbie(barcodeCount, sampleConditions, conditionColor)
+#' myBarbie <- tagTopBarcodes(myBarbie)
+#' plotBarcodePareto(myBarbie)
 plotBarcodePareto <- function(Barbie) {
   flag <- Barbie$isTop$vec
   contribution <- Barbie$CPM
@@ -31,7 +66,7 @@ plotBarcodePareto <- function(Barbie) {
   toAdd$group <- rep(levels(data$group), each=emptyBar)
   data <- rbind(data, toAdd)
   ## order data
-  data <- data %>% arrange(group, -value)
+  data <- data %>% dplyr::arrange(group, -value)
   data$id <- nrow(data) |> seq()
   ## add label
   labelData <- data
@@ -56,63 +91,64 @@ plotBarcodePareto <- function(Barbie) {
   ## total length of all bars
   pi <- max(data$id)
 
-  p <- ggplot(data, aes(x=as.factor(id), y=value)) +
-    ## add the bars with a blue color
-    geom_bar(stat="identity", alpha=1, color="#999966") +
-    ## add a val=100/75/50/25 lines - compute it first to make sure barplots are OVER it.
-    geom_segment(
-      data=gridData,
-      aes(x = -pi * 0.005, y = 20, xend = -pi * 0.001, yend = 20),
-      colour = "grey", alpha=1, linewidth=0.3 , inherit.aes = FALSE ) +
-    geom_segment(
-      data=gridData,
-      aes(x = -pi * 0.005, y = 15, xend = -pi * 0.001, yend = 15),
-      colour = "grey", alpha=1, linewidth=0.3 , inherit.aes = FALSE ) +
-    geom_segment(
-      data=gridData,
-      aes(x = -pi * 0.005, y = 10, xend = -pi * 0.001, yend = 10),
-      colour = "grey", alpha=1, linewidth=0.3 , inherit.aes = FALSE ) +
-    geom_segment(
-      data=gridData,
-      aes(x = -pi * 0.005, y = 5, xend = -pi * 0.001, yend = 5),
-      colour = "grey", alpha=1, linewidth=0.3 , inherit.aes = FALSE ) +
-    ## add text showing the value of each lines
-    annotate("text", x = c(rep(pi * 0.995, 4), pi * 0.05),
-             y = c(5, 10, 15, 20, 30),
-             label = c("5%", "10%", "15%", "20%", "relative mean Barcode Proportion") ,
-             color="#999966", size=3 , angle=0, fontface="bold", hjust=1) +
-    ## the negative value controls the size of the central circle, the positive to add size over each bar
-    ylim(-8,30) +
-    ## custom the theme: no axis title and no cartesian grid
-    theme_minimal() +
-    theme(
-      axis.text = element_blank(),
-      axis.title = element_blank(),
-      panel.grid = element_blank(),
-      ## remove unnecessary margin around plot
-      plot.margin = unit(rep(0,4), "cm"),
-      legend.title = element_text(size = 8),
-      legend.text = element_text(size = 8),
-      legend.position = "inside",
-      legend.position.inside = c(0.9, 0.5)
-    ) +
-    ## make the coordinate polar instead of cartesian.
-    coord_polar(start = 0) +
-    ## add base line information
-    geom_segment(
-      data=baseData,
-      aes(x = start, y = -1, xend = end, yend = -1, color=group),
-      alpha=0.8, linewidth=2 , inherit.aes = FALSE)  +
-    geom_text(
-      data=baseData,
-      aes(x = title * 1.05, y = c(-4,-6), label=labs, color=group),
-      hjust=c(1,1), alpha=0.8, size=3, fontface="bold", inherit.aes = FALSE, show.legend = F) +
-    labs(color = "Num of Barcodes") +
-    scale_color_manual(
-      values = c("TRUE" = "#FF3399", "FALSE" = "#0066FF"),
-      labels = c("Top Barcodes", "Others")
-    )
-  message("to save the plot, call 'ggsave' setting width=8, height=6.")
+  suppressWarnings({
+    p <- ggplot(data, aes(x=as.factor(id), y=value)) +
+      ## add the bars with a blue color
+      geom_bar(stat="identity", alpha=1, color="#999966", linewidth=0.5) +
+      ## add a val=100/75/50/25 lines - compute it first to make sure barplots are OVER it.
+      geom_segment(
+        data=gridData,
+        aes(x = -pi * 0.005, y = 20, xend = -pi * 0.001, yend = 20),
+        colour = "grey", alpha=1, linewidth=0.3 , inherit.aes = FALSE ) +
+      geom_segment(
+        data=gridData,
+        aes(x = -pi * 0.005, y = 15, xend = -pi * 0.001, yend = 15),
+        colour = "grey", alpha=1, linewidth=0.3 , inherit.aes = FALSE ) +
+      geom_segment(
+        data=gridData,
+        aes(x = -pi * 0.005, y = 10, xend = -pi * 0.001, yend = 10),
+        colour = "grey", alpha=1, linewidth=0.3 , inherit.aes = FALSE ) +
+      geom_segment(
+        data=gridData,
+        aes(x = -pi * 0.005, y = 5, xend = -pi * 0.001, yend = 5),
+        colour = "grey", alpha=1, linewidth=0.3 , inherit.aes = FALSE ) +
+      ## add text showing the value of each lines
+      annotate("text", x = c(rep(pi * 0.995, 4), pi * 0.05),
+               y = c(5, 10, 15, 20, 30),
+               label = c("5%", "10%", "15%", "20%", "relative mean Barcode Proportion") ,
+               color="#999966", size=3 , angle=0, fontface="bold", hjust=1) +
+      ## the negative value controls the size of the central circle, the positive to add size over each bar
+      ylim(-8,30) +
+      ## custom the theme: no axis title and no cartesian grid
+      theme_minimal() +
+      theme(
+        axis.text = element_blank(),
+        axis.title = element_blank(),
+        panel.grid = element_blank(),
+        ## remove unnecessary margin around plot
+        plot.margin = unit(rep(0,4), "cm"),
+        legend.title = element_text(size = 8),
+        legend.text = element_text(size = 8),
+        legend.position = "inside",
+        legend.position.inside = c(0.9, 0.5)
+      ) +
+      ## make the coordinate polar instead of cartesian.
+      coord_polar(start = 0) +
+      ## add base line information
+      geom_segment(
+        data=baseData,
+        aes(x = start, y = -1, xend = end, yend = -1, color=group),
+        alpha=0.8, linewidth=2 , inherit.aes = FALSE)  +
+      geom_text(
+        data=baseData,
+        aes(x = title * 1.05, y = c(-4,-6), label=labs, color=group),
+        hjust=c(1,1), alpha=0.8, size=3, fontface="bold", inherit.aes = FALSE, show.legend = F) +
+      labs(color = "Num of Barcodes") +
+      scale_color_manual(
+        values = c("TRUE" = "#FF3399", "FALSE" = "#0066FF"),
+        labels = c("Top Barcodes", "Others")
+      )
+  })
 
   return(p)
 }

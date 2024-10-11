@@ -1,22 +1,47 @@
-#' Title make a subset of columns from all components of a 'Barbie' object based on specified conditions in the metadata
+#' Trim samples of a `Barbie` object based on specified specified
+#'  sample conditions
 #'
-#' @param Barbie an object created by the 'createBarbie()' function in the 'Barbie' package
-#' @param factor a string specifying the factor name in 'Barbie$metadata'
-#' @param specifiedConditions a string or a string vector specifying the conditions in the specified factor
-#' @param keep a logical value indicating whether to retain or exclude the columns (samples) of the specified conditions
+#' In the `matrix` and `data.frame` components of a `Barbie` object,
+#'  samples are organized in columns and Barcodes in rows. The `metadata`
+#'  component in `Barbie` is a `data.frame` representing sample conditions,
+#'  organized by various experimental factors.
+#'  `subsetSamplesByMetadata()` trims the columns based on specified
+#'  `specifiedConditions` in the specified `factor` in `Barbie$metadata`.
 #'
-#' @return an updated Barbie object with subsets of its components
+#' @param Barbie A `Barbie` object created by the [createBarbie] function.
+#' @param factor A string representing the name of a factor in
+#'  `Barbie$metadata`. Defaults to the first factor in `Barbie$metadata`.
+#' @param specifiedConditions A string vector specifying the conditions
+#'  in the specified factor. Defaults to all conditions in the specified factor.
+#' @param keep A logical value: TRUE to retain or FALSE to exclude
+#'  the columns (samples) of the specified conditions. Defaults to TRUE.
+#'
+#' @return A `Barbie` object with:
+#'  * Updated components reflecting the subsetted samples, including `assay`,
+#'    `metadata`, `proportion`, `CPM`, `occurrence`, `rank`, and `isTop$mat`.
+#'  * Other components are inherited from the original `Barbie` object.
+#'
 #' @export
 #'
 #' @examples
 #' myBarbie <- createBarbie(
 #'   object=matrix(c(1:20), nrow=5, ncol=4),
 #'   target=data.frame(fac=c(1, 1, 2, 2)))
-#' subsetColumnsByMetadata(Barbie=myBarbie, factor="fac", specifiedConditions=1, keep=TRUE)
-subsetSamplesByMetadata <- function(Barbie, factor, specifiedConditions, keep = TRUE) {
+#' subsetSamplesByMetadata(
+#'   Barbie=myBarbie, factor="fac", specifiedConditions=1, keep=TRUE)
+subsetSamplesByMetadata <- function(
+    Barbie, factor=NULL, specifiedConditions=NULL, keep = TRUE) {
+  ## check `Barbie` format and default factor to all samples
+  checkBarbieDimensions(Barbie)
+  if(is.null(factor)) {
+    factor <- colnames(Barbie$metadata)[1]
+  }
   ## stop if the specified factor and conditions are not in the metadata of the object.
   if (!factor %in% colnames(Barbie$metadata))
     stop("specified factor in 'Barbie$metadata' is not found.")
+  if(is.null(specifiedConditions)) {
+    specifiedConditions <- unique(Barbie$metadata[[factor]])
+  }
   if (!all(specifiedConditions %in% Barbie$metadata[[factor]]))
     stop("specified conditions in 'Barbie$metadata$", factor, "' is not found.")
   ## choose columns specified by the factor and conditions, retaining or excluding them based on 'keep'.
@@ -29,21 +54,36 @@ subsetSamplesByMetadata <- function(Barbie, factor, specifiedConditions, keep = 
   return(subsetObject)
 }
 
-#' Title make a subset of columns from all components of a 'Barbie' object based on specified columns
+#' Trim samples of a `Barbie` object based on specified columns
 #'
-#' @param Barbie an object created by the 'createBarbie()' function in the 'Barbie' package
-#' @param retainedColumns a logical vector indicating each column to be retained or excluded
+#' In the `matrix` and `data.frame` components of a `Barbie` object,
+#'  samples are organized in columns and Barcodes in rows. `subsetSamples()`
+#'  trims the columns based on specified `retainedColumns`.
 #'
-#' @return an updated Barbie object with subsets of its components
+#' @param Barbie A `Barbie` object created by the [createBarbie] function.
+#' @param retainedColumns A logical vector indicating each column
+#'  to be retained or excluded. Default to retaining all samples.
+#'
+#' @return A `Barbie` object with:
+#'  * Updated components reflecting the subsetted samples, including `assay`,
+#'    `metadata`, `proportion`, `CPM`, `occurrence`, `rank`, and `isTop$mat`.
+#'  * Other components are inherited from the original `Barbie` object.
+#'
 #' @export
 #'
 #' @examples
 #' myBarbie <- createBarbie(
 #'   object=matrix(c(1:20), nrow=5, ncol=4),
 #'   target=data.frame(fac=c(1, 1, 2, 2)))
-#' subsetColumns(Barbie=myBarbie, retainedColumns=c(TRUE, TRUE, FALSE, FALSE))
-subsetSamples <- function(Barbie, retainedColumns) {
-  ## update all components in the object based on the retained columns (samples).
+#' subsetSamples(Barbie=myBarbie, retainedColumns=c(TRUE, TRUE, FALSE, FALSE))
+subsetSamples <- function(Barbie, retainedColumns=NULL) {
+  ## check `Barbie` format and default retainedColumns to all samples
+  if(checkBarbieDimensions(Barbie)) {
+    if(is.null(retainedColumns)) {
+      retainedColumns <- rep(TRUE, ncol(Barbie$assay))
+    }
+  }
+  ## update all components in the object based on the retained columns.
   subsetObject <- list(
     assay = Barbie$assay[, retainedColumns, drop=FALSE],
     metadata = Barbie$metadata[retainedColumns, , drop=FALSE],
@@ -65,32 +105,66 @@ subsetSamples <- function(Barbie, retainedColumns) {
   return(subsetObject)
 }
 
-#' Title combining several 'Barbie' object by binding matrix components by samples and merging list components
+#' Merge several `Barbie` objects into one object organized by samples
 #'
-#' @param ... a list of 'Barbie' object
+#' `combineBarbies` merges multiple `Barbie` objects, aligning their components
+#'  based on samples. Components such as `assay`, `metadata`, `proportion`,
+#'  `CPM`, `occurrence`, `rank`, and `isTop$mat` are combined by binding their
+#'  columns (samples). The `isTop$vec` component is merged using a logical
+#'  OR (`||`) operator, while other inherited components are passed unchanged.
 #'
-#' @return a 'Barbie' object
+#' @param ... A list of `Barbie` objects created by the [createBarbie] function.
+#'
+#' @return A `Barbie` object including all the samples passed `Barbie` objects.
+#'
+#' @note All input `Barbie` objects must have the same number of Barcodes
+#'  (rows) in the same order.
+#'
 #' @export
 #'
-#' @import dplyr
 #' @importFrom magrittr %>%
 #'
 #' @examples
+#' Barbie1 <- createBarbie(
+#' object=matrix(c(1:20), nrow=5, ncol=4),
+#' target=data.frame(a=c("a", "a", "b", "b"),
+#'                   b=c("x", "x", "x", "x")),
+#' factorColors=list(a=c("a"="#FFFFFF", "b" = "#CCCCFF"),
+#'                   b=c("x"="#000099")))
+#' Barbie2 <- createBarbie(
+#'   object=matrix(c(21:30), nrow=5, ncol=2),
+#'   target=data.frame(a=c("a", "c"),
+#'                     c=c("u", "u")),
+#'   factorColors=list(a=c("a"="#FFFFFF", "c"="#000000"),
+#'                     c=c("u"="#CCCCCC")))
+#' Barbie3 <- createBarbie(
+#'   object=matrix(c(31:35), nrow=5, ncol=1),
+#'   target=data.frame(b=c("x")),
+#'   factorColors=list(b=c("x"="#999999")))
 #' combineBarbies(Barbie1, Barbie2, Barbie3)
 combineBarbies <- function(...) {
   ## need fix unmatched rownames (Barcode ID)
   ## collect all Barbie objects into a list
   BarbieList <- list(...)
   ## start with the first Barbie object in the list
-  combinedObject <- BarbieList[[1]]
+  if(checkBarbieDimensions(BarbieList[[1]])) {
+    combinedObject <- BarbieList[[1]]
+  }
   ## loop through the remaining Barbie objects in the list
   for (i in 2:length(BarbieList)) {
+    ## check Barbie dimensions
+    checkBarbieDimensions(BarbieList[[i]])
     Barbie <- BarbieList[[i]]
+    ## check number of Barcodes
+    if(nrow(Barbie$assay) != nrow(combinedObject$assay)) {
+      stop("all `Barbie` object must contain same number of Barcodes.")
+    }
     ## combine the elements of the current Barbie with the combinedObject
     combinedObject <- list(
       assay = cbind(combinedObject$assay, Barbie$assay) %>% as.data.frame(),
-      ## dispatch 'mergeMetadata()'
-      metadata = mergeMetadata(combinedObject$metadata, Barbie$metadata) %>% as.data.frame(),
+      ## dispatch `mergeMetadata()`
+      metadata = mergeMetadata(combinedObject$metadata, Barbie$metadata) %>%
+        as.data.frame(),
       proportion = cbind(combinedObject$proportion, Barbie$proportion),
       CPM = cbind(combinedObject$CPM, Barbie$CPM),
       occurrence = cbind(combinedObject$occurrence, Barbie$occurrence),
@@ -99,17 +173,21 @@ combineBarbies <- function(...) {
                    mat=cbind(combinedObject$isTop$mat, Barbie$isTop$mat)),
       clusters = paste(combinedObject$clusters, Barbie$clusters, sep = "_"),
       ## dispatch 'mergeLists()' to merge factor color lists from the objects
-      factorColors = mergeLists(combinedObject$factorColors, Barbie$factorColors))
+      factorColors = mergeLists(
+        combinedObject$factorColors, Barbie$factorColors))
 
     ## check and include elements present in both combinedObject and the currentBarbie but not mentioned above
     allElementNames <- unique(c(names(combinedObject), names(Barbie)))
     for (elementName in allElementNames) {
       if (!elementName %in% names(combinedObject))
-        if (elementName %in% names(combinedObject) && elementName %in% names(Barbie)) {
+        if (elementName %in% names(combinedObject) &&
+            elementName %in% names(Barbie)) {
         ## if the element exists in both combinedObject and the currentBarbie
         ## bind columns if the element is a matrix or data.frame, otherwise treating the elements as lists
-        if (is.matrix(combinedObject[[elementName]]) || is.data.frame(combinedObject[[elementName]]))
-          combinedObject[[elementName]] <- cbind(combinedObject[[elementName]], Barbie[[elementName]])
+        if (is.matrix(combinedObject[[elementName]]) ||
+            is.data.frame(combinedObject[[elementName]]))
+          combinedObject[[elementName]] <- cbind(
+            combinedObject[[elementName]], Barbie[[elementName]])
         else mergeLists(combinedObject[[elementName]], Barbie[[elementName]])
       } else if (elementName %in% names(combinedObject)) {
         ## include element from combinedObject if not present in the currentBarbie
@@ -124,16 +202,20 @@ combineBarbies <- function(...) {
   return(combinedObject)
 }
 
-#' Title merging several Barbie$metadata
+#' Merge multiple Barbie$metadata
 #'
-#' @param ... a list of metadata
+#' @param ... A list of Barbie$metadata
 #'
-#' @return a data.frame
+#' @return A `data.frame`
 #'
 #' @importFrom magrittr %>%
+#' @importFrom dplyr bind_cols
 #'
-#' @examples
-#' mergeMetadata(Barbie1$metadata, Barbie2$metadata)
+#' @noRd
+#'
+#' @examples \dontrun{
+#' Barbie:::mergeMetadata(Barbie1$metadata, Barbie2$metadata)
+#' }
 mergeMetadata <- function(...) {
   dfs <- list(...)
   sampleSizes <- vapply(dfs, nrow, integer(1))
@@ -148,12 +230,12 @@ mergeMetadata <- function(...) {
   }
   factors <- unlist(lapply(dfs, colnames))
 
-  boundDf <- bind_cols(extendedDfs)
+  boundDf <- dplyr::bind_cols(extendedDfs)
   boundDf[is.na(boundDf)] <- ""
   mergedDf <- tapply(names(boundDf), factors, function(cols) {
     subsetDf <- boundDf[, cols, drop=FALSE]
     apply(subsetDf, 1, paste0, collapse = "")
-  }) %>% bind_cols() %>%
+  }) %>% dplyr::bind_cols() %>%
     as.data.frame()
 
   rownames(mergedDf) <- lapply(dfs, rownames) %>%
@@ -164,19 +246,22 @@ mergeMetadata <- function(...) {
 }
 
 
-#' Title Merging several lists into one list and include all elements in the old lists
+#' Merge multiple `list`s into one and include all elements in the old `list`s
 #'
-#' @param ... a list of lists
+#' @param ... A list of `Barbie` list components
 #'
-#' @return a list
+#' @return A `list`
 #'
-#' @examples
+#' @noRd
+#'
+#' @examples \dontrun{
 #' list1 <- list(a = c("a"="#FFFFFF", "b" = "#CCCCFF"),
 #'               b = c("x"="#000099"))
 #' list2 <- list(a = c("a" = "#FFFFFF", "c"="#000000"),
 #'               c = c("u" = "#CCCCCC"))
 #' list3 <- list(b = c("x"="#999999"))
-#' mergeLists(list1, list2, list3)
+#' Barbie:::mergeLists(list1, list2, list3)
+#' }
 mergeLists <- function(...) {
   ## combine all lists into a single list of lists
   lists <- list(...)
@@ -201,20 +286,37 @@ mergeLists <- function(...) {
   return(combinedList)
 }
 
-#' Title make a subset of rows from all components of a 'Barbie' object based on specified rows
+#' Trim Barcodes of a `Barbie` object based on specified rows
 #'
-#' @param Barbie an object created by the 'createBarbie()' function in the 'Barbie' package
-#' @param retainedRows a logical vector indicating each row to be retained or excluded
+#' In the `matrix` and `data.frame` components of a `Barbie` object,
+#'  samples are organized in columns and Barcodes in rows. `subsetBarcodes()`
+#'  trims the rows based on specified `retainedRows`.
 #'
-#' @return an updated Barbie object with subsets of its components
+#' @param Barbie A `Barbie` object created by the [createBarbie] function.
+#' @param retainedRows A logical vector indicating each row
+#'  to be retained or excluded. Default to retaining all Barcodes.
+#'
+#' @return A `Barbie` object with:
+#'  * Updated components reflecting the subsetted Barcodes, including `assay`,
+#'    `proportion`, `CPM`, `occurrence`, `rank`, `isTop$mat`, `isTop$vec`,
+#'    and `clusters`.
+#'  * Other components are inherited from the original `Barbie` object.
+#'
 #' @export
 #'
 #' @examples
 #' myBarbie <- createBarbie(
 #'   object=matrix(c(1:20), nrow=5, ncol=4),
 #'   target=data.frame(fac=c(1, 1, 2, 2)))
-#' subsetBarcodes(Barbie=myBarbie, retainedRows=c(TRUE, TRUE, FALSE, FALSE, FALSE))
-subsetBarcodes <- function(Barbie, retainedRows) {
+#' subsetBarcodes(
+#'   Barbie=myBarbie, retainedRows=c(TRUE, TRUE, FALSE, FALSE, FALSE))
+subsetBarcodes <- function(Barbie, retainedRows=NULL) {
+  ## check `Barbie` format and default retainedRows to all Barcodes
+  checkBarbieDimensions(Barbie)
+  if(is.null(retainedRows)) {
+    retainedRows <- rep(TRUE, nrow(Barbie$assay))
+  }
+  ## update all components in the object based on the retained rows.
   subsetObject <- list(
     assay = Barbie$assay[retainedRows, ,drop=FALSE],
     metadata = Barbie$metadata,
@@ -231,7 +333,8 @@ subsetBarcodes <- function(Barbie, retainedRows) {
   ## subset these elements based on 'retainedRows'
   for (elementName in names(Barbie)) {
     if (!(elementName %in% names(subsetObject))) {
-      if(is.data.frame(Barbie[[elementName]]) || is.matrix(Barbie[[elementName]]))
+      if(is.data.frame(Barbie[[elementName]]) ||
+         is.matrix(Barbie[[elementName]]))
         subsetObject[[elementName]] <- Barbie[[elementName]][retainedRows,]
       else if(is.vector(Barbie[[elementName]]))
         subsetObject[[elementName]] <- Barbie[[elementName]][retainedRows]
@@ -241,13 +344,28 @@ subsetBarcodes <- function(Barbie, retainedRows) {
   return(subsetObject)
 }
 
-#' collapse a 'Barbie' object by sample groups
+#' Collapse samples of a `Barbie` object based on sample grouping
 #'
-#' @param Barbie an object created by the 'createBarbie()' function in the 'Barbie' package
-#' @param groupArray a vector indication the group of each sample
-#' @param method function indicating the method for collapsing each sample in the subset matrix of each Barcode group
+#' In the `matrix` and `data.frame` components of a `Barbie` object,
+#'  samples are organized in columns and Barcodes in rows. `collapseSamples()`
+#'  merges the columns based on specified `groupArray`. Samples within the same
+#'  group are collapsed into a single column using specified aggregation method.
 #'
-#' @return a 'Barbie' object with samples collapsed by 'groupArray'
+#' @param Barbie A `Barbie` object created by the [createBarbie] function.
+#' @param groupArray A vector indicating the group to which each sample belongs.
+#'  Defaults to each sample being treated as a unique group.
+#' @param method The name of an aggregation function used to collapse samples
+#'  within the same group. Defaults to `mean`.
+#'
+#' @return A `Barbie` object with updated components reflecting the collapsed
+#'  sample groups, including:
+#'  * `assay`, `proportion`, and `CPM` aggregated by the specified `method`
+#'  * `metadata` merged for all sample conditions within the group
+#'  * `occurrence` aggregated by `any` within the group
+#'  * `rank` aggregated by `min` within the group
+#'  * `isTop$mat` aggregated by `any` within the group
+#'  * Other components inherited from the original `Barbie` object.
+#'
 #' @export
 #'
 #' @importFrom magrittr %>%
@@ -257,8 +375,20 @@ subsetBarcodes <- function(Barbie, retainedRows) {
 #'   object=matrix(c(1:20), nrow=5, ncol=4),
 #'   target=data.frame(fac=c(1, 1, 2, 2)))
 #' collapseSamples(Barbie=myBarbie, groupArray=c(1,1,2,2))
-collapseSamples <- function(Barbie, groupArray, method=mean) {
-  if(!(is.function(method))) {stop("method must be a function")}
+collapseSamples <- function(Barbie, groupArray=NULL, method=mean) {
+  ## check method
+  if(!(is.function(method))) {
+    stop("'method' must be a valid function.")}
+  testVector <- c(1, 2)
+  testResult <- tryCatch(method(testVector), error = function(e) NULL)
+  if (is.null(testResult) || length(testResult) != 1) {
+    stop("'method' must be an aggregation function that returns a single value.")
+  }
+  ## check object format
+  checkBarbieDimensions(Barbie)
+  if(is.null(groupArray)) {
+    groupArray <- seq_len(ncol(Barbie$assay))
+  }
   collapsedObject <- list(
     assay = Barbie$assay %>%
       collapseColumnsByArray(groupArray=groupArray, method = method) %>%
@@ -266,14 +396,16 @@ collapseSamples <- function(Barbie, groupArray, method=mean) {
     metadata = Barbie$metadata %>% t() %>%
       collapseColumnsByArray(groupArray=groupArray, method=function(x) {
         checkDup <- duplicated(x)
-        ifelse(length(checkDup) -1 == sum(checkDup), x[[1]], paste(x, collapse = "."))
+        ifelse(
+          length(checkDup) -1 == sum(checkDup), x[[1]],
+          paste(x, collapse = "."))
       }) %>% t() %>% as.data.frame(),
     proportion = Barbie$proportion %>%
-      collapseColumnsByArray(groupArray=groupArray),
+      collapseColumnsByArray(groupArray=groupArray, method = method),
     CPM = Barbie$CPM %>%
-      collapseColumnsByArray(groupArray=groupArray),
+      collapseColumnsByArray(groupArray=groupArray, method = method),
     occurrence = Barbie$occurrence %>%
-      collapseColumnsByArray(groupArray=groupArray, method=max),
+      collapseColumnsByArray(groupArray=groupArray, method=any),
     rank = Barbie$rank %>%
       collapseColumnsByArray(groupArray=groupArray, method=min),
     isTop = list(
@@ -292,19 +424,24 @@ collapseSamples <- function(Barbie, groupArray, method=mean) {
   return(collapsedObject)
 }
 
-#' collapse a matrix by column groups
+#' Collapse a matrix by column grouping
 #'
-#' @param mat a matrix, data.frame, or vector
-#' @param groupArray a vector indication the groups of each column in 'mat'
-#' @param method a function indicating the method for collapsing each Barcodes in the subset matrix of each sample group
+#' @param mat A matrix, data.frame, or vector.
+#' @param groupArray A vector indication the group to which each column belongs.
+#' @param method The name of an aggregation function used to collapse columns
+#'  within the same group. Defaults to `mean`.
 #'
-#' @return a matrix, data.frame, or vector collapsed by column groups
+#' @return A matrix, data.frame, or vector aggregated by the specified `method`.
+#'
+#' @noRd
 #'
 #' @importFrom magrittr %>%
 #'
-#' @examples
+#' @examples \dontrun{
 #' mymatrix <- matrix(1:25, nrow=5, ncol=5)
-#' collapseColumnsByArray(mymatrix, groupArray=c(1,1,1,2,2), method=mean)
+#' Barbie:::collapseColumnsByArray(
+#'  mymatrix, groupArray=c(1,1,1,2,2), method=mean)
+#' }
 collapseColumnsByArray <- function(mat, groupArray, method=mean) {
   collapsedMat <- NULL
   if (is.matrix(mat) || is.data.frame(mat)) {
@@ -322,13 +459,28 @@ collapseColumnsByArray <- function(mat, groupArray, method=mean) {
   return(collapsedMat)
 }
 
-#' collapse a 'Barbie' object by Barcode groups
+#' Collapse Barcodes of a `Barbie` object based on Barcode grouping
 #'
-#' @param Barbie an object created by the 'createBarbie()' function in the 'Barbie' package
-#' @param groupArray a vector indication the group of each sample
-#' @param method a function choosing method for collapsing Barcode counts within Barcode groups
+#' In the `matrix` and `data.frame` components of a `Barbie` object,
+#'  samples are organized in columns and Barcodes in rows. `collapseBarcodes()`
+#'  merges the rows based on specified `groupArray`. Barcodes within the same
+#'  group are collapsed into a single row using specified aggregation method.
 #'
-#' @return a 'Barbie' object with samples collapsed by 'groupArray'
+#' @param Barbie A `Barbie` object created by the [createBarbie] function.
+#' @param groupArray A vector indicating the group to which each Barcode
+#'  belongs. Defaults to each Barcode being treated as a unique group.
+#' @param method The name of an aggregation function used to collapse barcodes
+#'  within the same group. Defaults to `max`.
+#'
+#' @return A `Barbie` object with updated components reflecting the collapsed
+#'  Barcode groups, including:
+#'  * `assay`, `proportion`, and `CPM` aggregated by the specified `method`
+#'  * `occurrence` aggregated by `any` within the group
+#'  * `rank` aggregated by `min` within the group
+#'  * `isTop$mat` and `isTop$vec` aggregated by `any` within the group
+#'  * `clusters` aggregated by the most abundant cluster name within the group
+#'  * Other components inherited from the original `Barbie` object.
+#'
 #' @export
 #'
 #' @importFrom magrittr %>%
@@ -338,16 +490,28 @@ collapseColumnsByArray <- function(mat, groupArray, method=mean) {
 #'   object=matrix(c(1:20), nrow=5, ncol=4),
 #'   target=data.frame(fac=c(1, 1, 2, 2)))
 #' collapseBarcodes(Barbie=myBarbie, groupArray=c(1,1,2,2,2))
-collapseBarcodes <- function(Barbie, groupArray, method=max) {
-  if(!(is.function(method))) {stop("method must be a function")}
+collapseBarcodes <- function(Barbie, groupArray=NULL, method=max) {
+  ## check method
+  if(!(is.function(method))) {
+    stop("'method' must be a valid function.")}
+  testVector <- c(1, 2)
+  testResult <- tryCatch(method(testVector), error = function(e) NULL)
+  if (is.null(testResult) || length(testResult) != 1) {
+    stop("'method' must be an aggregation function that returns a single value.")
+  }
+  ## check object format
+  checkBarbieDimensions(Barbie)
+  if(is.null(groupArray)) {
+    groupArray <- seq_len(nrow(Barbie$assay))
+  }
   collapsedObject <- list(
     assay = Barbie$assay %>%
       collapseRowsByArray(groupArray=groupArray, method = method) %>% as.data.frame(),
     metadata = Barbie$metadata,
     proportion = Barbie$proportion %>%
-      collapseRowsByArray(groupArray=groupArray),
+      collapseRowsByArray(groupArray=groupArray, method = method),
     CPM = Barbie$CPM %>%
-      collapseRowsByArray(groupArray=groupArray),
+      collapseRowsByArray(groupArray=groupArray, method = method),
     occurrence = Barbie$occurrence %>%
       collapseRowsByArray(groupArray=groupArray, method=any),
     rank = Barbie$rank %>%
@@ -357,32 +521,40 @@ collapseBarcodes <- function(Barbie, groupArray, method=max) {
         collapseRowsByArray(groupArray=groupArray, method=any),
       mat=Barbie$isTop$mat %>%
         collapseRowsByArray(groupArray=groupArray, method=any)),
-    clusters = Barbie$clusters,
+    clusters = Barbie$clusters %>%
+      collapseRowsByArray(groupArray=groupArray,
+                          method= function(x) names(which.max(table(x)))),
     factorColors = Barbie$factorColors)
 
   ## include existing elements in the collapsedObject
   for (elementName in names(Barbie)) {
     if (!(elementName %in% names(collapsedObject)))
       collapsedObject[[elementName]] <- Barbie[[elementName]] %>%
-        collapseRowsByArray(groupArray = groupArray, method = function(x) {x[[1]]})
+        collapseRowsByArray(groupArray = groupArray,
+                            method = function(x) {x[[1]]})
   }
 
   return(collapsedObject)
 }
 
-#' collapse a matrix by column groups
+#' collapse a matrix by row grouping
 #'
-#' @param mat a matrix, data.frame, or vector
-#' @param groupArray a vector indication the groups of each column in 'mat'
-#' @param method function indicating the method for collapsing each sample in the subset matrix of each Barcode group
+#' @param mat A matrix, data.frame, or vector.
+#' @param groupArray A vector indication the group to which each row belongs.
+#' @param method The name of an aggregation function used to collapse rows
+#'  within the same group. Defaults to `max`.
 #'
-#' @return a matrix, data.frame, or vector collapsed by column groups
+#' @return A matrix, data.frame, or vector aggregated by the specified `method`.
+#'
+#' @noRd
 #'
 #' @importFrom magrittr %>%
 #'
-#' @examples
+#' @examples \dontrun{
 #' mymatrix <- matrix(1:25, nrow=5, ncol=5)
-#' collapseRowsByArray(mymatrix, groupArray=c(1,1,1,2,2), method=mean)
+#' Barbie:::collapseRowsByArray(
+#'   mymatrix, groupArray=c(1,1,1,2,2), method=mean)
+#' }
 collapseRowsByArray <- function(mat, groupArray, method=max) {
   collapsedMat <- NULL
   if (is.matrix(mat) || is.data.frame(mat)) {

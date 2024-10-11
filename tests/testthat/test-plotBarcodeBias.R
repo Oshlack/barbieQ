@@ -1,11 +1,16 @@
 test_that("plot Barcode test results - scatter plot - works", {
-  HSC <- Barbie::HSC
-  BB <- createBarbie(object = HSC$assay, target = HSC$metadata)
-  testBB <- testBarcodeBias(BB, sampleGroups = "treat", contrastLevels = c("IV", "IT"))
-  plotBarcodeBiasScatterPlot(Barbie = testBB)
+  Block <- c(1,1,2,3,3,4,1,1,2,3,3,4)
+  Treat <- factor(rep(c("ctrl", "drug"), each=6))
+  Time <- rep(rep(1:2, each=3), 2)
+  nbarcodes <- 50
+  nsamples <- 12
+  count <- matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples) %>% abs()
+  rownames(count) <- paste0("Barcode", 1:nbarcodes)
+  Barbie <- createBarbie(count, data.frame(Treat=Treat, Time=Time))
 
-  testBB <- testBarcodeBias(testBB, sampleGroups = "lineage", contrastLevels = c("Myeloid", "Tcell"))
-  p <- plotBarcodeBiasScatterPlot(Barbie = testBB, elementName = "diffProp_lineage")
+  testBB <- testBarcodeBias(Barbie, sampleGroups = "Treat")
+  p <- plotBarcodeBiasScatterPlot(
+    Barbie = testBB, elementName = "diffProp_Treat")
 
   expect_s3_class(p, "ggplot")
   expect_equal(length(p$layers), 3L)
@@ -13,20 +18,29 @@ test_that("plot Barcode test results - scatter plot - works", {
   plotPoint <- ggplot_build(p)$data[[1]]
   expect_equal(plotPoint$y, p$data$minusLogP)
   expect_equal(plotPoint$x, -p$data$avgRank)
-  # testBB <- testBarcodeBias(BB, sampleGroups = "treat", method = "diffOcc",
-  #                           contrastLevels = c("IV", "IT"))
 })
 
 test_that("plot Barcode test results - heatmap works", {
-  HSC <- Barbie::HSC
-  testBB <- testBarcodeBias(HSC , sampleGroups = "treat", contrastLevels = c("IV", "IT"))
+  Block <- c(1,1,2,3,3,4,1,1,2,3,3,4)
+  Treat <- factor(rep(c("ctrl", "drug"), each=6))
+  Time <- rep(rep(1:2, each=3), 2)
+  nbarcodes <- 50
+  nsamples <- 12
+  count <- matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples) %>% abs()
+  rownames(count) <- paste0("Barcode", 1:nbarcodes)
+  Barbie <- createBarbie(count, data.frame(Treat=Treat, Time=Time))
+
+  testBB <- testBarcodeBias(Barbie, sampleGroups = "Treat")
 
   hp <- plotBarcodeBiasHeatmap(testBB)
   expect_s4_class(hp, "Heatmap")
-  expect_equal(levels(hp@matrix_param$column_split$treat), c("IV", "IT", "IF", "T0"))
+  expect_equal(levels(hp@matrix_param$column_split$Treat),
+               c("ctrl", "drug"))
 
-  testBB <- testBarcodeBias(HSC , sampleGroups = "treat", contrastLevels = c("IF", "IV"))
+  testBB <- testBarcodeBias(
+    Barbie, sampleGroups = "Treat", contrastLevels = c("drug", "ctrl"))
   hp <- plotBarcodeBiasHeatmap(testBB)
-  expect_equal(levels(hp@matrix_param$column_split$treat), c("IF", "IV", "IT", "T0"))
+  expect_equal(levels(hp@matrix_param$column_split$Treat),
+               c("drug", "ctrl"))
 })
 

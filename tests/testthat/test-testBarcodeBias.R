@@ -84,9 +84,4 @@ test_that("barcode test extracting correct arguments, dispatching right function
   testBB3 <- testBarcodeBias(Barbie, sampleGroups = "Treat", method = "diffOcc")
 
   testBB <- testBarcodeBias(Barbie, sampleGroups = rep(1:4, each = 3))
-
-  HSC <- Barbie::HSC
-  BB <- createBarbie(object = HSC$assay, target = HSC$metadata)
-  testBB4 <- testBarcodeBias(BB, sampleGroups = "treat", contrastLevels = c("IV", "IT"))
-  testBB5 <- testBarcodeBias(Barbie = BB, sampleGroups = "mouse", contrastLevels = c("M13", "M14"))
 })

@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotBarcodeBias.R
 \name{plotBarcodeBiasScatterPlot}
 \alias{plotBarcodeBiasScatterPlot}
-\title{plotting test results of Barcodes by scatter plot}
+\title{Plot Barcodes catogorized by significant change using a dot plot}
 \usage{
 plotBarcodeBiasScatterPlot(
   Barbie,
@@ -13,27 +13,45 @@ plotBarcodeBiasScatterPlot(
 )
 }
 \arguments{
-\item{Barbie}{Barbie object created by createBarbie(), with test results stored by calling testBarcodeBias()}
+\item{Barbie}{A \code{Barbie} object created by the \link{createBarbie} function,
+updated with Barcode test results by calling the \link{testBarcodeBias} function.}
 
-\item{elementName}{a string value indicating the test being conducted and stored in Barbie$testBarcode}
+\item{elementName}{A string indicating name of the test
+conducted and stored in \code{Barbie$testBarcode}. Default to the last
+test conducted and stored.}
 
-\item{reorderRank}{a logical value deciding whether to reorder Barcode rank within each sample}
+\item{reorderRank}{A logical value deciding whether to reorder
+Barcode ranks within each sample. Defaults to FALSE.}
 
-\item{pValuesAdjusted}{a logical value choosing to present adjusted p.values or original p.values}
+\item{pValuesAdjusted}{A logical value indicating which p.value to present.
+TRUE to present adjusted p.values. FALSE to present original p.values.
+Defaults to TRUE.}
 
-\item{xAxis}{a string value indicating what to visualise on x scale}
+\item{xAxis}{A string indicating what to visualise on the x scale of the
+dot plot. Options include: "avgRank", "totalOcc", "avgLogCPM",
+and "avgProportion". Defaults to "avgRank", representing the average
+rank of Barcodes across samples.}
 }
 \value{
-a "ggplot" S3 class object
+A \code{ggplot} S3 class object displaying the significance level
+against other properties of Barcodes in a dot plot.
 }
 \description{
-plotting test results of Barcodes by scatter plot
+\code{plotBarcodeBiasScatterPlot()} use a dot plot to visualize the significance
+level of each Barcode in differential proportion or occurrence,
+as determined by the \link{testBarcodeBias} function.
+P.values are plotted against other properties of Barcodes
+specified by \code{xAxis}.
 }
 \examples{
-HSC <- Barbie::HSC
-BB <- createBarbie(object = HSC$assay, target = HSC$metadata)
-rownames(BB$metadata) <- BB$metadata[,1]
-BB$metadata <- BB$metadata[,-1]
-testBB <- testBarcodeBias(BB, sampleGroups = "treat", contrastLevels = c("IV", "IT"))
-plotBarcodeBiasScatterPlot(Barbie = testBB)
+Block <- c(1,1,2,3,3,4,1,1,2,3,3,4)
+Treat <- factor(rep(c("ctrl", "drug"), each=6))
+Time <- rep(rep(1:2, each=3), 2)
+nbarcodes <- 50
+nsamples <- 12
+count <- abs(matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples))
+rownames(count) <- paste0("Barcode", 1:nbarcodes)
+Barbie <- createBarbie(count, data.frame(Treat=Treat, Time=Time))
+testBB <- testBarcodeBias(Barbie, sampleGroups = "Treat")
+plotBarcodeBiasScatterPlot(Barbie = testBB, elementName = "diffProp_Treat")
 }

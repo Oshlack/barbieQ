@@ -91,9 +91,8 @@ createBarbie <- function(object, target=NULL, factorColors=NULL) {
     Barbie$assay <- returnNumMat(object)
     } else if (is.list(object)) {
       ## inherit components if a `Barbie` object is passed to `object`
-      if (checkBarbieDimensions(object)) {
-        Barbie <- object
-      }
+      checkBarbieDimensions(object)
+      Barbie <- object
     ## extract barcode counts from other objects. Need a function for it.
     # if Seurat, extract assay and metadata.
     # if BARtab object, extract ...
@@ -150,7 +149,7 @@ now creating a pseudo uni-group with a homogeneous setting in 'Barbie$metadata'.
   if(any(ColumnHasNA)) {
     warning("In Barcode count matrix (Barbie$assay), ", length(WhichRowHasNA), " Barcodes (rows) show NAs across ", length(WhichColumnHasNA), " samples (columns).")
     ## display a menu for the user to choose how to handle NAs.
-    choice <- menu(c("yes, continue with zeros", "no, keep NA and continue", "stop"), title = "Do you want to convert all NA into zero and continue?")
+    choice <- utils::menu(c("yes, continue with zeros", "no, keep NA and continue", "stop"), title = "Do you want to convert all NA into zero and continue?")
     if(choice == 1) {
       ## replace NAs by zeros.
       Barbie$assay[is.na(Barbie$assay)] <- 0

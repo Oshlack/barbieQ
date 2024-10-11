@@ -2,7 +2,7 @@
 % Please edit documentation in R/BarcodePairCorrelation.R
 \name{clusterCorrelatingBarcodes}
 \alias{clusterCorrelatingBarcodes}
-\title{cluster Barcodes based on pair wise correlation}
+\title{Cluster "co-existing" Barcodes based on pairwise correlation}
 \usage{
 clusterCorrelatingBarcodes(
   Barbie,
@@ -13,27 +13,42 @@ clusterCorrelatingBarcodes(
 )
 }
 \arguments{
-\item{Barbie}{a Barbie object created by createBarbie()}
+\item{Barbie}{A \code{Barbie} object created by the \link{createBarbie} function.}
 
-\item{method}{a string value to choose correlation method, default "pearson"}
+\item{method}{A string specifying the correlation method to use.
+Defaults to "pearson". Options include: "pearson", "kendall", "spearman".}
 
-\item{corCutoff}{a numeric value to decide high correlation level, default 0.95}
+\item{corCutoff}{A numeric value that sets the threshold for high correlation
+Defaults to 0.95}
 
-\item{dataCutoff}{a numeric value to decide the minimum level of log2(mean CPM)}
+\item{dataCutoff}{A numeric value that sets the minimum level of
+Barcode pair's log2(mean CPM) for a Barcode pair to be considered as
+highly correlated co-existing Barcodes. Defaults to 0}
 
-\item{BarcodeClusters}{a list of known groups containing different Barcodes or a vector/array indicating Barcode groups}
+\item{BarcodeClusters}{A \code{list} of known groups containing different Barcodes
+or a \code{vector}/\code{array} indicating Barcode groups. Defaults to NULL.}
 }
 \value{
-a ggplot S3 object
+A \code{Barbie} object updated with adding a \code{data.frame} component of
+Barcode cluster, called \code{BarcodeCluster}.
 }
 \description{
-cluster Barcodes based on pair wise correlation
+\code{clusterCorrelatingBarcodes()} groups "co-existing" Barcode into clusters by
+identifying "co-existing" Barcode pairs based on two criteria:
+\itemize{
+\item The proportions of Barcodes across samples exhibit high correlation,
+exceeding the threshold specified by \code{corCutoff}.
+\item The log2(mean CPM) of the Barcode pair exceeds the threshold specified
+by \code{dataCutoff}.
+These two parameters can be manually optimized using the visualization
+function \link{plotBarcodePairCorrelation}.
+}
 }
 \examples{
 nbarcodes <- 50
 nsamples <- 12
 count <- abs(matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples))
 rownames(count) <- paste0("Barcode", 1:nbarcodes)
-Barbie <- Barbie::createBarbie(count)
+Barbie <- createBarbie(count)
 clusterCorrelatingBarcodes(Barbie, BarcodeClusters=c(rep(1:10, 5)))
 }

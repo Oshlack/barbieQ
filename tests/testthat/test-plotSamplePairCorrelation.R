@@ -1,12 +1,30 @@
 test_that("plotting sample pair-wise correlation in Heatmap works", {
-  HSC <- Barbie::HSC
-  p <- plotSamplePairCorrelation(Barbie = HSC)
+  ## Sample conditions and color palettes
+  sampleConditions <- data.frame(
+    Treat=factor(rep(c("ctrl", "drug"), each=6)),
+    Time=rep(rep(1:2, each=3), 2))
+  conditionColor <- list(
+    Treat=c(ctrl="#999999", drug="#112233"),
+    Time=c("1"="#778899", "2"="#998877"))
+
+  ## Barcode count data
+  nbarcodes <- 50
+  nsamples <- 12
+  barcodeCount <- abs(matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples))
+  rownames(barcodeCount) <- paste0("Barcode", 1:nbarcodes)
+
+  object1 <- createBarbie(
+    object=barcodeCount, target=sampleConditions, factorColors=conditionColor)
+
+  p <- plotSamplePairCorrelation(Barbie = object1)
   expect_s4_class(p, "Heatmap")
 
-  HSC$metadata$treat <- factor(HSC$metadata$treat, levels = c("IF", "IT", "IV"))
-  HSC$metadata$lineage <- factor(HSC$metadata$lineage, levels = c("Bcell", "Tcell", "immature", "Myeloid"))
-  sampleOrder <- c("time", "treat", "lineage", "celltype", "tissue", "mouse")
-  p <- plotSamplePairCorrelation(Barbie = HSC, sampleOrder = sampleOrder)
-  expect_equal(HSC$metadata$treat[p@column_order] %>% table() %>% names(),
-               c("IF", "IT", "IV"))
+  object1$metadata$Treat <- factor(
+    object1$metadata$Treat, levels = c("drug", "ctrl"))
+  object1$metadata$Time <- factor(
+    object1$metadata$Time, levels = 2:1)
+  sampleOrder <- c("Time", "Treat")
+  p <- plotSamplePairCorrelation(Barbie = object1, sampleOrder = sampleOrder)
+  expect_equal(object1$metadata$Time[p@column_order] %>% table() %>% names(),
+               c("2", "1"))
 })

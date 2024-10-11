@@ -2,20 +2,45 @@
 % Please edit documentation in R/plotBarcodePareto.R
 \name{plotBarcodePareto}
 \alias{plotBarcodePareto}
-\title{plotting Barcode proportion by a circular bar plot}
+\title{Plot contributions of Barcodes split by \emph{top} v.s. \emph{bottom}
+in a circular bar plot.}
 \usage{
 plotBarcodePareto(Barbie)
 }
 \arguments{
-\item{Barbie}{a Barbie object created by createBarbie()}
+\item{Barbie}{A \code{Barbie} object created by the \link{createBarbie} function.}
 }
 \value{
-a "ggplot" S3 class object
+A \code{ggplot} S3 class object displaying a circular bar plot,
+highlighting the relative total proportion of each Barcode across samples.
 }
 \description{
-plotting Barcode proportion by a circular bar plot
+After the \link{tagTopBarcodes} function tags Barcodes as either
+\emph{top} or \emph{bottom}, \code{plotBarcodePareto()} visualizes the
+proportion of each Barcode and separates them by these tags
+in a circular bar plot, also known as a Pareto plot.
+}
+\note{
+To save the plot with its original aspect ratio, use the
+\code{ggplot2::ggsave} function and set \code{width = 8} and \code{height = 6},
+or an equivalent size.
 }
 \examples{
-HSC <- Barbie::HSC
-plotBarcodePareto(HSC)
+## sample conditions and color palettes
+sampleConditions <- data.frame(
+  Treat=factor(rep(c("ctrl", "drug"), each=6)),
+  Time=rep(rep(1:2, each=3), 2))
+conditionColor <- list(
+  Treat=c(ctrl="#999999", drug="#112233"),
+  Time=c("1"="#778899", "2"="#998877"))
+## Barcode count data
+nbarcodes <- 50
+nsamples <- 12
+barcodeCount <- abs(matrix(10, nbarcodes, nsamples))
+barcodeCount[21:50,] <- 0.0001
+rownames(barcodeCount) <- paste0("Barcode", 1:nbarcodes)
+## create a `Barbie` object
+myBarbie <- createBarbie(barcodeCount, sampleConditions, conditionColor)
+myBarbie <- tagTopBarcodes(myBarbie)
+plotBarcodePareto(myBarbie)
 }

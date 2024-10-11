@@ -1,27 +1,49 @@
-#' plotting test results of Barcodes by scatter plot
+#' Plot Barcodes catogorized by significant change using a dot plot
 #'
-#' @param Barbie Barbie object created by createBarbie(), with test results stored by calling testBarcodeBias()
-#' @param elementName a string value indicating the test being conducted and stored in Barbie$testBarcode
-#' @param reorderRank a logical value deciding whether to reorder Barcode rank within each sample
-#' @param pValuesAdjusted a logical value choosing to present adjusted p.values or original p.values
-#' @param xAxis a string value indicating what to visualise on x scale
+#' `plotBarcodeBiasScatterPlot()` use a dot plot to visualize the significance
+#'  level of each Barcode in differential proportion or occurrence,
+#'  as determined by the [testBarcodeBias] function.
+#'  P.values are plotted against other properties of Barcodes
+#'  specified by `xAxis`.
 #'
-#' @return a "ggplot" S3 class object
+#' @param Barbie A `Barbie` object created by the [createBarbie] function,
+#'  updated with Barcode test results by calling the [testBarcodeBias] function.
+#' @param elementName A string indicating name of the test
+#'  conducted and stored in `Barbie$testBarcode`. Default to the last
+#'  test conducted and stored.
+#' @param reorderRank A logical value deciding whether to reorder
+#'  Barcode ranks within each sample. Defaults to FALSE.
+#' @param pValuesAdjusted A logical value indicating which p.value to present.
+#'  TRUE to present adjusted p.values. FALSE to present original p.values.
+#'  Defaults to TRUE.
+#' @param xAxis A string indicating what to visualise on the x scale of the
+#'  dot plot. Options include: "avgRank", "totalOcc", "avgLogCPM",
+#'  and "avgProportion". Defaults to "avgRank", representing the average
+#'  rank of Barcodes across samples.
+#'
+#' @return A `ggplot` S3 class object displaying the significance level
+#'  against other properties of Barcodes in a dot plot.
+#'
 #' @export
+#'
 #' @import ggplot2
-#' @import dplyr
-#' @import stats
+#' @importFrom stats setNames
+#' @import data.table
 #'
 #' @examples
-#' HSC <- Barbie::HSC
-#' BB <- createBarbie(object = HSC$assay, target = HSC$metadata)
-#' rownames(BB$metadata) <- BB$metadata[,1]
-#' BB$metadata <- BB$metadata[,-1]
-#' testBB <- testBarcodeBias(BB, sampleGroups = "treat", contrastLevels = c("IV", "IT"))
-#' plotBarcodeBiasScatterPlot(Barbie = testBB)
-plotBarcodeBiasScatterPlot <- function(Barbie, elementName = NULL,
-                                       reorderRank = FALSE, pValuesAdjusted = TRUE,
-                                       xAxis = "avgRank") {
+#' Block <- c(1,1,2,3,3,4,1,1,2,3,3,4)
+#' Treat <- factor(rep(c("ctrl", "drug"), each=6))
+#' Time <- rep(rep(1:2, each=3), 2)
+#' nbarcodes <- 50
+#' nsamples <- 12
+#' count <- abs(matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples))
+#' rownames(count) <- paste0("Barcode", 1:nbarcodes)
+#' Barbie <- createBarbie(count, data.frame(Treat=Treat, Time=Time))
+#' testBB <- testBarcodeBias(Barbie, sampleGroups = "Treat")
+#' plotBarcodeBiasScatterPlot(Barbie = testBB, elementName = "diffProp_Treat")
+plotBarcodeBiasScatterPlot <- function(
+    Barbie, elementName = NULL, reorderRank = FALSE, pValuesAdjusted = TRUE,
+    xAxis = "avgRank") {
   ## extract test resilts and information
   if(is.null(elementName))
     elementName <- names(Barbie$testBarcodes)[length(names(Barbie$testBarcodes))]
@@ -31,7 +53,7 @@ plotBarcodeBiasScatterPlot <- function(Barbie, elementName = NULL,
   statMat <- testInfo$results
   methodLs <- testInfo$methods
   ## define a custom color/shape palette for test results
-  customShape <- setNames(c(21, 24, 23), c(methodLs$contrastLevels, "n.s."))
+  customShape <- stats::setNames(c(21, 24, 23), c(methodLs$contrastLevels, "n.s."))
   customColor <- Barbie$factorColors[[elementName]]
   ## y axis will be p.value
   ## x axis will be optional: total occurrence, average rank, average log CPM
@@ -48,11 +70,12 @@ plotBarcodeBiasScatterPlot <- function(Barbie, elementName = NULL,
   ## check xAxis
   xOptions <- c("avgRank", "totalOcc", "avgLogCPM", "avgProportion")
   xAxis <- match.arg(xAxis, xOptions)
-  xTitle <- setNames(c("Average rank of Barcode across samples",
-                       "Number of samples in which Barcode occurs",
-                       "Average Barcode Log2 CPM+1 across samples",
-                       "Average Barcode proportion across samples"),
-                     xOptions)
+  xTitle <- stats::setNames(
+    c("Average rank of Barcode across samples",
+      "Number of samples in which Barcode occurs",
+      "Average Barcode Log2 CPM+1 across samples",
+      "Average Barcode proportion across samples"),
+    xOptions)
   ## data.frame for ggplot
   mydata <- data.frame(
     direction = statMat$direction,
@@ -90,24 +113,45 @@ plotBarcodeBiasScatterPlot <- function(Barbie, elementName = NULL,
 }
 
 
-#' plotting test results of Barcodes by Heatmap
+#' Plot Barcodes categorized by significant change using a Heatmap
 #'
-#' @param Barbie Barbie object created by createBarbie(), with test results stored by calling testBarcodeBias()
-#' @param value a string value choosing to present "CPM" or "occurrence"
-#' @param elementName a string value indicating the test being conducted and stored in Barbie$testBarcode
-#' @param sampleAnnotation a column Annotation object created by ComplexHeatmap::HeatmapAnnotation()
+#' `plotBarcodeBiasHeatmap()` uses the Heatmap annotations to visualize the
+#'  significance level of each Barcode in differential proportion or occurrence,
+#'  as determined by the [testBarcodeBias] function.
 #'
-#' @return a "Heatmap" S4 object
+#' @param Barbie A `Barbie` object created by the [createBarbie] function,
+#'  updated with Barcode test results by calling the [testBarcodeBias] function.
+#' @param value A string indicating what to visualize.
+#'  Defaults to "CPM". Options include: "CPM" and "occurrence".
+#' @param elementName A string indicating name of the test
+#'  conducted and stored in `Barbie$testBarcode`. Default to the last
+#'  test conducted and stored.
+#' @param sampleAnnotation A column Annotation object created by the
+#'  [ComplexHeatmap::HeatmapAnnotation] function. Defaults to samples annotated
+#'  by the groups to be compared.
+#'
+#' @return A `Heatmap` S4 class object displaying the significance level
+#'  of Barcodes in Heatmap annotations.
+#'
 #' @export
 #'
 #' @import ComplexHeatmap
-#' @import grid
-#' @import stats
+#' @importFrom grid gpar
+#' @importFrom dplyr setdiff
+#' @importFrom stats setNames
+#' @import data.table
 #'
 #' @examples
-#' HSC <- Barbie::HSC
-#' HSC <- testBarcodeBias(HSC , sampleGroups = "treat", contrastLevels = c("IV", "IT"))
-#' plotBarcodeBiasHeatmap(HSC)
+#' Block <- c(1,1,2,3,3,4,1,1,2,3,3,4)
+#' Treat <- factor(rep(c("ctrl", "drug"), each=6))
+#' Time <- rep(rep(1:2, each=3), 2)
+#' nbarcodes <- 50
+#' nsamples <- 12
+#' count <- abs(matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples))
+#' rownames(count) <- paste0("Barcode", 1:nbarcodes)
+#' Barbie <- createBarbie(count, data.frame(Treat=Treat, Time=Time))
+#' testBB <- testBarcodeBias(Barbie, sampleGroups = "Treat")
+#' plotBarcodeBiasHeatmap(Barbie = testBB, elementName = "diffProp_Treat")
 plotBarcodeBiasHeatmap <- function(Barbie, value="CPM", elementName = NULL,
                                    sampleAnnotation=NULL) {
   ## extract test resilts and information
@@ -120,14 +164,15 @@ plotBarcodeBiasHeatmap <- function(Barbie, value="CPM", elementName = NULL,
   methodLs <- testInfo$methods
   modelTargets <- testInfo$targets
   ## define a custom color/shape palette for test results
-  customShape <- setNames(c(21, 24, 23), c(methodLs$contrastLevels, "n.s."))
+  customShape <- stats::setNames(
+    c(21, 24, 23), c(methodLs$contrastLevels, "n.s."))
   customColor <- Barbie$factorColors[[elementName]]
 
   ## customize row annotation
   barcodeAnnotation <- rowAnnotation(
     Bias = statMat$direction,
     annotation_name_side = "top",
-    annotation_name_gp = gpar(fontsize = 10),
+    annotation_name_gp = grid::gpar(fontsize = 10),
     col = list(
       Bias = customColor),
     show_legend = TRUE,
@@ -135,10 +180,10 @@ plotBarcodeBiasHeatmap <- function(Barbie, value="CPM", elementName = NULL,
     )
 
   ## adjust the order of slices based on contrast levels in the test
-  restLevels <- setdiff(levels(modelTargets[,methodLs$contrastVector]),
-                        methodLs$contrastLevels)
-  levels(modelTargets[,methodLs$contrastVector]) <- c(methodLs$contrastLevels,
-                                                      restLevels)
+  restLevels <- dplyr::setdiff(
+    levels(modelTargets[,methodLs$contrastVector]), methodLs$contrastLevels)
+  levels(modelTargets[,methodLs$contrastVector]) <- c(
+    methodLs$contrastLevels, restLevels)
 
   hp <- plotBarbieHeatmap(
     Barbie = Barbie,

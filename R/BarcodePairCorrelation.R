@@ -1,24 +1,42 @@
-#' plot Barcode pair wise correlation
+#' Plot Barcode pairwise correlation
 #'
-#' @param Barbie a Barbie object created by createBarbie()
-#' @param method a string value to choose correlation method, default "pearson"
-#' @param dataVisual a sring value to choose visualization data from "mean" or "max" of Barcode CPM in each pair
-#' @param corCutoff a numeric value to decide high correlation level, default 0.95
-#' @param dataCutoff a numeric value to decide the minimum level of log2(mean CPM) to make correlation level convincing
-#' @param BarcodeClusters a list of known groups containing different Barcodes or a vector/array indicating Barcode groups
+#' `plotBarcodePairCorrelation()` visualizes the correlation of each pair of
+#'  Barcodes in the `Barbie` object using a dot plot.
+#'  "Co-existing" Barcodes are identified as showing high correlation in
+#'  Barcode proportions across samples using the [clusterCorrelatingBarcodes]
+#'  function.
+#'  Visualizing the pair wise correlation assists in determining the threshold
+#'  for tagging the highly correlated co-exisitng Barcode clusters.
 #'
-#' @return a list of two data.frame including correlation of all pairs of Barcodes and known correlated Barcode names
+#' @param Barbie A `Barbie` object created by the [createBarbie] function.
+#' @param method A string specifying the correlation method to use.
+#'  Defaults to "pearson". Options include: "pearson", "kendall", "spearman".
+#' @param dataVisual A string indicating what to present against
+#'  correlation in the dot plot. Defaults to `mean`, representing the mean CPM
+#'  for each pair. The alternative option is "max".
+#' @param corCutoff A numeric value that sets the threshold for high correlation
+#'  Defaults to 0.95
+#' @param dataCutoff A numeric value that sets the minimum level of
+#'  Barcode pair's log2(mean CPM) for a Barcode pair to be considered as
+#'  highly correlated co-existing Barcodes. Defaults to 0
+#' @param BarcodeClusters A `list` of known groups containing different Barcodes
+#'  or a `vector`/`array` indicating Barcode groups. Defaults to NULL.
+#'
+#' @return A `ggplot` S3 object displaying a dot plot of the correlation in CPM
+#'  between each pair of Barcodes, plotted against the mean or max of their CPM.
+#'
 #' @export
 #'
 #' @import ggplot2
 #' @importFrom magrittr  %>%
+#' @import data.table
 #'
 #' @examples
 #' nbarcodes <- 50
 #' nsamples <- 12
-#' count <- matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples) %>% abs()
+#' count <- abs(matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples))
 #' rownames(count) <- paste0("Barcode", 1:nbarcodes)
-#' Barbie <- Barbie::createBarbie(count)
+#' Barbie <- createBarbie(count)
 #' plotBarcodePairCorrelation(Barbie, BarcodeClusters=c(rep(1:10, 5)))
 plotBarcodePairCorrelation <- function(Barbie, method="pearson", dataVisual="mean",
     corCutoff=0.95, dataCutoff=0, BarcodeClusters=NULL) {
@@ -39,8 +57,9 @@ plotBarcodePairCorrelation <- function(Barbie, method="pearson", dataVisual="mea
   suppressWarnings({
     ## plotting correlations
     p <- ggplot(corTestResults, aes(x=cor)) +
-      geom_histogram(aes(y=(..count..) / max(..count..) * max(yAxis)),
-                     binwidth=0.05, alpha=0.3, fill="grey") +
+      geom_histogram(
+        aes(y=(after_stat(count)) / max(after_stat(count)) * max(yAxis)),
+        binwidth=0.05, alpha=0.3, fill="grey") +
       geom_point(aes(y=yAxis, color=signif, shape=knownCorrelating)) +
       stat_ecdf(geom="step", aes(y=..y.. * max(yAxis), color=signif), alpha=0.5) +
       scale_color_manual(values=c("n.s." = "#00BFC4", "*" = "#F8766D")) +
@@ -65,28 +84,45 @@ plotBarcodePairCorrelation <- function(Barbie, method="pearson", dataVisual="mea
   return(p)
 }
 
-#' cluster Barcodes based on pair wise correlation
+
+#' Cluster "co-existing" Barcodes based on pairwise correlation
 #'
-#' @param Barbie a Barbie object created by createBarbie()
-#' @param method a string value to choose correlation method, default "pearson"
-#' @param corCutoff a numeric value to decide high correlation level, default 0.95
-#' @param dataCutoff a numeric value to decide the minimum level of log2(mean CPM)
-#' @param BarcodeClusters a list of known groups containing different Barcodes or a vector/array indicating Barcode groups
+#' `clusterCorrelatingBarcodes()` groups "co-existing" Barcode into clusters by
+#'  identifying "co-existing" Barcode pairs based on two criteria:
+#'   * The proportions of Barcodes across samples exhibit high correlation,
+#'    exceeding the threshold specified by `corCutoff`.
+#'   * The log2(mean CPM) of the Barcode pair exceeds the threshold specified
+#'    by `dataCutoff`.
+#'  These two parameters can be manually optimized using the visualization
+#'  function [plotBarcodePairCorrelation].
 #'
-#' @return a ggplot S3 object
+#' @param Barbie A `Barbie` object created by the [createBarbie] function.
+#' @param method A string specifying the correlation method to use.
+#'  Defaults to "pearson". Options include: "pearson", "kendall", "spearman".
+#' @param corCutoff A numeric value that sets the threshold for high correlation
+#'  Defaults to 0.95
+#' @param dataCutoff A numeric value that sets the minimum level of
+#'  Barcode pair's log2(mean CPM) for a Barcode pair to be considered as
+#'  highly correlated co-existing Barcodes. Defaults to 0
+#' @param BarcodeClusters A `list` of known groups containing different Barcodes
+#'  or a `vector`/`array` indicating Barcode groups. Defaults to NULL.
+#'
+#' @return A `Barbie` object updated with adding a `data.frame` component of
+#'  Barcode cluster, called `BarcodeCluster`.
+#'
 #' @export
 #'
 #' @importFrom dplyr filter
 #' @importFrom igraph graph_from_edgelist
 #' @importFrom igraph clusters
-#' @importFrom magrittr  %>%
+#' @importFrom magrittr %>%
 #'
 #' @examples
 #' nbarcodes <- 50
 #' nsamples <- 12
 #' count <- abs(matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples))
 #' rownames(count) <- paste0("Barcode", 1:nbarcodes)
-#' Barbie <- Barbie::createBarbie(count)
+#' Barbie <- createBarbie(count)
 #' clusterCorrelatingBarcodes(Barbie, BarcodeClusters=c(rep(1:10, 5)))
 clusterCorrelatingBarcodes <- function(
     Barbie, method="pearson", corCutoff=0.95, dataCutoff=0, BarcodeClusters=NULL) {
@@ -129,25 +165,36 @@ clusterCorrelatingBarcodes <- function(
   return(Barbie)
 }
 
-#' generate pair wise Barcode correlation and standardize known cluster information
+#' Generate pairwise Barcode correlation and standardize
+#'  known Barcode cluster information
 #'
-#' @param Barbie a Barbie object created by createBarbie()
-#' @param method a string value to choose correlation method, default "pearson"
-#' @param BarcodeClusters a list of known groups containing different Barcodes or a vector/array indicating Barcode groups
+#' @param Barbie A `Barbie` object created by the [createBarbie] function.
+#' @param method A string specifying the correlation method to use.
+#'  Defaults to "pearson". Options include: "pearson", "kendall", "spearman".
+#' @param BarcodeClusters A `list` of known groups containing different Barcodes
+#'  or a `vector`/`array` indicating Barcode groups. Defaults to NULL.
 #'
-#' @return an updated Barbie object including Barcode group information
+#' @return A `list` containing two `data.frame`s:
+#'  * The correlation of all pairs of Barcodes
+#'  * The names of known correlated Barcodes
 #'
 #' @importFrom utils combn
 #' @importFrom dplyr setequal
-#' @importFrom magrittr  %>%
+#' @importFrom magrittr %>%
+#' @importFrom stats cor.test
+#' @importFrom stats p.adjust
+#' @import data.table
 #'
-#' @examples
+#' @noRd
+#'
+#' @examples \dontrun{
 #' nbarcodes <- 50
 #' nsamples <- 12
-#' count <- matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples) %>% abs()
+#' count <- abs(matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples))
 #' rownames(count) <- paste0("Barcode", 1:nbarcodes)
 #' Barbie <- createBarbie(count)
 #' Barbie:::extractBarcodePairs(Barbie, BarcodeClusters=c(rep(1:10, 5)))
+#' }
 extractBarcodePairs <- function(Barbie, method="pearson", BarcodeClusters=NULL) {
   ## check Barbie
   checkBarbieDimensions(Barbie)
@@ -186,7 +233,7 @@ extractBarcodePairs <- function(Barbie, method="pearson", BarcodeClusters=NULL) 
   ## compute the correlation test on each pair of Barcodes
   ## omitting NA values by setting use="complete.obs"
   corTestList <- utils::combn(ncol(mat), 2, function(idx) {
-    corTest <- cor.test(
+    corTest <- stats::cor.test(
       mat[,idx[1]], mat[,idx[2]],
       alternative="greater", use="complete.obs", method=method)
     data.frame(
@@ -206,7 +253,7 @@ extractBarcodePairs <- function(Barbie, method="pearson", BarcodeClusters=NULL) 
   corTestResults <- do.call(rbind, corTestList)
   ## adding an adjusted pvalue column
   corTestResults <- corTestResults %>%
-    mutate(adj.p.value=p.adjust(p.value, method="BH")) %>%
+    mutate(adj.p.value=stats::p.adjust(p.value, method="BH")) %>%
     mutate(signif=ifelse(adj.p.value < 0.05, "*", "n.s."))
 
   return(list(corTestResults=corTestResults,

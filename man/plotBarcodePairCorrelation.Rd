@@ -2,7 +2,7 @@
 % Please edit documentation in R/BarcodePairCorrelation.R
 \name{plotBarcodePairCorrelation}
 \alias{plotBarcodePairCorrelation}
-\title{plot Barcode pair wise correlation}
+\title{Plot Barcode pairwise correlation}
 \usage{
 plotBarcodePairCorrelation(
   Barbie,
@@ -14,29 +14,43 @@ plotBarcodePairCorrelation(
 )
 }
 \arguments{
-\item{Barbie}{a Barbie object created by createBarbie()}
+\item{Barbie}{A \code{Barbie} object created by the \link{createBarbie} function.}
 
-\item{method}{a string value to choose correlation method, default "pearson"}
+\item{method}{A string specifying the correlation method to use.
+Defaults to "pearson". Options include: "pearson", "kendall", "spearman".}
 
-\item{dataVisual}{a sring value to choose visualization data from "mean" or "max" of Barcode CPM in each pair}
+\item{dataVisual}{A string indicating what to present against
+correlation in the dot plot. Defaults to \code{mean}, representing the mean CPM
+for each pair. The alternative option is "max".}
 
-\item{corCutoff}{a numeric value to decide high correlation level, default 0.95}
+\item{corCutoff}{A numeric value that sets the threshold for high correlation
+Defaults to 0.95}
 
-\item{dataCutoff}{a numeric value to decide the minimum level of log2(mean CPM) to make correlation level convincing}
+\item{dataCutoff}{A numeric value that sets the minimum level of
+Barcode pair's log2(mean CPM) for a Barcode pair to be considered as
+highly correlated co-existing Barcodes. Defaults to 0}
 
-\item{BarcodeClusters}{a list of known groups containing different Barcodes or a vector/array indicating Barcode groups}
+\item{BarcodeClusters}{A \code{list} of known groups containing different Barcodes
+or a \code{vector}/\code{array} indicating Barcode groups. Defaults to NULL.}
 }
 \value{
-a list of two data.frame including correlation of all pairs of Barcodes and known correlated Barcode names
+A \code{ggplot} S3 object displaying a dot plot of the correlation in CPM
+between each pair of Barcodes, plotted against the mean or max of their CPM.
 }
 \description{
-plot Barcode pair wise correlation
+\code{plotBarcodePairCorrelation()} visualizes the correlation of each pair of
+Barcodes in the \code{Barbie} object using a dot plot.
+"Co-existing" Barcodes are identified as showing high correlation in
+Barcode proportions across samples using the \link{clusterCorrelatingBarcodes}
+function.
+Visualizing the pair wise correlation assists in determining the threshold
+for tagging the highly correlated co-exisitng Barcode clusters.
 }
 \examples{
 nbarcodes <- 50
 nsamples <- 12
-count <- matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples) \%>\% abs()
+count <- abs(matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples))
 rownames(count) <- paste0("Barcode", 1:nbarcodes)
-Barbie <- Barbie::createBarbie(count)
+Barbie <- createBarbie(count)
 plotBarcodePairCorrelation(Barbie, BarcodeClusters=c(rep(1:10, 5)))
 }

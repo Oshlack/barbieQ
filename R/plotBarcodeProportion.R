@@ -1,25 +1,46 @@
-#' plotting Barcode contributions (percentage of average Barcode proportion across samples)
+#' Plot Barcode contributions as average Barcode proportion across samples
 #'
-#' @param Barbie  a Barbie object created by createBarbie()
-#' @param coordFixed a logical value to decide whether to coordinate x and y scale
-#' @param colorGradient a logical value to choose bar colors being consistant or gradient
+#' `plotBarcodeProportion()` visualizes the average proportion of each Barcode
+#'  across samples using a bar plot, allowing for an easy comparison of
+#'  Barcode contributions.
 #'
-#' @return a "ggplot" S3 class object
+#' @param Barbie A `Barbie` object created by the [createBarbie] function.
+#' @param coordFixed A logical value indicating whether to coordinate the x
+#'  and y scales. Defaults to FALSE, meaning the scales are not coordinated.
+#' @param colorGradient A logical value indicating whether to apply a gradient
+#'  to the bar colors. Defaults to FALSE, which means colors will be
+#'  consistent across all bars.
+#'
+#' @return A `ggplot` S3 class object displaying Barcode contributions in a
+#'  bar plot.
+#'
 #' @export
 #'
 #' @import ggplot2
 #' @importFrom circlize colorRamp2
-#' @import dplyr
+#' @import data.table
 #'
 #' @examples
-#' HSC <- Barbie::HSC
-#' plotBarcodeProportion(HSC)
-#' plotBarcodeProportion(HSC, colorGradient=TRUE)
-plotBarcodeProportion <- function(Barbie, coordFixed=FALSE, colorGradient=FALSE) {
+#' ## sample conditions and color palettes
+#' sampleConditions <- data.frame(
+#'   Treat=factor(rep(c("ctrl", "drug"), each=6)),
+#'   Time=rep(rep(1:2, each=3), 2))
+#' conditionColor <- list(
+#'   Treat=c(ctrl="#999999", drug="#112233"),
+#'   Time=c("1"="#778899", "2"="#998877"))
+#' ## Barcode count data
+#' nbarcodes <- 50
+#' nsamples <- 12
+#' barcodeCount <- abs(matrix(10, nbarcodes, nsamples))
+#' barcodeCount[21:50,] <- 0.0001
+#' rownames(barcodeCount) <- paste0("Barcode", 1:nbarcodes)
+#' ## create a `Barbie` object
+#' myBarbie <- createBarbie(barcodeCount, sampleConditions, conditionColor)
+#' plotBarcodeProportion(myBarbie)
+plotBarcodeProportion <- function(
+    Barbie, coordFixed=FALSE, colorGradient=FALSE) {
   ## check Barbie dimensions
-  if(!checkBarbieDimensions(Barbie))
-    stop("Barbie components are not in right format or dimensions don't match.
-please start with Barbie::createBarbie() and use proper functions to modify the object - don't do it manually.")
+  checkBarbieDimensions(Barbie)
   ## compute mean Barcode proportion across samples as contribution
   contribution <- rowSums(Barbie$proportion) / ncol(Barbie$proportion)
   relativeContribution <- contribution / sum(contribution) *100
@@ -32,7 +53,7 @@ please start with Barbie::createBarbie() and use proper functions to modify the 
     rank = as.numeric(rank)
   )
   ## define color function and assign bar colors
-  colorFun <- colorRamp2(
+  colorFun <- circlize::colorRamp2(
     c(min(relativeContribution), max(relativeContribution)),
     c("#FFC1E0", "#FF3399"))
   if(colorGradient) {
@@ -41,18 +62,20 @@ please start with Barbie::createBarbie() and use proper functions to modify the 
     barColor <- "#FF3399"
   }
 
-  p <- ggplot(data, aes(x=rank, y=percentage)) +
-    geom_bar(stat="identity", alpha= 1, color = alpha(barColor, 0.2),
-             fill = barColor, linewidth = 1) +
-    labs(title = "Barcode Contribution",
-         x = paste0(nrow(data), " Barcodes"),
-         y = "Relative Average Barcode Proportion (%)") +
-    theme_minimal() +
-    theme(axis.ticks = element_blank(),
-          panel.background = element_blank(),  # Remove plot background
-          panel.grid = element_blank(),
-          axis.text.x = element_blank() # Remove x-axis tick labels
-    )
+  suppressWarnings({
+    p <- ggplot(data, aes(x=rank, y=percentage)) +
+      geom_bar(stat="identity", alpha= 1, color = alpha(barColor, 0.2),
+               fill = barColor, linewidth = 1) +
+      labs(title = "Barcode Contribution",
+           x = paste0(nrow(data), " Barcodes"),
+           y = "Relative Average Barcode Proportion (%)") +
+      theme_minimal() +
+      theme(axis.ticks = element_blank(),
+            panel.background = element_blank(),
+            panel.grid = element_blank(),
+            axis.text.x = element_blank()
+      )
+  })
 
   if(coordFixed){
     p <- p + coord_fixed()

@@ -6,38 +6,47 @@
 \usage{
 tagTopBarcodes(
   Barbie,
-  activeColumns = NULL,
-  threshold = 0.99,
-  minTopAppearance = 1
+  activeSamples = NULL,
+  proportionThreshold = 0.99,
+  minTopFrequency = 1
 )
 }
 \arguments{
-\item{Barbie}{an object created by the \link{createBarbie} function}
+\item{Barbie}{An object created by the \link{createBarbie} function.}
 
-\item{activeColumns}{a logical vector indicating which column (sample)
-to be considered when determining the 'top Barcodes'}
+\item{activeSamples}{a logical vector indicating which samples (columns)
+to consider when determining the \emph{top} Barcodes across the entire
+dataset. Default to considering all samples in the \code{Barbie} object.}
 
-\item{threshold}{a number ranging from 0 to 1 used for thresholding the Barcodes' contribution}
+\item{proportionThreshold}{A numeric value ranging from 0 to 1,
+used as a threshold for determining \emph{top} Barcodes in each sample
+based on their combined proportion in theat sample. Default to 0.99.}
 
-\item{minTopAppearance}{An integer indicating the minimum times a barcode must be 'top' in each column to be considered a 'top barcode' across samples}
+\item{minTopFrequency}{An integer specifying the minimum number of times
+a Barcode must be tagged as \emph{top} across the selected samples
+(specified by \code{activeSamples}) in order to be considered \emph{top}
+for the entire dataset. Default to 1.}
 }
 \value{
-A 'Barbie' object, including components:
+A \code{Barbie} object updating \code{isTop} while inheriting other components
+from the \code{Barbie} object passed into the function.
+See \code{Barbie} structure in \link{createBarbie}.
+\code{isTop} is a list including:
 \itemize{
-\item \code{isTop} (updated): a list containing a vector \code{vec} and a matrix \code{mat},
-tagging each Barcode as being part of the major contributors or not.
-\item Other components inherited from the \code{Barbie} object passed into the
-function. See \code{Barbie} structure in \link{createBarbie}.
+\item \code{vec}: a logical vector tagging Barcodes as \emph{top}
+across the entire dataset.
+\item \code{mat}: a logical matrix tagging Barcodes as \emph{top} in each sample.
 }
 }
 \description{
-\code{tagTopBarcodes} is designed for better filtering out the background noise,
+\code{tagTopBarcodes()} is designed for better filtering out the background noise,
 i.e., Barcodes that consistently have low contributions across samples.
-Each Barcode is tagged as one of the major contributing Barcodes or not
-in each sample, referred to \emph{top} Barcodes. In the entire dataset,
-a Barcode is considered \emph{top} if it is tagged as \emph{top}
-in a number of samples passing a defined threshold
-across all selected samples.
+Each Barcode is tagged as one of the major contributing Barcodes
+(\emph{top} Barcodes) or not in each sample, based on whether their
+combined proportion passes a defined threshold in the sample.
+Across the entire dataset, a Barcode is considered \emph{top}
+if it is tagged as \emph{top} in a number of samples,
+meeting a specified appearance threshold across all selected samples.
 }
 \examples{
 ## create a `Barbie` object

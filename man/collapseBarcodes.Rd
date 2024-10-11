@@ -2,22 +2,36 @@
 % Please edit documentation in R/modifierMethods.R
 \name{collapseBarcodes}
 \alias{collapseBarcodes}
-\title{collapse a 'Barbie' object by Barcode groups}
+\title{Collapse Barcodes of a \code{Barbie} object based on Barcode grouping}
 \usage{
-collapseBarcodes(Barbie, groupArray, method = max)
+collapseBarcodes(Barbie, groupArray = NULL, method = max)
 }
 \arguments{
-\item{Barbie}{an object created by the 'createBarbie()' function in the 'Barbie' package}
+\item{Barbie}{A \code{Barbie} object created by the \link{createBarbie} function.}
 
-\item{groupArray}{a vector indication the group of each sample}
+\item{groupArray}{A vector indicating the group to which each Barcode
+belongs. Defaults to each Barcode being treated as a unique group.}
 
-\item{method}{a function choosing method for collapsing Barcode counts within Barcode groups}
+\item{method}{The name of an aggregation function used to collapse barcodes
+within the same group. Defaults to \code{max}.}
 }
 \value{
-a 'Barbie' object with samples collapsed by 'groupArray'
+A \code{Barbie} object with updated components reflecting the collapsed
+Barcode groups, including:
+\itemize{
+\item \code{assay}, \code{proportion}, and \code{CPM} aggregated by the specified \code{method}
+\item \code{occurrence} aggregated by \code{any} within the group
+\item \code{rank} aggregated by \code{min} within the group
+\item \code{isTop$mat} and \code{isTop$vec} aggregated by \code{any} within the group
+\item \code{clusters} aggregated by the most abundant cluster name within the group
+\item Other components inherited from the original \code{Barbie} object.
+}
 }
 \description{
-collapse a 'Barbie' object by Barcode groups
+In the \code{matrix} and \code{data.frame} components of a \code{Barbie} object,
+samples are organized in columns and Barcodes in rows. \code{collapseBarcodes()}
+merges the rows based on specified \code{groupArray}. Barcodes within the same
+group are collapsed into a single row using specified aggregation method.
 }
 \examples{
 myBarbie <- createBarbie(

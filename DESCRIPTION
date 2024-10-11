@@ -28,7 +28,8 @@ Imports:
     limma,
     stats,
     igraph,
-    utils
+    utils,
+    data.table
 Depends: 
     R (>= 3.5.0)
 Roxygen: list(markdown = TRUE)

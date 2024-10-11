@@ -2,28 +2,48 @@
 % Please edit documentation in R/modifierMethods.R
 \name{subsetSamplesByMetadata}
 \alias{subsetSamplesByMetadata}
-\title{Title make a subset of columns from all components of a 'Barbie' object based on specified conditions in the metadata}
+\title{Trim samples of a \code{Barbie} object based on specified specified
+sample conditions}
 \usage{
-subsetSamplesByMetadata(Barbie, factor, specifiedConditions, keep = TRUE)
+subsetSamplesByMetadata(
+  Barbie,
+  factor = NULL,
+  specifiedConditions = NULL,
+  keep = TRUE
+)
 }
 \arguments{
-\item{Barbie}{an object created by the 'createBarbie()' function in the 'Barbie' package}
+\item{Barbie}{A \code{Barbie} object created by the \link{createBarbie} function.}
 
-\item{factor}{a string specifying the factor name in 'Barbie$metadata'}
+\item{factor}{A string representing the name of a factor in
+\code{Barbie$metadata}. Defaults to the first factor in \code{Barbie$metadata}.}
 
-\item{specifiedConditions}{a string or a string vector specifying the conditions in the specified factor}
+\item{specifiedConditions}{A string vector specifying the conditions
+in the specified factor. Defaults to all conditions in the specified factor.}
 
-\item{keep}{a logical value indicating whether to retain or exclude the columns (samples) of the specified conditions}
+\item{keep}{A logical value: TRUE to retain or FALSE to exclude
+the columns (samples) of the specified conditions. Defaults to TRUE.}
 }
 \value{
-an updated Barbie object with subsets of its components
+A \code{Barbie} object with:
+\itemize{
+\item Updated components reflecting the subsetted samples, including \code{assay},
+\code{metadata}, \code{proportion}, \code{CPM}, \code{occurrence}, \code{rank}, and \code{isTop$mat}.
+\item Other components are inherited from the original \code{Barbie} object.
+}
 }
 \description{
-Title make a subset of columns from all components of a 'Barbie' object based on specified conditions in the metadata
+In the \code{matrix} and \code{data.frame} components of a \code{Barbie} object,
+samples are organized in columns and Barcodes in rows. The \code{metadata}
+component in \code{Barbie} is a \code{data.frame} representing sample conditions,
+organized by various experimental factors.
+\code{subsetSamplesByMetadata()} trims the columns based on specified
+\code{specifiedConditions} in the specified \code{factor} in \code{Barbie$metadata}.
 }
 \examples{
 myBarbie <- createBarbie(
   object=matrix(c(1:20), nrow=5, ncol=4),
   target=data.frame(fac=c(1, 1, 2, 2)))
-subsetColumnsByMetadata(Barbie=myBarbie, factor="fac", specifiedConditions=1, keep=TRUE)
+subsetSamplesByMetadata(
+  Barbie=myBarbie, factor="fac", specifiedConditions=1, keep=TRUE)
 }

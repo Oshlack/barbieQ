@@ -2,22 +2,27 @@
 % Please edit documentation in R/tagTopBarcodes.R
 \name{tagTopEachColumn}
 \alias{tagTopEachColumn}
-\title{Tag top Barcodes in each column (sample).}
+\title{Tag \emph{top} Barcodes in each sample.}
 \usage{
-tagTopEachColumn(tempCol, threshold = 0.99)
+tagTopEachColumn(tempCol, proportionThreshold = 0.99)
 }
 \arguments{
-\item{tempCol}{a numeric vector of Barcode counts in a sample, usually being a column in a count matrix}
+\item{tempCol}{a numeric vector of Barcode counts in a sample,
+usually being a column in a count matrix}
 
-\item{threshold}{a number ranging from 0 to 1 used for thresholding the Barcodes' contribution}
+\item{proportionThreshold}{A numeric value ranging from 0 to 1,
+used as a threshold for determining \emph{top} Barcodes in each sample
+based on their combined proportion in theat sample. Default to 0.99.}
 }
 \value{
-a logical vector indicating whether each Barcode is considered as 'top' in this vector
+a logical vector tagging Barcodes as \emph{top} in the sample.
 }
 \description{
-Tag top Barcodes in each column (sample).
+Tag \emph{top} Barcodes in each sample.
 }
 \examples{
+\dontrun{
 myCount <- c(1, 2, 3, 98, NA, NA)
-tagTopEachColumn(myCount, 0.99)
+Barbie:::tagTopEachColumn(myCount, 0.99)
+}
 }

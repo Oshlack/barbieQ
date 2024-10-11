@@ -1,24 +1,33 @@
 #' Tag each Barcode as being part of the major contributors or not
 #'
-#' `tagTopBarcodes` is designed for better filtering out the background noise,
+#' `tagTopBarcodes()` is designed for better filtering out the background noise,
 #'  i.e., Barcodes that consistently have low contributions across samples.
-#'  Each Barcode is tagged as one of the major contributing Barcodes or not
-#'  in each sample, referred to *top* Barcodes. In the entire dataset,
-#'  a Barcode is considered *top* if it is tagged as *top*
-#'  in a number of samples passing a defined threshold
-#'  across all selected samples.
+#'  Each Barcode is tagged as one of the major contributing Barcodes
+#'  (\emph{top} Barcodes) or not in each sample, based on whether their
+#'  combined proportion passes a defined threshold in the sample.
+#'  Across the entire dataset, a Barcode is considered \emph{top}
+#'  if it is tagged as \emph{top} in a number of samples,
+#'  meeting a specified appearance threshold across all selected samples.
 #'
-#' @param Barbie an object created by the [createBarbie] function
-#' @param activeColumns a logical vector indicating which column (sample)
-#'  to be considered when determining the *top* Barcodes
-#' @param threshold a number ranging from 0 to 1 used for thresholding the Barcodes' contribution
-#' @param minTopAppearance An integer indicating the minimum times a barcode must be 'top' in each column to be considered a 'top barcode' across samples
+#' @param Barbie An object created by the [createBarbie] function.
+#' @param activeSamples a logical vector indicating which samples (columns)
+#'  to consider when determining the \emph{top} Barcodes across the entire
+#'  dataset. Default to considering all samples in the `Barbie` object.
+#' @param proportionThreshold A numeric value ranging from 0 to 1,
+#'  used as a threshold for determining \emph{top} Barcodes in each sample
+#'  based on their combined proportion in theat sample. Default to 0.99.
+#' @param minTopFrequency An integer specifying the minimum number of times
+#'  a Barcode must be tagged as \emph{top} across the selected samples
+#'  (specified by `activeSamples`) in order to be considered \emph{top}
+#'  for the entire dataset. Default to 1.
 #'
-#' @return A 'Barbie' object, including components:
-#'  * `isTop` (updated): a list containing a vector `vec` and a matrix `mat`,
-#'    tagging each Barcode as being part of the major contributors or not.
-#'  * Other components inherited from the `Barbie` object passed into the
-#'    function. See `Barbie` structure in [createBarbie].
+#' @return A `Barbie` object updating `isTop` while inheriting other components
+#' from the `Barbie` object passed into the function.
+#' See `Barbie` structure in [createBarbie].
+#' `isTop` is a list including:
+#'  * `vec`: a logical vector tagging Barcodes as \emph{top}
+#'    across the entire dataset.
+#'  * `mat`: a logical matrix tagging Barcodes as \emph{top} in each sample.
 #'
 #' @export
 #'
@@ -40,21 +49,21 @@
 #' myBarbie <- createBarbie(barcodeCount, sampleConditions, conditionColor)
 #' ## tag top Barcodes
 #' tagTopBarcodes(myBarbie)
-tagTopBarcodes <- function(Barbie, activeColumns=NULL,
-                           threshold=0.99, minTopAppearance=1){
+tagTopBarcodes <- function(Barbie, activeSamples=NULL,
+                           proportionThreshold=0.99, minTopFrequency=1){
   mat <- Barbie$assay
   ## dispatch 'returnNumMat' function to ensure the object is a numeric matrix apart from NAs.
   if(inherits(mat, "data.frame") || inherits(mat, "matrix") || is.vector(mat))
     mat <- returnNumMat(mat)
   else stop("`Barbie$assay` should be a data.frame, matrix or vector of Barcode counts.")
-  ## if 'activeColumns' is not specified, assume all columns are active.
-  if(is.null(activeColumns)) activeColumns <- rep(TRUE, ncol(mat))
+  ## if 'activeSamples' is not specified, assume all columns are active.
+  if(is.null(activeSamples)) activeSamples <- rep(TRUE, ncol(mat))
   ## dispatch 'tagTopEachColumn' to individully determine 'top Barcodes' in each column.
-  topsInMat <- apply(mat, 2, function(col) tagTopEachColumn(col, threshold))
+  topsInMat <- apply(mat, 2, function(col) tagTopEachColumn(col, proportionThreshold))
   ## select the active columns used to determine 'top Barcodes' out of the samples.
-  subTopMat <- topsInMat[, activeColumns, drop = FALSE]
+  subTopMat <- topsInMat[, activeSamples, drop = FALSE]
   ## determine the 'top Barcodes' based on the numbers of being true out of all 'active' samples.
-  topOverall <- rowSums(subTopMat, na.rm = TRUE) >= minTopAppearance
+  topOverall <- rowSums(subTopMat, na.rm = TRUE) >= minTopFrequency
   ## store
   updatedObject <- list(
     ## retain other components
@@ -80,24 +89,27 @@ tagTopBarcodes <- function(Barbie, activeColumns=NULL,
   return(updatedObject)
 }
 
-#' Tag top Barcodes in each column (sample).
+#' Tag \emph{top} Barcodes in each sample.
 #'
-#' @param tempCol a numeric vector of Barcode counts in a sample, usually being a column in a count matrix
-#' @param threshold a number ranging from 0 to 1 used for thresholding the Barcodes' contribution
+#' @param tempCol a numeric vector of Barcode counts in a sample,
+#'  usually being a column in a count matrix
+#' @param proportionThreshold A numeric value ranging from 0 to 1,
+#'  used as a threshold for determining \emph{top} Barcodes in each sample
+#'  based on their combined proportion in theat sample. Default to 0.99.
 #'
-#' @return a logical vector indicating whether each Barcode is considered as 'top' in this vector
+#' @return a logical vector tagging Barcodes as \emph{top} in the sample.
 #'
 #' @noMd
 #'
-#' @import stats
-#' @examples
+#' @importFrom stats na.omit
+#'
+#' @examples \dontrun{
 #' myCount <- c(1, 2, 3, 98, NA, NA)
-#' tagTopEachColumn(myCount, 0.99)
-tagTopEachColumn <- function(tempCol, threshold=0.99){
-  ## need update this function: with a more robust threshold instead of empirical 0.99
-
+#' Barbie:::tagTopEachColumn(myCount, 0.99)
+#' }
+tagTopEachColumn <- function(tempCol, proportionThreshold=0.99){
   ## set up default threshold at 0.99
-  if(is.null(threshold)) threshold <- 0.99
+  if(is.null(proportionThreshold)) proportionThreshold <- 0.99
   ## NAs are retained as NA in 'Barbie$rank', but we want NAs to be placed last in the ranking here.
   ## setting 'na.last=TRUE' will place NAs last in the ranking.
   ## setting 'ties.method="first"' will handle equal values by assigning the first the lowest rank.
@@ -117,13 +129,20 @@ tagTopEachColumn <- function(tempCol, threshold=0.99){
     else if (x == 1) sum(sortedValue[1])
     }, numeric(1))
   ## step3: calculate sum of all values from the first to the last, omitting NAs
-  sums <- sum(na.omit(tempCol))
-  ## step4: find the position where the cumulative sum is >= threshold and the previous value not exceeds it
+  sums <- sum(stats::na.omit(tempCol))
+  ## avoid dividing by zero
+  if(sums == 0) sums <- Inf
+  ## step4: find the position where the cumulative sum is >= proportionThreshold and the previous value not exceeds it
   position <- which(
-    replace(cumSum >= threshold*sums, is.na(cumSum), FALSE) &
-      replace(cumSumMinus1 < threshold*sums, is.na(cumSumMinus1), FALSE))
+    replace(cumSum >= proportionThreshold*sums, is.na(cumSum), FALSE) &
+      replace(
+        cumSumMinus1 < proportionThreshold*sums, is.na(cumSumMinus1), FALSE))
   ## step5: determine all values ranking higher than the position is 'top'.
-  isTopInColumn <- rankCol <= rankCol[position]
+  if(length(position) == 0L) {
+    isTopInColumn <- rep(FALSE, length(rankCol))
+  } else {
+    isTopInColumn <- rankCol <= rankCol[position]
+  }
 
   return(isTopInColumn)
 }

@@ -2,25 +2,44 @@
 % Please edit documentation in R/plotBarcodeProportion.R
 \name{plotBarcodeProportion}
 \alias{plotBarcodeProportion}
-\title{plotting Barcode contributions (percentage of average Barcode proportion across samples)}
+\title{Plot Barcode contributions as average Barcode proportion across samples}
 \usage{
 plotBarcodeProportion(Barbie, coordFixed = FALSE, colorGradient = FALSE)
 }
 \arguments{
-\item{Barbie}{a Barbie object created by createBarbie()}
+\item{Barbie}{A \code{Barbie} object created by the \link{createBarbie} function.}
 
-\item{coordFixed}{a logical value to decide whether to coordinate x and y scale}
+\item{coordFixed}{A logical value indicating whether to coordinate the x
+and y scales. Defaults to FALSE, meaning the scales are not coordinated.}
 
-\item{colorGradient}{a logical value to choose bar colors being consistant or gradient}
+\item{colorGradient}{A logical value indicating whether to apply a gradient
+to the bar colors. Defaults to FALSE, which means colors will be
+consistent across all bars.}
 }
 \value{
-a "ggplot" S3 class object
+A \code{ggplot} S3 class object displaying Barcode contributions in a
+bar plot.
 }
 \description{
-plotting Barcode contributions (percentage of average Barcode proportion across samples)
+\code{plotBarcodeProportion()} visualizes the average proportion of each Barcode
+across samples using a bar plot, allowing for an easy comparison of
+Barcode contributions.
 }
 \examples{
-HSC <- Barbie::HSC
-plotBarcodeProportion(HSC)
-plotBarcodeProportion(HSC, colorGradient=TRUE)
+## sample conditions and color palettes
+sampleConditions <- data.frame(
+  Treat=factor(rep(c("ctrl", "drug"), each=6)),
+  Time=rep(rep(1:2, each=3), 2))
+conditionColor <- list(
+  Treat=c(ctrl="#999999", drug="#112233"),
+  Time=c("1"="#778899", "2"="#998877"))
+## Barcode count data
+nbarcodes <- 50
+nsamples <- 12
+barcodeCount <- abs(matrix(10, nbarcodes, nsamples))
+barcodeCount[21:50,] <- 0.0001
+rownames(barcodeCount) <- paste0("Barcode", 1:nbarcodes)
+## create a `Barbie` object
+myBarbie <- createBarbie(barcodeCount, sampleConditions, conditionColor)
+plotBarcodeProportion(myBarbie)
 }

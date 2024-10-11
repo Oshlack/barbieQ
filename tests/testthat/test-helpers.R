@@ -34,23 +34,27 @@ test_that("extracting targets and sampleGroups works", {
 
   expect_message(
     extractTargetsAndPrimaryFactor(Barbie = Barbie),
-    "no properly specified 'sampleGroups'. setting samples by homogenenous group.")
+    "setting Treat as the primary effector of sample conditions.")
   expect_message(
-    extractTargetsAndPrimaryFactor(Barbie = Barbie,
-                                   targets = data.frame(Treat=Treat, Time=Time, Block = Block)),
-    "no properly specified 'sampleGroups'. setting samples by homogenenous group."
+    extractTargetsAndPrimaryFactor(
+      Barbie = Barbie,
+      targets = data.frame(Treat=Treat, Time=Time, Block = Block)),
+    "setting Treat as the primary effector of sample conditions."
   )
   expect_message(
     extractTargetsAndPrimaryFactor(Barbie = Barbie, sampleGroups = "Treat"),
     "setting Treat as the primary effector of sample conditions."
   )
   expect_equal(
-    extractTargetsAndPrimaryFactor(Barbie = Barbie,
-                                   targets = data.frame(Treat=Treat, Time=Time, Block = Block),
-                                   sampleGroups = "Treat"),
+    extractTargetsAndPrimaryFactor(
+      Barbie = Barbie,
+      targets = data.frame(Treat=Treat, Time=Time, Block = Block),
+      sampleGroups = "Treat"),
     list(mytargets = data.frame(Treat=Treat, Time=Time, Block = Block),
          pointer = 1)
     )
-  expect_error(extractTargetsAndPrimaryFactor(Barbie = Barbie, sampleGroups = "treat"))
-  expect_error(extractTargetsAndPrimaryFactor(Barbie = Barbie, sampleGroups = c(1:6)))
+  expect_error(
+    extractTargetsAndPrimaryFactor(Barbie = Barbie, sampleGroups = "treat"))
+  expect_error(
+    extractTargetsAndPrimaryFactor(Barbie = Barbie, sampleGroups = c(1:6)))
 })

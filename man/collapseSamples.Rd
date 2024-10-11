@@ -2,22 +2,36 @@
 % Please edit documentation in R/modifierMethods.R
 \name{collapseSamples}
 \alias{collapseSamples}
-\title{collapse a 'Barbie' object by sample groups}
+\title{Collapse samples of a \code{Barbie} object based on sample grouping}
 \usage{
-collapseSamples(Barbie, groupArray, method = mean)
+collapseSamples(Barbie, groupArray = NULL, method = mean)
 }
 \arguments{
-\item{Barbie}{an object created by the 'createBarbie()' function in the 'Barbie' package}
+\item{Barbie}{A \code{Barbie} object created by the \link{createBarbie} function.}
 
-\item{groupArray}{a vector indication the group of each sample}
+\item{groupArray}{A vector indicating the group to which each sample belongs.
+Defaults to each sample being treated as a unique group.}
 
-\item{method}{function indicating the method for collapsing each sample in the subset matrix of each Barcode group}
+\item{method}{The name of an aggregation function used to collapse samples
+within the same group. Defaults to \code{mean}.}
 }
 \value{
-a 'Barbie' object with samples collapsed by 'groupArray'
+A \code{Barbie} object with updated components reflecting the collapsed
+sample groups, including:
+\itemize{
+\item \code{assay}, \code{proportion}, and \code{CPM} aggregated by the specified \code{method}
+\item \code{metadata} merged for all sample conditions within the group
+\item \code{occurrence} aggregated by \code{any} within the group
+\item \code{rank} aggregated by \code{min} within the group
+\item \code{isTop$mat} aggregated by \code{any} within the group
+\item Other components inherited from the original \code{Barbie} object.
+}
 }
 \description{
-collapse a 'Barbie' object by sample groups
+In the \code{matrix} and \code{data.frame} components of a \code{Barbie} object,
+samples are organized in columns and Barcodes in rows. \code{collapseSamples()}
+merges the columns based on specified \code{groupArray}. Samples within the same
+group are collapsed into a single column using specified aggregation method.
 }
 \examples{
 myBarbie <- createBarbie(

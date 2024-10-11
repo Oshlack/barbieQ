@@ -2,7 +2,8 @@ test_that("subset Barbie by metadata works", {
   myBarbie <- createBarbie(
     object=matrix(c(1:20), nrow=5, ncol=4),
     target=data.frame(fac=c(1, 1, 2, 2)))
-  subBarbie <- subsetSamplesByMetadata(Barbie=myBarbie, factor="fac", specifiedConditions=1, keep=TRUE)
+  subBarbie <- subsetSamplesByMetadata(
+    Barbie=myBarbie, factor="fac", specifiedConditions=1, keep=TRUE)
   expect_equal(subBarbie$metadata$fac, c(1, 1))
 })
 
@@ -44,6 +45,10 @@ test_that("combining Barbie samples works", {
                       c = c("u" = "#CCCCCC")))
   rownames(manualBarbie$metadata) <- rownames(combinedBarbie$metadata)
   expect_equal(combinedBarbie$metadata, manualBarbie$metadata)
+
+  Barbie4 <- createBarbie(
+    object=matrix(c(31:34), nrow=4, ncol=1))
+  expect_error(combineBarbies(Barbie1, Barbie4))
 })
 
 test_that("merging lists works", {

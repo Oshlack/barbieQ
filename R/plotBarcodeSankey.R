@@ -1,17 +1,41 @@
-#' plotting relative Barcode total contribution in Sankey plot - top vs bottom Barcodes
+#' Plot total contributions of Barcodes grouped by \emph{top} vs. \emph{bottom}
+#' in a stacked bar plot.
 #'
-#' @param Barbie a Barbie object created by createBarbie()
+#' After the [tagTopBarcodes] function tags Barcodes as either
+#'  \emph{top} or \emph{bottom}, `plotBarcodeSankey()` visualizes their
+#'  relative frequency and total contribution across all samples using
+#'  a stacked bar plot, resembling a Sankey plot.
 #'
-#' @return a "ggplot" S3 class object
+#' @param Barbie A `Barbie` object created by the [createBarbie] function.
+#'
+#' @return A `ggplot` S3 class object displaying the Sankey-like stacked bar
+#'  plot, where Barcodes are categorized as either \emph{top} or \emph{bottom}.
+#'
 #' @export
 #'
-#' @import tidyr
+#' @importFrom tidyr gather
 #' @importFrom magrittr %>%
 #' @import ggplot2
+#' @import data.table
 #'
 #' @examples
-#' HSC <- Barbie::HSC
-#' plotBarcodeSankey(HSC)
+#' ## sample conditions and color palettes
+#' sampleConditions <- data.frame(
+#'   Treat=factor(rep(c("ctrl", "drug"), each=6)),
+#'   Time=rep(rep(1:2, each=3), 2))
+#' conditionColor <- list(
+#'   Treat=c(ctrl="#999999", drug="#112233"),
+#'   Time=c("1"="#778899", "2"="#998877"))
+#' ## Barcode count data
+#' nbarcodes <- 50
+#' nsamples <- 12
+#' barcodeCount <- abs(matrix(10, nbarcodes, nsamples))
+#' barcodeCount[21:50,] <- 0.0001
+#' rownames(barcodeCount) <- paste0("Barcode", 1:nbarcodes)
+#' ## create a `Barbie` object
+#' myBarbie <- createBarbie(barcodeCount, sampleConditions, conditionColor)
+#' myBarbie <- tagTopBarcodes(myBarbie)
+#' plotBarcodeSankey(myBarbie)
 plotBarcodeSankey <- function(Barbie) {
   flag <- Barbie$isTop$vec
   contribution <- Barbie$CPM
@@ -32,22 +56,25 @@ plotBarcodeSankey <- function(Barbie) {
   dataLong <- tidyr::gather(ppdata, key = "variable", value = "value", -category)
   dataLong$variable <- factor(dataLong$variable, levels = c("top", "bottom"))
 
-  p <- ggplot(dataLong, aes(x = category, y = value, fill = variable)) +
-    geom_bar(stat = "identity", width = 0.5) +
-    facet_grid(~category, scales = "free_x", space = "free_x") +
-    geom_text(aes(label = paste0(round(value), "%")), position = position_stack(vjust = 0.5)) +
-    labs(x = " ", y = "relative total proportion (%)") +
-    labs(fill = "Barcodes") +
-    scale_fill_manual(
-      values = c("top" = "#FF3399", "bottom" = "#0066FF"),
-      labels = c(paste0("Top ", sum(flag)), "Others")
-    ) +
-    theme(axis.ticks = element_blank(),
-          panel.background = element_blank(),
-          panel.grid = element_blank(),
-          axis.title.y = element_blank(),
-          axis.text.y = element_blank(),
-          axis.ticks.y = element_blank())
+  suppressWarnings({
+    p <- ggplot(dataLong, aes(x = category, y = value, fill = variable)) +
+      geom_bar(stat = "identity", width = 0.5) +
+      facet_grid(~category, scales = "free_x", space = "free_x") +
+      geom_text(aes(label = paste0(round(value), "%")), position = position_stack(vjust = 0.5)) +
+      labs(x = " ", y = "relative total proportion (%)") +
+      labs(fill = "Barcodes") +
+      scale_fill_manual(
+        values = c("top" = "#FF3399", "bottom" = "#0066FF"),
+        labels = c(paste0("Top ", sum(flag)), "Others")
+      ) +
+      theme(axis.ticks = element_blank(),
+            panel.background = element_blank(),
+            panel.grid = element_blank(),
+            axis.title.y = element_blank(),
+            axis.text.y = element_blank(),
+            axis.ticks.y = element_blank())
+  })
+
 
   return(p)
 }

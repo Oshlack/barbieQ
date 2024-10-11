@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotSamplePairCorrelation.R
 \name{plotSamplePairCorrelation}
 \alias{plotSamplePairCorrelation}
-\title{plotting sample pair-wise correlation in Heatmap}
+\title{Plot sample pairwise correlation in a Heatmap}
 \usage{
 plotSamplePairCorrelation(
   Barbie,
@@ -13,29 +13,48 @@ plotSamplePairCorrelation(
 )
 }
 \arguments{
-\item{Barbie}{a Barbie object created by createBarbie()}
+\item{Barbie}{A \code{Barbie} object created by the \link{createBarbie} function.}
 
-\item{sampleOrder}{a charactor vector indicating samples ordered by which factor in targets}
+\item{sampleOrder}{A character vector of names of the factors in the
+sample conditions provided by \code{Barbie} or \code{targets},
+specifying the order in which samples should be arranged.
+Defaults to the original order of factors in the sample conditions.}
 
-\item{targets}{a data.frame containing sample conditions - each effector is a column}
+\item{targets}{A \code{matrix} or \code{data.frame} of sample conditions,
+where each factor is represented in a separate column. Defaults to NULL,
+in which case sample conditions are inherited from \code{Barbie$metadata}.}
 
-\item{sampleGroups}{a vector or a string value indicating the primary effector in targets}
+\item{sampleGroups}{A string representing the name of a factor from the
+sample conditions passed by \code{Barbie} or \code{targets}, or a vector of
+sample conditions, indicating the primary factor to split sample slices.}
 
-\item{method}{a string value choose correlation method from "pearson" or "spearman"}
+\item{method}{A string specifying the correlation method to use.
+Defaults to "pearson". Options include: "pearson", "spearman".}
 }
 \value{
-a "Heatmap" S4 obejct
+A "Heatmap" S4 object displaying the pairwise correlation between
+samples in a Heatmap.
 }
 \description{
-plotting sample pair-wise correlation in Heatmap
+\code{plotSamplePairCorrelation()} visualizes the pairwise correlation of
+CPM values across samples in a \code{Barbie} object,
+using a heatmap with a checkerboard-like pattern.
 }
 \examples{
-HSC <- Barbie::HSC
-plotSamplePairCorrelation(Barbie = HSC)
-
-HSC$metadata$treat <- factor(HSC$metadata$treat, levels = c("IF", "IT", "IV"))
-HSC$metadata$lineage <- factor(HSC$metadata$lineage,
-levels = c("Bcell", "Tcell", "immature", "Myeloid"))
-sampleOrder <- c("time", "treat", "lineage", "celltype", "tissue", "mouse")
-plotSamplePairCorrelation(Barbie = HSC, sampleOrder = sampleOrder)
+## sample conditions and color palettes
+sampleConditions <- data.frame(
+  Treat=factor(rep(c("ctrl", "drug"), each=6)),
+  Time=rep(rep(1:2, each=3), 2))
+conditionColor <- list(
+  Treat=c(ctrl="#999999", drug="#112233"),
+  Time=c("1"="#778899", "2"="#998877"))
+## Barcode count data
+nbarcodes <- 50
+nsamples <- 12
+barcodeCount <- abs(matrix(10, nbarcodes, nsamples))
+barcodeCount[21:50,] <- 0.0001
+rownames(barcodeCount) <- paste0("Barcode", 1:nbarcodes)
+## create a `Barbie` object
+myBarbie <- createBarbie(barcodeCount, sampleConditions, conditionColor)
+plotSamplePairCorrelation(myBarbie)
 }

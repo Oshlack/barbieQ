@@ -2,20 +2,40 @@
 % Please edit documentation in R/plotBarcodeSankey.R
 \name{plotBarcodeSankey}
 \alias{plotBarcodeSankey}
-\title{plotting relative Barcode total contribution in Sankey plot - top vs bottom Barcodes}
+\title{Plot total contributions of Barcodes grouped by \emph{top} vs. \emph{bottom}
+in a stacked bar plot.}
 \usage{
 plotBarcodeSankey(Barbie)
 }
 \arguments{
-\item{Barbie}{a Barbie object created by createBarbie()}
+\item{Barbie}{A \code{Barbie} object created by the \link{createBarbie} function.}
 }
 \value{
-a "ggplot" S3 class object
+A \code{ggplot} S3 class object displaying the Sankey-like stacked bar
+plot, where Barcodes are categorized as either \emph{top} or \emph{bottom}.
 }
 \description{
-plotting relative Barcode total contribution in Sankey plot - top vs bottom Barcodes
+After the \link{tagTopBarcodes} function tags Barcodes as either
+\emph{top} or \emph{bottom}, \code{plotBarcodeSankey()} visualizes their
+relative frequency and total contribution across all samples using
+a stacked bar plot, resembling a Sankey plot.
 }
 \examples{
-HSC <- Barbie::HSC
-plotBarcodeSankey(HSC)
+## sample conditions and color palettes
+sampleConditions <- data.frame(
+  Treat=factor(rep(c("ctrl", "drug"), each=6)),
+  Time=rep(rep(1:2, each=3), 2))
+conditionColor <- list(
+  Treat=c(ctrl="#999999", drug="#112233"),
+  Time=c("1"="#778899", "2"="#998877"))
+## Barcode count data
+nbarcodes <- 50
+nsamples <- 12
+barcodeCount <- abs(matrix(10, nbarcodes, nsamples))
+barcodeCount[21:50,] <- 0.0001
+rownames(barcodeCount) <- paste0("Barcode", 1:nbarcodes)
+## create a `Barbie` object
+myBarbie <- createBarbie(barcodeCount, sampleConditions, conditionColor)
+myBarbie <- tagTopBarcodes(myBarbie)
+plotBarcodeSankey(myBarbie)
 }
