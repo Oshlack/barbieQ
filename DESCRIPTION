@@ -1,21 +1,27 @@
 Package: Barbie
 Type: Package
-Title: Analyze and Interpret Barcode Data for Clonal Tracking
-Version: 0.1.0
-Author: LF
-Maintainer: LF <liyang.fei@petermac.org>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: MIT + file LICENSE
+Title: Analyze Barcode Data from Clonal Tracking Experiments
+Version: 0.99.0
+Description: The Barbie package provides a suite of robust statistical tools 
+  for analysing Barcode count data generated from clonal tracking experiments.
+  By tracking the incorporation of unique DNA Barcodes into progenitor cells 
+  and sequencing the Barcodes from progeny cells, researchers can quantify 
+  clonal populations and assess their dynamics before and after experimental 
+  perturbations. Barbie covers data preprocessing, statistical testing, and 
+  visualizations.
+Authors@R:
+    person("Liyang", "Fei",
+      email = liyang.fei@petermac.org,
+      role = c("cre", "aut"),
+      comment = c(ORCID = "0000-0002-3293-2094"))
+License: GPL-3
+LazyData: FALSE
 Encoding: UTF-8
-LazyData: true
 VignetteBuilder: knitr
 Suggests: 
     knitr,
     rmarkdown,
     testthat (>= 3.0.0)
-RoxygenNote: 7.3.2
-Config/testthat/edition: 3
 Imports: 
     magrittr,
     tidyr,
@@ -30,7 +36,11 @@ Imports:
     igraph,
     utils,
     data.table
+biocViews: ClonalTrack, CompositionalData, Regression, Visualization
+BugReports: https://github.com/Oshlack/Barbie
+URL: https://github.com/Oshlack/Barbie/issues
+RoxygenNote: 7.3.2
+Config/testthat/edition: 3
 Depends: 
-    R (>= 3.5.0)
+    R (>= 4.4.0)
 Roxygen: list(markdown = TRUE)
-

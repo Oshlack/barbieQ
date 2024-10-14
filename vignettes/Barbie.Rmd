@@ -1,5 +1,5 @@
 ---
-title: "Barbie"
+title: "Barbie: An R package for analysing Barcode count data from clonal tracking experiments"
 output: 
   BiocStyle::html_document:
     toc: true
@@ -20,17 +20,7 @@ knitr::opts_chunk$set(
 
 # Introduction
 
-**BARBIE**: An R package for analysing barcode count data from clonal tracking experiments
-
-Barcode count data reveals the clonal composition of pools of cells before and after perturbations in clonal tracking experiments, helping to track progeny cells back to their original progenitor cell.
-
-This technique relies on each progenitor cell incorporating a unique DNA 
-barcode, which is passed down to its offspring. Subsequent sequencing of these barcodes enables researchers to quantify progeny by counting the barcodes in 
-the sample, reflecting the size of each clonal population.
-
-**BARBIE** implements robust statistical methods for analyzing barcode count 
-data from bulk sequencing, covering functions for data preprocessing, 
-statistical testing, and visualization.
+The **Barbie** package provides a suite of robust statistical tools for analysing Barcode count data generated from clonal tracking experiments. By tracking the incorporation of unique DNA Barcodes into progenitor cells and sequencing the Barcodes from progeny cells, researchers can quantify clonal populations and assess their dynamics before and after experimental perturbations. **Barbie** covers data preprocessing, statistical testing, and visualizations, offering key functions for initializing data structures, identifying dominant Barcodes, and testing differential Barcode proportions or occurrences across conditions using generalized linear regression (GLM) models.
 
 Key functions include:
 

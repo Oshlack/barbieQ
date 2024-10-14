@@ -1,8 +1,10 @@
 .Rproj.user
 .Rhistory
+.Rprofile
 .RData
 .Ruserdata
 inst/doc
 **.DS_Store
-.RData
-.Rproj.user
+vignettes/*.html
+testthat/*.pdf
+testthat/_snaps
