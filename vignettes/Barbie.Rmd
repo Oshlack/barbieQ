@@ -83,6 +83,8 @@ library(limma)
 
 # Simulate Data to Use
 
+An example dataset on Barcode count will be implemented from published clonal track research for better demonstrating the function in the package.
+
 ```{r data}
 ## Sample conditions and color palettes
 sampleConditions <- data.frame(
@@ -102,12 +104,16 @@ rownames(barcodeCount) <- paste0("Barcode", seq_len(nbarcodes))
 
 # Example
 
+## Create Barbie Object
+
 ```{r example, fig.width=8, fig.height=6}
 ## Passing `object`, `target` and `factorColors`
 exampleBB <- createBarbie(
   object = barcodeCount, target = sampleConditions, factorColors = conditionColor
 )
 ```
+
+## Tag Top Contributing Barcodes
 
 ```{r tag top, fig.width=8, fig.height=6}
 ## Tag top contributing Barcodes
@@ -125,10 +131,14 @@ plotBarcodeSankey(Barbie = exampleBB) |> plot()
 plotBarcodePairCorrelation(Barbie = exampleBB) |> plot()
 ```
 
+## Sample Correlation
+
 ```{r sample pair cor, fig.width=5, fig.height=4}
 ## visualize sample pair wise correlation
 plotSamplePairCorrelation(Barbie = exampleBB) |> plot()
 ```
+
+## Test on Differential Barcode Proportion
 
 ```{r test diffProp, fig.width=5, fig.height=4}
 ## test Barcode differential proportion between sample groups
@@ -142,6 +152,8 @@ plotBarcodeBiasHeatmap(exampleBB) |> plot()
 plotBarcodeBiasScatterPlot(exampleBB) |> plot()
 ```
 
+## Test on Differential Barcode Occurrence
+
 ```{r test diffOcc, fig.width=5, fig.height=4}
 ## test Barcode differential occurrence between sample groups
 exampleBB <- testBarcodeBias(
@@ -154,7 +166,6 @@ plotBarcodeBiasHeatmap(exampleBB) |> plot()
 plotBarcodeBiasScatterPlot(exampleBB) |> plot()
 ```
 
-
 # References
 
 # SessionInfo
@@ -162,4 +173,3 @@ plotBarcodeBiasScatterPlot(exampleBB) |> plot()
 ```{r session info}
 sessionInfo()
 ```
-
