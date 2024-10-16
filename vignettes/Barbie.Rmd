@@ -44,8 +44,9 @@ Key functions include:
 
 ```{r install, eval=FALSE}
 ## Install BiocManager if not already installed
-if (!requireNamespace("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
+if (!requireNamespace("BiocManager", quietly = TRUE)) {
+  install.packages("BiocManager")
+}
 ## Load BiocManager
 library(BiocManager)
 ## Install packages
@@ -85,16 +86,18 @@ library(limma)
 ```{r data}
 ## Sample conditions and color palettes
 sampleConditions <- data.frame(
-  Treat=factor(rep(c("ctrl", "drug"), each=6)),
-  Time=rep(rep(1:2, each=3), 2))
+  Treat = factor(rep(c("ctrl", "drug"), each = 6)),
+  Time = rep(rep(seq_len(2), each = 3), 2)
+)
 conditionColor <- list(
-  Treat=c(ctrl="#999999", drug="#112233"),
-  Time=c("1"="#778899", "2"="#998877"))
+  Treat = c(ctrl = "#999999", drug = "#112233"),
+  Time = c("1" = "#778899", "2" = "#998877")
+)
 ## Barcode count data
- nbarcodes <- 50
- nsamples <- 12
- barcodeCount <- abs(matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples))
- rownames(barcodeCount) <- paste0("Barcode", 1:nbarcodes)
+nbarcodes <- 50
+nsamples <- 12
+barcodeCount <- abs(matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples))
+rownames(barcodeCount) <- paste0("Barcode", seq_len(nbarcodes))
 ```
 
 # Example
@@ -102,38 +105,39 @@ conditionColor <- list(
 ```{r example, fig.width=8, fig.height=6}
 ## Passing `object`, `target` and `factorColors`
 exampleBB <- createBarbie(
-   object=barcodeCount, target=sampleConditions, factorColors=conditionColor)
+  object = barcodeCount, target = sampleConditions, factorColors = conditionColor
+)
 ```
 
 ```{r tag top, fig.width=8, fig.height=6}
 ## Tag top contributing Barcodes
-exampleBB <- tagTopBarcodes(Barbie=exampleBB)
+exampleBB <- tagTopBarcodes(Barbie = exampleBB)
 ## visualize top vs. bottom contribution
-plotBarcodePareto(Barbie=exampleBB) |> plot()
+plotBarcodePareto(Barbie = exampleBB) |> plot()
 ```
 
 ```{r tag top 2, fig.width=4, fig.height=3}
-plotBarcodeSankey(Barbie=exampleBB) |> plot()
+plotBarcodeSankey(Barbie = exampleBB) |> plot()
 ```
 
 ```{r barcode pair cor, fig.width=5, fig.height=3}
 ## visualize Barcode pairwise correlation
-plotBarcodePairCorrelation(Barbie=exampleBB) |> plot()
+plotBarcodePairCorrelation(Barbie = exampleBB) |> plot()
 ```
 
 ```{r sample pair cor, fig.width=5, fig.height=4}
 ## visualize sample pair wise correlation
-plotSamplePairCorrelation(Barbie=exampleBB)  |> plot()
+plotSamplePairCorrelation(Barbie = exampleBB) |> plot()
 ```
 
 ```{r test diffProp, fig.width=5, fig.height=4}
 ## test Barcode differential proportion between sample groups
 exampleBB <- testBarcodeBias(
-  Barbie=exampleBB,
-  sampleGroups="Treat",
-  contrastLevels=c("ctrl", "drug"),
-  method="diffProp"
-  )
+  Barbie = exampleBB,
+  sampleGroups = "Treat",
+  contrastLevels = c("ctrl", "drug"),
+  method = "diffProp"
+)
 plotBarcodeBiasHeatmap(exampleBB) |> plot()
 plotBarcodeBiasScatterPlot(exampleBB) |> plot()
 ```
@@ -141,11 +145,11 @@ plotBarcodeBiasScatterPlot(exampleBB) |> plot()
 ```{r test diffOcc, fig.width=5, fig.height=4}
 ## test Barcode differential occurrence between sample groups
 exampleBB <- testBarcodeBias(
-  Barbie=exampleBB,
-  sampleGroups="Treat",
-  contrastLevels=c("ctrl", "drug"),
-  method="diffOcc"
-  )
+  Barbie = exampleBB,
+  sampleGroups = "Treat",
+  contrastLevels = c("ctrl", "drug"),
+  method = "diffOcc"
+)
 plotBarcodeBiasHeatmap(exampleBB) |> plot()
 plotBarcodeBiasScatterPlot(exampleBB) |> plot()
 ```

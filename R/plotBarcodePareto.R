@@ -32,17 +32,19 @@
 #' @examples
 #' ## sample conditions and color palettes
 #' sampleConditions <- data.frame(
-#'   Treat=factor(rep(c("ctrl", "drug"), each=6)),
-#'   Time=rep(rep(1:2, each=3), 2))
+#'   Treat = factor(rep(c("ctrl", "drug"), each = 6)),
+#'   Time = rep(rep(seq_len(2), each = 3), 2)
+#' )
 #' conditionColor <- list(
-#'   Treat=c(ctrl="#999999", drug="#112233"),
-#'   Time=c("1"="#778899", "2"="#998877"))
+#'   Treat = c(ctrl = "#999999", drug = "#112233"),
+#'   Time = c("1" = "#778899", "2" = "#998877")
+#' )
 #' ## Barcode count data
 #' nbarcodes <- 50
 #' nsamples <- 12
 #' barcodeCount <- abs(matrix(10, nbarcodes, nsamples))
-#' barcodeCount[21:50,] <- 0.0001
-#' rownames(barcodeCount) <- paste0("Barcode", 1:nbarcodes)
+#' barcodeCount[seq(21, 50), ] <- 0.0001
+#' rownames(barcodeCount) <- paste0("Barcode", seq_len(nbarcodes))
 #' ## create a `Barbie` object
 #' myBarbie <- createBarbie(barcodeCount, sampleConditions, conditionColor)
 #' myBarbie <- tagTopBarcodes(myBarbie)
@@ -55,15 +57,15 @@ plotBarcodePareto <- function(Barbie) {
   nbottom <- sum(!flag)
   topTag <- factor(flag, levels = c(TRUE, FALSE))
   data <- data.frame(
-    individual=rownames(contribution),
-    group=topTag,
-    value=rowSums(contribution) / sum(rowSums(contribution)) *100
+    individual = rownames(contribution),
+    group = topTag,
+    value = rowSums(contribution) / sum(rowSums(contribution)) * 100
   )
   ## set a number of 'empty bar' to add at the end of each group
   emptyBar <- 5
-  toAdd <- data.frame(matrix(NA, emptyBar*nlevels(data$group), ncol(data)))
+  toAdd <- data.frame(matrix(NA, emptyBar * nlevels(data$group), ncol(data)))
   colnames(toAdd) <- colnames(data)
-  toAdd$group <- rep(levels(data$group), each=emptyBar)
+  toAdd$group <- rep(levels(data$group), each = emptyBar)
   data <- rbind(data, toAdd)
   ## order data
   data <- data %>% dplyr::arrange(group, -value)
@@ -71,9 +73,9 @@ plotBarcodePareto <- function(Barbie) {
   ## add label
   labelData <- data
   numberBar <- nrow(labelData)
-  angle <- 90 - 360*(labelData$id-0.5) / numberBar
+  angle <- 90 - 360 * (labelData$id - 0.5) / numberBar
   labelData$hjust <- ifelse(angle < -90, 1, 0)
-  labelData$angle <- ifelse(angle < -90, angle+180, angle)
+  labelData$angle <- ifelse(angle < -90, angle + 180, angle)
 
   ## prepare a data frame for base lines
   baseData <- data %>%
@@ -85,40 +87,46 @@ plotBarcodePareto <- function(Barbie) {
   baseData$labs <- ifelse(baseData$group == "TRUE", ntop, nbottom)
   ## prepare a data frame for grid (scales)
   gridData <- baseData
-  gridData$end <- gridData$end[c(nrow(gridData), 1:nrow(gridData)-1)] + 1
+  gridData$end <- gridData$end[c(nrow(gridData), seq_len(nrow(gridData)) - 1)] + 1
   gridData$start <- gridData$start - 1
-  gridData <- gridData[-1,]
+  gridData <- gridData[-1, ]
   ## total length of all bars
   pi <- max(data$id)
 
   suppressWarnings({
-    p <- ggplot(data, aes(x=as.factor(id), y=value)) +
+    p <- ggplot(data, aes(x = as.factor(id), y = value)) +
       ## add the bars with a blue color
-      geom_bar(stat="identity", alpha=1, color="#999966", linewidth=0.5) +
+      geom_bar(stat = "identity", alpha = 1, color = "#999966", linewidth = 0.5) +
       ## add a val=100/75/50/25 lines - compute it first to make sure barplots are OVER it.
       geom_segment(
-        data=gridData,
+        data = gridData,
         aes(x = -pi * 0.005, y = 20, xend = -pi * 0.001, yend = 20),
-        colour = "grey", alpha=1, linewidth=0.3 , inherit.aes = FALSE ) +
+        colour = "grey", alpha = 1, linewidth = 0.3, inherit.aes = FALSE
+      ) +
       geom_segment(
-        data=gridData,
+        data = gridData,
         aes(x = -pi * 0.005, y = 15, xend = -pi * 0.001, yend = 15),
-        colour = "grey", alpha=1, linewidth=0.3 , inherit.aes = FALSE ) +
+        colour = "grey", alpha = 1, linewidth = 0.3, inherit.aes = FALSE
+      ) +
       geom_segment(
-        data=gridData,
+        data = gridData,
         aes(x = -pi * 0.005, y = 10, xend = -pi * 0.001, yend = 10),
-        colour = "grey", alpha=1, linewidth=0.3 , inherit.aes = FALSE ) +
+        colour = "grey", alpha = 1, linewidth = 0.3, inherit.aes = FALSE
+      ) +
       geom_segment(
-        data=gridData,
+        data = gridData,
         aes(x = -pi * 0.005, y = 5, xend = -pi * 0.001, yend = 5),
-        colour = "grey", alpha=1, linewidth=0.3 , inherit.aes = FALSE ) +
+        colour = "grey", alpha = 1, linewidth = 0.3, inherit.aes = FALSE
+      ) +
       ## add text showing the value of each lines
-      annotate("text", x = c(rep(pi * 0.995, 4), pi * 0.05),
-               y = c(5, 10, 15, 20, 30),
-               label = c("5%", "10%", "15%", "20%", "relative mean Barcode Proportion") ,
-               color="#999966", size=3 , angle=0, fontface="bold", hjust=1) +
+      annotate("text",
+        x = c(rep(pi * 0.995, 4), pi * 0.05),
+        y = c(5, 10, 15, 20, 30),
+        label = c("5%", "10%", "15%", "20%", "relative mean Barcode Proportion"),
+        color = "#999966", size = 3, angle = 0, fontface = "bold", hjust = 1
+      ) +
       ## the negative value controls the size of the central circle, the positive to add size over each bar
-      ylim(-8,30) +
+      ylim(-8, 30) +
       ## custom the theme: no axis title and no cartesian grid
       theme_minimal() +
       theme(
@@ -126,7 +134,7 @@ plotBarcodePareto <- function(Barbie) {
         axis.title = element_blank(),
         panel.grid = element_blank(),
         ## remove unnecessary margin around plot
-        plot.margin = unit(rep(0,4), "cm"),
+        plot.margin = unit(rep(0, 4), "cm"),
         legend.title = element_text(size = 8),
         legend.text = element_text(size = 8),
         legend.position = "inside",
@@ -136,13 +144,16 @@ plotBarcodePareto <- function(Barbie) {
       coord_polar(start = 0) +
       ## add base line information
       geom_segment(
-        data=baseData,
-        aes(x = start, y = -1, xend = end, yend = -1, color=group),
-        alpha=0.8, linewidth=2 , inherit.aes = FALSE)  +
+        data = baseData,
+        aes(x = start, y = -1, xend = end, yend = -1, color = group),
+        alpha = 0.8, linewidth = 2, inherit.aes = FALSE
+      ) +
       geom_text(
-        data=baseData,
-        aes(x = title * 1.05, y = c(-4,-6), label=labs, color=group),
-        hjust=c(1,1), alpha=0.8, size=3, fontface="bold", inherit.aes = FALSE, show.legend = F) +
+        data = baseData,
+        aes(x = title * 1.05, y = c(-4, -6), label = labs, color = group),
+        hjust = c(1, 1), alpha = 0.8, size = 3, fontface = "bold",
+        inherit.aes = FALSE, show.legend = FALSE
+      ) +
       labs(color = "Num of Barcodes") +
       scale_color_manual(
         values = c("TRUE" = "#FF3399", "FALSE" = "#0066FF"),

@@ -28,8 +28,10 @@ trims the rows based on specified \code{retainedRows}.
 }
 \examples{
 myBarbie <- createBarbie(
-  object=matrix(c(1:20), nrow=5, ncol=4),
-  target=data.frame(fac=c(1, 1, 2, 2)))
+  object = matrix(c(1:20), nrow = 5, ncol = 4),
+  target = data.frame(fac = c(1, 1, 2, 2))
+)
 subsetBarcodes(
-  Barbie=myBarbie, retainedRows=c(TRUE, TRUE, FALSE, FALSE, FALSE))
+  Barbie = myBarbie, retainedRows = c(TRUE, TRUE, FALSE, FALSE, FALSE)
+)
 }

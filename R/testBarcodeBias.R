@@ -51,44 +51,50 @@
 #' @importFrom stats model.matrix
 #'
 #' @examples
-#' Block <- c(1,1,2,3,3,4,1,1,2,3,3,4)
-#' Treat <- factor(rep(1:2, each=6))
-#' Time <- rep(rep(1:2, each=3), 2)
+#' Block <- c(1, 1, 2, 3, 3, 4, 1, 1, 2, 3, 3, 4)
+#' Treat <- factor(rep(seq_len(2), each = 6))
+#' Time <- rep(rep(seq_len(2), each = 3), 2)
 #' nbarcodes <- 50
 #' nsamples <- 12
-#' count <- abs(matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples))
-#' rownames(count) <- paste0("Barcode", 1:nbarcodes)
-#' Barbie <- createBarbie(count, data.frame(Treat=Treat, Time=Time))
+#' count <- abs(matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples))
+#' rownames(count) <- paste0("Barcode", seq_len(nbarcodes))
+#' Barbie <- createBarbie(count, data.frame(Treat = Treat, Time = Time))
 #' testBarcodeBias(Barbie, sampleGroups = "Treat")
 testBarcodeBias <- function(
-    Barbie, method="diffProp",
-    targets=NULL, sampleGroups=NULL, contrastLevels=NULL,
-    designFormula=NULL, designMatrix=NULL,
-    block=NULL, transformation="asin-sqrt", regularization="firth") {
+    Barbie, method = "diffProp",
+    targets = NULL, sampleGroups = NULL, contrastLevels = NULL,
+    designFormula = NULL, designMatrix = NULL,
+    block = NULL, transformation = "asin-sqrt", regularization = "firth") {
   ## check Barbie dimensions
   checkBarbieDimensions(Barbie)
   ## check method: confirm method is chosen from "diffProp" and "diffOcc"
   method <- match.arg(method, c("diffProp", "diffOcc"))
   ## extract targets and primary effector based on arguments
   targetsInfo <- extractTargetsAndPrimaryFactor(
-    Barbie = Barbie, targets = targets, sampleGroups = sampleGroups)
+    Barbie = Barbie, targets = targets, sampleGroups = sampleGroups
+  )
   mytargets <- targetsInfo$mytargets
   pointer <- targetsInfo$pointer
   ## extract the groupTitle to be compared: sampleGroups
   groupTitle <- colnames(mytargets)[pointer]
   ## confirm all effectors (columns) in 'mytargets' are factor() or numeric()
   ## convert columns that are neither factor nor numeric into factor
-  nonFac <- sapply(mytargets, function(x) !(is.factor(x) | is.numeric(x)))
-  for(col in seq(nonFac)[nonFac]) {
-    mytargets[,col] <- factor(mytargets[,col])
+  nonFac <- vapply(
+    mytargets, function(x) !(is.factor(x) | is.numeric(x)), logical(1)
+  )
+  for (col in seq(nonFac)[nonFac]) {
+    mytargets[, col] <- factor(mytargets[, col])
   }
   ## remove factor columns with only one level - will be problematic in model.matrix
-  oneLevelFactors <- sapply(
-    mytargets, function(x) is.factor(x) && length(unique(x)) == 1)
-  if(any(oneLevelFactors)) {
+  oneLevelFactors <- vapply(
+    mytargets, function(x) is.factor(x) && length(unique(x)) == 1, logical(1)
+  )
+  if (any(oneLevelFactors)) {
     mytargets <- mytargets[, !oneLevelFactors]
-    message("removing effectors with only one level from targets: ",
-            paste0(colnames(mytargets)[oneLevelFactors], collapse = ", "))
+    message(
+      "removing effectors with only one level from targets: ",
+      paste0(colnames(mytargets)[oneLevelFactors], collapse = ", ")
+    )
   }
 
   ## import 'design' using tidy evaluation
@@ -99,7 +105,10 @@ testBarcodeBias <- function(
       "~0 + ", paste(
         groupTitle,
         paste0("+ ", dplyr::setdiff(
-          colnames(mytargets), groupTitle), collapse = " "))) %>%
+          colnames(mytargets), groupTitle
+        ), collapse = " ")
+      )
+    ) %>%
       stats::as.formula()
   }
   ## check designFormula format
@@ -109,14 +118,16 @@ testBarcodeBias <- function(
     ## check if all variables in designFormula are present in 'mytargets'
     missingTerms <- dplyr::setdiff(all.vars(designFormula), colnames(mytargets))
     if (length(missingTerms) > 0) {
-      stop("The following variables in the 'designFormula' are missing from 'targets' or 'Barbie$metadata':",
-           paste(missingTerms, collapse = ", "))
-      }
+      stop(
+        "The following variables in the 'designFormula' are missing from 'targets' or 'Barbie$metadata':",
+        paste(missingTerms, collapse = ", ")
+      )
     }
+  }
 
   ## if designMatrix not specified, generate it by designFormula
   if (is.null(designMatrix)) {
-    designMatrix <- stats::model.matrix(designFormula, data=mytargets)
+    designMatrix <- stats::model.matrix(designFormula, data = mytargets)
   } else {
     ## check designMatrix format and dimension
     if (is.matrix(designMatrix) || is.data.frame(designMatrix)) {
@@ -126,7 +137,7 @@ testBarcodeBias <- function(
     } else {
       stop("'designMatrix' should always be a matrix. use fucntion model.matrix() to generate a 'designMatrix'.")
     }
-    }
+  }
 
   ## make designMatrix full rank by deleting columns of nested effectors, ie. linearly related vectors
   ## compute QR decomposition of the designMatrix
@@ -135,27 +146,30 @@ testBarcodeBias <- function(
   ## select the indices in the pivot vector after the rank of the matrix
   ## the columns of matrix that are linearly dependent (those that do not contribute to the rank)
   keep[q$pivot[-seq(q$rank)]] <- FALSE
-  designMatrix <- designMatrix[,keep, drop=FALSE]
+  designMatrix <- designMatrix[, keep, drop = FALSE]
   ## message the users if any linearly related vectors are deleted
-  if(any(!keep))
+  if (any(!keep)) {
     message(sum(!keep), " nested effector(s) in the designMatrix were deleted because designMatrix must be full rank.")
+  }
 
   ## check block groups if it's specified
-  if(!(is.null(block))) {
-    if(length(block) != ncol(Barbie$assay))
+  if (!(is.null(block))) {
+    if (length(block) != ncol(Barbie$assay)) {
       stop("the length of 'block' doesn't match the row dimention (sample size) of specified 'targets' or 'Barbie$metadata'.")
+    }
   }
 
   ## 'pointer' indicates which column relates to 'sampleGroups': either a imported 'sampleGroups' column or a column name specified by 'sampleGroups' like 'Treat'
   ## case when sampleGroups column is factor
-  if(is.factor(mytargets[, pointer])) {
+  if (is.factor(mytargets[, pointer])) {
     ## make group contrast, extract levels if not specified
-    if(is.null(contrastLevels)) {
+    if (is.null(contrastLevels)) {
       contrastLevels <- levels(mytargets[, pointer])
-    } else if (is.vector(contrastLevels)){
+    } else if (is.vector(contrastLevels)) {
       missingLevels <- dplyr::setdiff(
-        contrastLevels, levels(mytargets[, pointer]))
-      if(length(missingLevels) > 0) {
+        contrastLevels, levels(mytargets[, pointer])
+      )
+      if (length(missingLevels) > 0) {
         stop("'contrastLevels' constains levels: ", missingLevels, " missing from the 'sampleGroups' column in 'targets' or 'Barbie$metadata'.")
       }
     } else {
@@ -164,24 +178,26 @@ testBarcodeBias <- function(
 
     ## now 'contrastLevels' should be a vector indicating levels in the 'sampleGroups' column
     ## 'contrastLevels' has one, two, or several levels.
-    if(length(contrastLevels) == 2L) {
+    if (length(contrastLevels) == 2L) {
       ## create contrast for the first two levels of 'sampleGroups'
       contrastFormula <- paste0(
-        groupTitle, contrastLevels[2], " - ", groupTitle, contrastLevels[1])
+        groupTitle, contrastLevels[2], " - ", groupTitle, contrastLevels[1]
+      )
       ## generate contrast for designMatrix
       mycontrasts <- limma::makeContrasts(
         contrasts = contrastFormula,
-        levels = colnames(designMatrix))
+        levels = colnames(designMatrix)
+      )
     } else {
       stop("'contrastLevels' has ", length(contrastLevels), " level(s), it should contain two levels for the 'sampleGroups' factor in 'targets' or 'Barbie$metadata'.")
     }
-
-  } else if(is.numeric(mytargets[, pointer])) {
+  } else if (is.numeric(mytargets[, pointer])) {
     ## case when sampleGroups column is numeric
     ## generate contrast for designMatrix
     mycontrasts <- limma::makeContrasts(
       contrasts = groupTitle,
-      levels = colnames(designMatrix))
+      levels = colnames(designMatrix)
+    )
     contrastLevels <- c("decrease", "increase")
   }
 
@@ -198,55 +214,65 @@ testBarcodeBias <- function(
   )
 
   ## all test results will be saved in Barbie$testBarcodes
-  if(is.null(Barbie$testBarcodes)) Barbie$testBarcodes <- list()
+  if (is.null(Barbie$testBarcodes)) Barbie$testBarcodes <- list()
 
   ## dispatch test functions based on the specified method
   ## default setting is "diffProp"
-  if(method == "diffProp") {
+  if (method == "diffProp") {
     BarcodeBiasProp <- testDiffProp(
       Barbie = Barbie, transformation = transformation,
       mycontrasts = mycontrasts, contrastLevels = contrastLevels,
       designMatrix = designMatrix, block = block
-      )
+    )
     ## clarify test methods information
     testMethods$aim <- "testing differential proportion"
     testMethods$method <- "linear regression"
     testMethods$transformation <- transformation
     ## store test results and methods
     elementName <- paste0("diffProp_", groupTitle)
-    if(!is.null(Barbie$testBarcodes[[elementName]]))
+    if (!is.null(Barbie$testBarcodes[[elementName]])) {
       message("overwriting exsiting test results")
-    Barbie$testBarcodes[[elementName]] <- list(results = BarcodeBiasProp,
-                                               methods = testMethods,
-                                               targets = mytargets)
-  } else if(method == "diffOcc") {
+    }
+    Barbie$testBarcodes[[elementName]] <- list(
+      results = BarcodeBiasProp,
+      methods = testMethods,
+      targets = mytargets
+    )
+  } else if (method == "diffOcc") {
     ## logistic regression, default regularization is "firth"
     BarcodeBiasOcc <- testDiffOcc(
-      Barbie, regularization = regularization,
+      Barbie,
+      regularization = regularization,
       mycontrasts = mycontrasts, contrastLevels = contrastLevels,
       designMatrix = designMatrix
-      )
+    )
     ## clarify test methods information
     testMethods$aim <- "testing differential occurrence"
     testMethods$method <- "logistic regression"
     testMethods$regularization <- regularization
     ## store test results and methods
     elementName <- paste0("diffOcc_", groupTitle)
-    if(!is.null(Barbie$testBarcodes[[elementName]]))
+    if (!is.null(Barbie$testBarcodes[[elementName]])) {
       message("overwriting exsiting test results")
-    Barbie$testBarcodes[[elementName]] <- list(results = BarcodeBiasOcc,
-                                               methods = testMethods,
-                                               targets = mytargets)
-  } else {stop("please choose test method from 'diffProp' or 'diffOcc'.")}
-
-  ## assign colors for the test results
-  if(is.null(Barbie$factorColors[[elementName]])) {
-    Barbie$factorColors[[elementName]] <- setNames(
-      c("#33AAFF", "#FF5959", "#FFC000"),
-      c(contrastLevels[1], contrastLevels[2], "n.s."))
+    }
+    Barbie$testBarcodes[[elementName]] <- list(
+      results = BarcodeBiasOcc,
+      methods = testMethods,
+      targets = mytargets
+    )
+  } else {
+    stop("please choose test method from 'diffProp' or 'diffOcc'.")
   }
 
-  print(testMethods)
+  ## assign colors for the test results
+  if (is.null(Barbie$factorColors[[elementName]])) {
+    Barbie$factorColors[[elementName]] <- setNames(
+      c("#33AAFF", "#FF5959", "#FFC000"),
+      c(contrastLevels[1], contrastLevels[2], "n.s.")
+    )
+  }
+
+  message("test methods saved in Barbie$testBarcodes$methods.")
 
   return(Barbie)
 }

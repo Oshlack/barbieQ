@@ -27,7 +27,8 @@ trims the columns based on specified \code{retainedColumns}.
 }
 \examples{
 myBarbie <- createBarbie(
-  object=matrix(c(1:20), nrow=5, ncol=4),
-  target=data.frame(fac=c(1, 1, 2, 2)))
-subsetSamples(Barbie=myBarbie, retainedColumns=c(TRUE, TRUE, FALSE, FALSE))
+  object = matrix(c(1:20), nrow = 5, ncol = 4),
+  target = data.frame(fac = c(1, 1, 2, 2))
+)
+subsetSamples(Barbie = myBarbie, retainedColumns = c(TRUE, TRUE, FALSE, FALSE))
 }

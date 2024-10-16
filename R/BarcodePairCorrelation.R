@@ -34,51 +34,62 @@
 #' @examples
 #' nbarcodes <- 50
 #' nsamples <- 12
-#' count <- abs(matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples))
-#' rownames(count) <- paste0("Barcode", 1:nbarcodes)
+#' count <- abs(matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples))
+#' rownames(count) <- paste0("Barcode", seq_len(nbarcodes))
 #' Barbie <- createBarbie(count)
-#' plotBarcodePairCorrelation(Barbie, BarcodeClusters=c(rep(1:10, 5)))
-plotBarcodePairCorrelation <- function(Barbie, method="pearson", dataVisual="mean",
-    corCutoff=0.95, dataCutoff=0, BarcodeClusters=NULL) {
+#' plotBarcodePairCorrelation(Barbie, BarcodeClusters = c(rep(seq_len(10), 5)))
+plotBarcodePairCorrelation <- function(
+    Barbie, method = "pearson", dataVisual = "mean",
+    corCutoff = 0.95, dataCutoff = 0, BarcodeClusters = NULL) {
   ## check dataVisual
   dataVisual <- match.arg(dataVisual, c("mean", "max"))
 
   ## call preprocessing function to extract pair wise information
   processedInfo <- extractBarcodePairs(
-    Barbie, method=method, BarcodeClusters=BarcodeClusters)
+    Barbie,
+    method = method, BarcodeClusters = BarcodeClusters
+  )
   corTestResults <- processedInfo$corTestResults
   knownPairDf <- processedInfo$knownPairDf
 
   ## choose what to present on y axis
-  yAxis <- log2(corTestResults[,dataVisual] + 1)
+  yAxis <- log2(corTestResults[, dataVisual] + 1)
   yTitle <- paste0("log2 (", dataVisual, " CPM +1)")
 
   ## ggplot2 has a bug that gives wrong warning of 'Removed rows containing missing values'
   suppressWarnings({
     ## plotting correlations
-    p <- ggplot(corTestResults, aes(x=cor)) +
+    p <- ggplot(corTestResults, aes(x = cor)) +
       geom_histogram(
-        aes(y=(after_stat(count)) / max(after_stat(count)) * max(yAxis)),
-        binwidth=0.05, alpha=0.3, fill="grey") +
-      geom_point(aes(y=yAxis, color=signif, shape=knownCorrelating)) +
-      stat_ecdf(geom="step", aes(y=..y.. * max(yAxis), color=signif), alpha=0.5) +
-      scale_color_manual(values=c("n.s." = "#00BFC4", "*" = "#F8766D")) +
-      scale_shape_manual(values=c("TRUE"=2, "FALSE"=1)) +
+        aes(y = (after_stat(count)) / max(after_stat(count)) * max(yAxis)),
+        binwidth = 0.05, alpha = 0.3, fill = "grey"
+      ) +
+      geom_point(aes(y = yAxis, color = signif, shape = knownCorrelating)) +
+      stat_ecdf(geom = "step", aes(y = ..y.. * max(yAxis), color = signif), alpha = 0.5) +
+      scale_color_manual(values = c("n.s." = "#00BFC4", "*" = "#F8766D")) +
+      scale_shape_manual(values = c("TRUE" = 2, "FALSE" = 1)) +
       theme_classic() +
       theme(aspect.ratio = 1) +
-      labs(x=paste0(method, " correlation of pairwise Barcode CPM"),
-           y=yTitle) +
-      scale_x_continuous(expand=c(0.05,0), limits=c(-1,1)) +
+      labs(
+        x = paste0(method, " correlation of pairwise Barcode CPM"),
+        y = yTitle
+      ) +
+      scale_x_continuous(expand = c(0.05, 0), limits = c(-1, 1)) +
       scale_y_continuous(
-        sec.axis=sec_axis(~ . / max(yAxis), name="cummulative freq.")) +
-      geom_hline(yintercept=dataCutoff, linetype="dashed", color="#7CAE00", alpha=0.8) +
-      geom_vline(xintercept=corCutoff, linetype="dashed", color="#C77CFF", alpha=0.8) +
-      annotate("text", x=corCutoff-0.1, y=max(yAxis)*1.03,
-               color="#C77CFF", alpha=1, size=3,
-               label=paste0("Cor=", corCutoff)) +
-      annotate("text", x=corCutoff-0.4, y=dataCutoff-max(yAxis)*0.02,
-               color="#7CAE00", alpha=1, size=3,
-               label=paste0("log2(", dataVisual, "+1)=" ,dataCutoff))
+        sec.axis = sec_axis(~ . / max(yAxis), name = "cummulative freq.")
+      ) +
+      geom_hline(yintercept = dataCutoff, linetype = "dashed", color = "#7CAE00", alpha = 0.8) +
+      geom_vline(xintercept = corCutoff, linetype = "dashed", color = "#C77CFF", alpha = 0.8) +
+      annotate("text",
+        x = corCutoff - 0.1, y = max(yAxis) * 1.03,
+        color = "#C77CFF", alpha = 1, size = 3,
+        label = paste0("Cor=", corCutoff)
+      ) +
+      annotate("text",
+        x = corCutoff - 0.4, y = dataCutoff - max(yAxis) * 0.02,
+        color = "#7CAE00", alpha = 1, size = 3,
+        label = paste0("log2(", dataVisual, "+1)=", dataCutoff)
+      )
   })
 
   return(p)
@@ -106,6 +117,9 @@ plotBarcodePairCorrelation <- function(Barbie, method="pearson", dataVisual="mea
 #'  highly correlated co-existing Barcodes. Defaults to 0
 #' @param BarcodeClusters A `list` of known groups containing different Barcodes
 #'  or a `vector`/`array` indicating Barcode groups. Defaults to NULL.
+#' @param plotClusters A logical value. TRUE returns a plot showing
+#'  the predicted Barcode clusters. FALSE returns an updated `Barbie` object.
+#'  Defaults to FALSE.
 #'
 #' @return A `Barbie` object updated with adding a `data.frame` component of
 #'  Barcode cluster, called `BarcodeCluster`.
@@ -120,15 +134,18 @@ plotBarcodePairCorrelation <- function(Barbie, method="pearson", dataVisual="mea
 #' @examples
 #' nbarcodes <- 50
 #' nsamples <- 12
-#' count <- abs(matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples))
-#' rownames(count) <- paste0("Barcode", 1:nbarcodes)
+#' count <- abs(matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples))
+#' rownames(count) <- paste0("Barcode", seq_len(nbarcodes))
 #' Barbie <- createBarbie(count)
-#' clusterCorrelatingBarcodes(Barbie, BarcodeClusters=c(rep(1:10, 5)))
+#' clusterCorrelatingBarcodes(Barbie, BarcodeClusters = c(rep(seq_len(10), 5)))
 clusterCorrelatingBarcodes <- function(
-    Barbie, method="pearson", corCutoff=0.95, dataCutoff=0, BarcodeClusters=NULL) {
+    Barbie, method = "pearson", corCutoff = 0.95, dataCutoff = 0,
+    BarcodeClusters = NULL, plotClusters = FALSE) {
   ## call preprocessing function to extract pair wise information
   processedInfo <- extractBarcodePairs(
-    Barbie, method=method, BarcodeClusters=BarcodeClusters)
+    Barbie,
+    method = method, BarcodeClusters = BarcodeClusters
+  )
   corTestResults <- processedInfo$corTestResults
   knownPairDf <- processedInfo$knownPairDf
 
@@ -139,30 +156,42 @@ clusterCorrelatingBarcodes <- function(
     dplyr::filter(mean >= dataCutoff)
 
   ## combine known correlating pairs and predicted pairs
-  totalPairs <- rbind(knownPairDf,
-                      corTestResultsHigh[, c("BarcodeX1", "BarcodeX2")])
+  totalPairs <- rbind(
+    knownPairDf,
+    corTestResultsHigh[, c("BarcodeX1", "BarcodeX2")]
+  )
   ## plotting highly correlating Barcode pairs
   g <- igraph::graph_from_edgelist(
     totalPairs %>% as.matrix(),
-    directed = F)
-  print(plot(g, vertex.label.cex=0.4))
+    directed = FALSE
+  )
+  p <- plot(g, vertex.label.cex = 0.4)
   ## cluster Barcode groups based on correlating pairs
   groups <- igraph::components(g)$membership
   predictList <- list()
-  if(length(groups) > 0L) predictList <- split(names(groups), groups)
+  if (length(groups) > 0L) predictList <- split(names(groups), groups)
   ## create an array indicating which group Barcodes belong to
   BarcodeGroupArray <- setNames(
-    numeric(nrow(Barbie$assay)), rownames(Barbie$assay))
+    numeric(nrow(Barbie$assay)), rownames(Barbie$assay)
+  )
   BarcodeGroupArray[names(groups)] <- groups
   ## assign single Barcodes by unique group names
   tagNoGroup <- which(BarcodeGroupArray == 0)
   BarcodeGroupArray[tagNoGroup] <- -seq_along(tagNoGroup)
   ## save Barcode groups in Barbie object
-  Barbie$BarcodeCluster <- data.frame(corCluster=BarcodeGroupArray)
+  Barbie$BarcodeCluster <- data.frame(corCluster = BarcodeGroupArray)
   ## message discovered clusters
-  message("predicting ", length(predictList), " clusters, including ", length(groups), " Barcodes.")
+  message(
+    "predicting ", length(predictList), " clusters, including ", length(groups), " Barcodes."
+  )
 
-  return(Barbie)
+  if (plotClusters) {
+    returnWhat <- p
+  } else {
+    returnWhat <- Barbie
+  }
+
+  return(returnWhat)
 }
 
 #' Generate pairwise Barcode correlation and standardize
@@ -187,15 +216,19 @@ clusterCorrelatingBarcodes <- function(
 #'
 #' @noRd
 #'
-#' @examples \dontrun{
+#' @examples \donttest{
 #' nbarcodes <- 50
 #' nsamples <- 12
-#' count <- abs(matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples))
-#' rownames(count) <- paste0("Barcode", 1:nbarcodes)
+#' count <- abs(matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples))
+#' rownames(count) <- paste0("Barcode", seq_len(nbarcodes))
 #' Barbie <- createBarbie(count)
-#' Barbie:::extractBarcodePairs(Barbie, BarcodeClusters=c(rep(1:10, 5)))
+#' Barbie:::extractBarcodePairs(
+#'   Barbie,
+#'   BarcodeClusters = c(rep(seq_len(10), 5))
+#' )
 #' }
-extractBarcodePairs <- function(Barbie, method="pearson", BarcodeClusters=NULL) {
+extractBarcodePairs <- function(
+    Barbie, method = "pearson", BarcodeClusters = NULL) {
   ## check Barbie
   checkBarbieDimensions(Barbie)
   ## check method
@@ -203,30 +236,40 @@ extractBarcodePairs <- function(Barbie, method="pearson", BarcodeClusters=NULL) 
   ## extract data
   mat <- Barbie$CPM
   ## confirm Barcodde IDs are provided
-  if(is.null(rownames(mat))) rownames(mat) <- rownames(Barbie$assay)
-  if(is.null(rownames(mat))) rownames(mat) <- paste0("Barcode", 1:nrow(mat))
+  if (is.null(rownames(mat))) rownames(mat) <- rownames(Barbie$assay)
+  if (is.null(rownames(mat))) {
+    rownames(mat) <- paste0(
+      "Barcode", seq_len(nrow(mat))
+    )
+  }
   rownames(mat) <- make.unique(rownames(mat))
   ## check BarcodeClusters
-  if(is.null(BarcodeClusters))
+  if (is.null(BarcodeClusters)) {
     BarcodeClusters <- seq_along(rownames(Barbie$assay))
+  }
   ## if BarcodeClusters is a vector or array
-  if((is.vector(BarcodeClusters) || is.factor(BarcodeClusters)) &&
-     !is.list(BarcodeClusters)) {
-    if(length(BarcodeClusters) != nrow(Barbie$assay))
+  if ((is.vector(BarcodeClusters) || is.factor(BarcodeClusters)) &&
+    !is.list(BarcodeClusters)) {
+    if (length(BarcodeClusters) != nrow(Barbie$assay)) {
       stop("'BarcodeCluster' must be of the same dimension as Barcodes.")
-    if(is.null(names(BarcodeClusters)))
+    }
+    if (is.null(names(BarcodeClusters))) {
       names(BarcodeClusters) <- rownames(Barbie$assay)
+    }
     ## convert the BarcodeCluster array into a list of groups
     BarcodeClustersList <- split(names(BarcodeClusters), BarcodeClusters)
-  } else if(is.list(BarcodeClusters)) {
+  } else if (is.list(BarcodeClusters)) {
     BarcodeClustersList <- BarcodeClusters
-  } else {stop("'BarcodeCluster' must be a vector/facter or a list.")}
+  } else {
+    stop("'BarcodeCluster' must be a vector/facter or a list.")
+  }
   ## convert cluster list into data.frame of each pair
   knownPairList <- lapply(BarcodeClustersList, function(xList) {
-    if(length(xList) >= 2) utils::combn(xList, 2) %>% t() })
+    if (length(xList) >= 2) utils::combn(xList, 2) %>% t()
+  })
   knownPairDf <- do.call(rbind, knownPairList)
   # if knownPairDf is null, make it an empty dataframe of two columns
-  if(is.null(knownPairDf)) knownPairDf <- data.frame()
+  if (is.null(knownPairDf)) knownPairDf <- data.frame()
 
   ## transpose barcode into columns for the convenience of calculating correlation matrix
   mat <- t(mat)
@@ -234,29 +277,34 @@ extractBarcodePairs <- function(Barbie, method="pearson", BarcodeClusters=NULL) 
   ## omitting NA values by setting use="complete.obs"
   corTestList <- utils::combn(ncol(mat), 2, function(idx) {
     corTest <- stats::cor.test(
-      mat[,idx[1]], mat[,idx[2]],
-      alternative="greater", use="complete.obs", method=method)
+      mat[, idx[1]], mat[, idx[2]],
+      alternative = "greater", use = "complete.obs", method = method
+    )
     data.frame(
-      pair=paste0(colnames(mat)[idx], collapse = "."),
-      BarcodeX1=colnames(mat)[idx[1]],
-      BarcodeX2=colnames(mat)[idx[2]],
-      cor=corTest$estimate,
-      p.value=corTest$p.value,
-      mean=mean(mat[,idx], na.rm=TRUE),
-      max=max(mat[,idx], na.rm=TRUE),
+      pair = paste0(colnames(mat)[idx], collapse = "."),
+      BarcodeX1 = colnames(mat)[idx[1]],
+      BarcodeX2 = colnames(mat)[idx[2]],
+      cor = corTest$estimate,
+      p.value = corTest$p.value,
+      mean = mean(mat[, idx], na.rm = TRUE),
+      max = max(mat[, idx], na.rm = TRUE),
       ## assess if the current pair exist in the known pair list
-      knownCorrelating=apply(
-        knownPairDf, 1, function(row)
-          dplyr::setequal(colnames(mat)[idx], row)) %>% any())
+      knownCorrelating = apply(
+        knownPairDf, 1, function(row) {
+          dplyr::setequal(colnames(mat)[idx], row)
+        }
+      ) %>% any()
+    )
   }, simplify = FALSE)
   ## binding the result of each pair into a long data.frame
   corTestResults <- do.call(rbind, corTestList)
   ## adding an adjusted pvalue column
   corTestResults <- corTestResults %>%
-    mutate(adj.p.value=stats::p.adjust(p.value, method="BH")) %>%
-    mutate(signif=ifelse(adj.p.value < 0.05, "*", "n.s."))
+    mutate(adj.p.value = stats::p.adjust(p.value, method = "BH")) %>%
+    mutate(signif = ifelse(adj.p.value < 0.05, "*", "n.s."))
 
-  return(list(corTestResults=corTestResults,
-              knownPairDf=knownPairDf))
-
+  return(list(
+    corTestResults = corTestResults,
+    knownPairDf = knownPairDf
+  ))
 }

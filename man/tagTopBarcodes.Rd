@@ -52,15 +52,17 @@ meeting a specified appearance threshold across all selected samples.
 ## create a `Barbie` object
 ## sample conditions and color palettes
 sampleConditions <- data.frame(
-  Treat=factor(rep(c("ctrl", "drug"), each=6)),
-  Time=rep(rep(1:2, each=3), 2))
+  Treat = factor(rep(c("ctrl", "drug"), each = 6)),
+  Time = rep(rep(1:2, each = 3), 2)
+)
 conditionColor <- list(
-  Treat=c(ctrl="#999999", drug="#112233"),
-  Time=c("1"="#778899", "2"="#998877"))
+  Treat = c(ctrl = "#999999", drug = "#112233"),
+  Time = c("1" = "#778899", "2" = "#998877")
+)
 ## Barcode count data
 nbarcodes <- 50
 nsamples <- 12
-barcodeCount <- abs(matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples))
+barcodeCount <- abs(matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples))
 rownames(barcodeCount) <- paste0("Barcode", 1:nbarcodes)
 ## create a `Barbie` object
 myBarbie <- createBarbie(barcodeCount, sampleConditions, conditionColor)

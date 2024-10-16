@@ -49,8 +49,8 @@ for tagging the highly correlated co-exisitng Barcode clusters.
 \examples{
 nbarcodes <- 50
 nsamples <- 12
-count <- abs(matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples))
+count <- abs(matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples))
 rownames(count) <- paste0("Barcode", 1:nbarcodes)
 Barbie <- createBarbie(count)
-plotBarcodePairCorrelation(Barbie, BarcodeClusters=c(rep(1:10, 5)))
+plotBarcodePairCorrelation(Barbie, BarcodeClusters = c(rep(1:10, 5)))
 }

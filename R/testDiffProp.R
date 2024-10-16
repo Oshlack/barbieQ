@@ -27,44 +27,53 @@
 #'
 #' @noRd
 #'
-#' @examples \dontrun{
-#' Block <- c(1,1,2,3,3,4,1,1,2,3,3,4)
-#' Treat <- factor(rep(c("ctrl", "drug"), each=6))
-#' Time <- rep(rep(1:2, each=3), 2)
+#' @examples \donttest{
+#' Block <- c(1, 1, 2, 3, 3, 4, 1, 1, 2, 3, 3, 4)
+#' Treat <- factor(rep(c("ctrl", "drug"), each = 6))
+#' Time <- rep(rep(seq_len(2), each = 3), 2)
 #' nbarcodes <- 50
 #' nsamples <- 12
-#' count <- abs(matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples))
-#' rownames(count) <- paste0("Barcode", 1:nbarcodes)
-#' Barbie <- createBarbie(count, data.frame(Treat=Treat, Time=Time))
+#' count <- abs(matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples))
+#' rownames(count) <- paste0("Barcode", seq_len(nbarcodes))
+#' Barbie <- createBarbie(count, data.frame(Treat = Treat, Time = Time))
 #' Barbie:::testDiffProp(
 #'   Barbie = Barbie,
 #'   mycontrasts = c(-1, 1, 0),
 #'   contrastLevels = c("ctrl", "drug"),
-#'   designMatrix = model.matrix(~0 + Treat + Time))
+#'   designMatrix = model.matrix(~ 0 + Treat + Time)
+#' )
 #' }
-testDiffProp <- function(Barbie, transformation="asin-sqrt",
-                         mycontrasts=NULL, contrastLevels=NULL,
-                         designMatrix=NULL, block=NULL) {
-  if(is.null(rownames(Barbie$proportion)))
+testDiffProp <- function(Barbie, transformation = "asin-sqrt",
+                         mycontrasts = NULL, contrastLevels = NULL,
+                         designMatrix = NULL, block = NULL) {
+  if (is.null(rownames(Barbie$proportion))) {
     rownames(Barbie$proportion) <- rownames(Barbie$assay)
-  if(is.null(rownames(Barbie$proportion)))
+  }
+  if (is.null(rownames(Barbie$proportion))) {
     rownames(Barbie$proportion) <- paste0(
-      "barcode", seq(nrow(Barbie$proportion)))
+      "barcode", seq(nrow(Barbie$proportion))
+    )
+  }
   ## checking transformation
   transformation <- match.arg(transformation, c("asin-sqrt", "logit", "none"))
   ## arcsin square root transformation for proportion data
   mydata <- asin(sqrt(Barbie$proportion))
   message("testing Barbie$proportion after arcsin square root transformation.")
-  if(!is.null(block)) {
+  if (!is.null(block)) {
     ## compute duplicates correction
-    dup <- limma::duplicateCorrelation(object = mydata, design = designMatrix,
-                                       block = block)
-    message("Consensus correlation of Barcode proportion within sample duplicates: ",
-            dup$consensus.correlation)
+    dup <- limma::duplicateCorrelation(
+      object = mydata, design = designMatrix,
+      block = block
+    )
+    message(
+      "Consensus correlation of Barcode proportion within sample duplicates: ",
+      dup$consensus.correlation
+    )
     ## fit limma linear regression model taking duplicates
     myfit1 <- limma::lmFit(
       object = mydata, design = designMatrix,
-      block = block, correlation = dup$consensus.correlation)
+      block = block, correlation = dup$consensus.correlation
+    )
   } else {
     ## ignore duplicates
     message("no block specified, so there are no duplicate measurements.")
@@ -77,14 +86,16 @@ testDiffProp <- function(Barbie, transformation="asin-sqrt",
   myfit3 <- limma::eBayes(myfit2)
   ## extract test result using multiple testing adjusted p.values
   myresults <- limma::decideTests(myfit3, adjust.method = "BH")
-  direction <- dplyr::recode(as.vector(myresults), "1"=contrastLevels[2],
-                             "-1"=contrastLevels[1], "0" = "n.s.")
+  direction <- dplyr::recode(as.vector(myresults),
+    "1" = contrastLevels[2],
+    "-1" = contrastLevels[1], "0" = "n.s."
+  )
   names(direction) <- rownames(myresults)
   ## extract adjusted p.values adjusted for multiple testing
   ## setting number to Inf will retain all Barcodes
   ## setting sort.by to "none" will stop sorting Barcodes by p.values
-  rankedResults <- limma::topTable(myfit3, number=Inf, sort.by = "none")
-  reorderedResults <- rankedResults[names(direction),]
+  rankedResults <- limma::topTable(myfit3, number = Inf, sort.by = "none")
+  reorderedResults <- rankedResults[names(direction), ]
 
   BarcodeBiasProp <- data.frame(
     direction = direction,
@@ -92,7 +103,7 @@ testDiffProp <- function(Barbie, transformation="asin-sqrt",
     p.value = reorderedResults$P.Value,
     logFC = reorderedResults$logFC,
     t = reorderedResults$t
-    )
+  )
 
   message("logFC is based on the data being tested, after being transformed.")
 

@@ -25,20 +25,31 @@ All input \code{Barbie} objects must have the same number of Barcodes
 }
 \examples{
 Barbie1 <- createBarbie(
-object=matrix(c(1:20), nrow=5, ncol=4),
-target=data.frame(a=c("a", "a", "b", "b"),
-                  b=c("x", "x", "x", "x")),
-factorColors=list(a=c("a"="#FFFFFF", "b" = "#CCCCFF"),
-                  b=c("x"="#000099")))
+  object = matrix(c(1:20), nrow = 5, ncol = 4),
+  target = data.frame(
+    a = c("a", "a", "b", "b"),
+    b = c("x", "x", "x", "x")
+  ),
+  factorColors = list(
+    a = c("a" = "#FFFFFF", "b" = "#CCCCFF"),
+    b = c("x" = "#000099")
+  )
+)
 Barbie2 <- createBarbie(
-  object=matrix(c(21:30), nrow=5, ncol=2),
-  target=data.frame(a=c("a", "c"),
-                    c=c("u", "u")),
-  factorColors=list(a=c("a"="#FFFFFF", "c"="#000000"),
-                    c=c("u"="#CCCCCC")))
+  object = matrix(c(21:30), nrow = 5, ncol = 2),
+  target = data.frame(
+    a = c("a", "c"),
+    c = c("u", "u")
+  ),
+  factorColors = list(
+    a = c("a" = "#FFFFFF", "c" = "#000000"),
+    c = c("u" = "#CCCCCC")
+  )
+)
 Barbie3 <- createBarbie(
-  object=matrix(c(31:35), nrow=5, ncol=1),
-  target=data.frame(b=c("x")),
-  factorColors=list(b=c("x"="#999999")))
+  object = matrix(c(31:35), nrow = 5, ncol = 1),
+  target = data.frame(b = c("x")),
+  factorColors = list(b = c("x" = "#999999"))
+)
 combineBarbies(Barbie1, Barbie2, Barbie3)
 }

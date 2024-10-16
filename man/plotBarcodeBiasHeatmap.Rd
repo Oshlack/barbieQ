@@ -36,14 +36,14 @@ significance level of each Barcode in differential proportion or occurrence,
 as determined by the \link{testBarcodeBias} function.
 }
 \examples{
-Block <- c(1,1,2,3,3,4,1,1,2,3,3,4)
-Treat <- factor(rep(c("ctrl", "drug"), each=6))
-Time <- rep(rep(1:2, each=3), 2)
+Block <- c(1, 1, 2, 3, 3, 4, 1, 1, 2, 3, 3, 4)
+Treat <- factor(rep(c("ctrl", "drug"), each = 6))
+Time <- rep(rep(1:2, each = 3), 2)
 nbarcodes <- 50
 nsamples <- 12
-count <- abs(matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples))
+count <- abs(matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples))
 rownames(count) <- paste0("Barcode", 1:nbarcodes)
-Barbie <- createBarbie(count, data.frame(Treat=Treat, Time=Time))
+Barbie <- createBarbie(count, data.frame(Treat = Treat, Time = Time))
 testBB <- testBarcodeBias(Barbie, sampleGroups = "Treat")
 plotBarcodeBiasHeatmap(Barbie = testBB, elementName = "diffProp_Treat")
 }

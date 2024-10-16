@@ -50,29 +50,34 @@ cell clonal tracking experiments.
 \examples{
 ## Sample conditions and color palettes
 sampleConditions <- data.frame(
-  Treat=factor(rep(c("ctrl", "drug"), each=6)),
-  Time=rep(rep(1:2, each=3), 2))
+  Treat = factor(rep(c("ctrl", "drug"), each = 6)),
+  Time = rep(rep(1:2, each = 3), 2)
+)
 conditionColor <- list(
-  Treat=c(ctrl="#999999", drug="#112233"),
-  Time=c("1"="#778899", "2"="#998877"))
+  Treat = c(ctrl = "#999999", drug = "#112233"),
+  Time = c("1" = "#778899", "2" = "#998877")
+)
 
 ## Barcode count data
 nbarcodes <- 50
 nsamples <- 12
-barcodeCount <- abs(matrix(rnorm(nbarcodes*nsamples), nbarcodes, nsamples))
+barcodeCount <- abs(matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples))
 rownames(barcodeCount) <- paste0("Barcode", 1:nbarcodes)
 
 ## Passing `object`, `target` and `factorColors`
-createBarbie(object=barcodeCount)
-createBarbie(object=barcodeCount, target=sampleConditions)
+createBarbie(object = barcodeCount)
+createBarbie(object = barcodeCount, target = sampleConditions)
 createBarbie(
-  object=barcodeCount, target=sampleConditions, factorColors=conditionColor)
+  object = barcodeCount, target = sampleConditions, factorColors = conditionColor
+)
 
 ## Updating a `Barbie` object by passing new `target` and `factorColors`
 myBarbie <- createBarbie(barcodeCount, sampleConditions, conditionColor)
-createBarbie(object=myBarbie, target=data.frame(Mouse=rep(1:4, each=3)))
+createBarbie(object = myBarbie, target = data.frame(Mouse = rep(1:4, each = 3)))
 createBarbie(
-  object=myBarbie, target=data.frame(Mouse=rep(1:4, each=3)),
-  factorColors=list(
-    Mouse=c("1"="#111199", "2"="#112200", "3"="#441111", "4"="#000000")))
+  object = myBarbie, target = data.frame(Mouse = rep(1:4, each = 3)),
+  factorColors = list(
+    Mouse = c("1" = "#111199", "2" = "#112200", "3" = "#441111", "4" = "#000000")
+  )
+)
 }

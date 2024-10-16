@@ -42,8 +42,10 @@ organized by various experimental factors.
 }
 \examples{
 myBarbie <- createBarbie(
-  object=matrix(c(1:20), nrow=5, ncol=4),
-  target=data.frame(fac=c(1, 1, 2, 2)))
+  object = matrix(c(1:20), nrow = 5, ncol = 4),
+  target = data.frame(fac = c(1, 1, 2, 2))
+)
 subsetSamplesByMetadata(
-  Barbie=myBarbie, factor="fac", specifiedConditions=1, keep=TRUE)
+  Barbie = myBarbie, factor = "fac", specifiedConditions = 1, keep = TRUE
+)
 }

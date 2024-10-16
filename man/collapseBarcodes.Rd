@@ -35,7 +35,8 @@ group are collapsed into a single row using specified aggregation method.
 }
 \examples{
 myBarbie <- createBarbie(
-  object=matrix(c(1:20), nrow=5, ncol=4),
-  target=data.frame(fac=c(1, 1, 2, 2)))
-collapseBarcodes(Barbie=myBarbie, groupArray=c(1,1,2,2,2))
+  object = matrix(c(1:20), nrow = 5, ncol = 4),
+  target = data.frame(fac = c(1, 1, 2, 2))
+)
+collapseBarcodes(Barbie = myBarbie, groupArray = c(1, 1, 2, 2, 2))
 }

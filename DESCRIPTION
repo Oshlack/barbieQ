@@ -10,10 +10,12 @@ Description: The Barbie package provides a suite of robust statistical tools
   perturbations. Barbie covers data preprocessing, statistical testing, and 
   visualizations.
 Authors@R:
-    person("Liyang", "Fei",
-      email = liyang.fei@petermac.org,
-      role = c("cre", "aut"),
-      comment = c(ORCID = "0000-0002-3293-2094"))
+  c(person(given = "Liyang", 
+           family = "Fei",
+           role = c("aut", "cre"),
+           email = "liyang.fei@petermac.org",
+           comment = c(ORCID = "0000-0002-3293-2094"))
+    )
 License: GPL-3
 LazyData: FALSE
 Encoding: UTF-8
@@ -36,7 +38,7 @@ Imports:
     igraph,
     utils,
     data.table
-biocViews: ClonalTrack, CompositionalData, Regression, Visualization
+biocViews: Sequencing, Regression, Preprocessing, Visualization
 BugReports: https://github.com/Oshlack/Barbie
 URL: https://github.com/Oshlack/Barbie/issues
 RoxygenNote: 7.3.2
