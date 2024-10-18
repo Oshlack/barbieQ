@@ -127,7 +127,7 @@ testDiffOcc <- function(Barbie, regularization = "firth",
   ## compute adjusted p.values
   adj.p.value <- stats::p.adjust(statMat$p.value, method = "BH")
   ## decide direction
-  direction <- ifelse(statMat$p.value >= 0.05, "n.s.",
+  direction <- ifelse(statMat$adj.p.value >= 0.05, "n.s.",
     ifelse(statMat$logOR > 0, contrastLevels[2],
       contrastLevels[1]
     )
