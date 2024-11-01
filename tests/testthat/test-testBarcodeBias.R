@@ -28,7 +28,7 @@ test_that("testing differential proportions works", {
   expect_equal(rownames(resultStat2), rownames(Barbie$proportion))
 })
 
-test_that("testing differential proportions works", {
+test_that("testing differential occurrence works", {
   Block <- c(1, 1, 2, 3, 3, 4, 1, 1, 2, 3, 3, 4)
   Treat <- factor(rep(c("ctrl", "drug"), each = 6))
   Time <- rep(rep(1:2, each = 3), 2)
