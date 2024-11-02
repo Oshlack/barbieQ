@@ -65,21 +65,29 @@ testDiffOcc <- function(Barbie, regularization = "firth",
   primaryVar <- rownames(mycontrasts)[mycontrasts == 1]
   additionalVar <- rownames(mycontrasts)[mycontrasts == 0]
   ## recreate the formula
-  formulaStr <- paste0(primaryVar)
-  if (length(additionalVar) > 0) {
-    formulaStr <- paste0(
-      formulaStr, " + ", paste(additionalVar, collapse = " + ")
-    )
-  }
+  ## add intercept if existing
+  formulaStr <- paste(primaryVar)
+  ## add additional variable if existing
+  formulaStr <- paste(c(formulaStr, additionalVar), collapse = " + ")
+  
   ## recreate design without the intercept (interceptVar serves as reference)
-  formulaStr <- paste0("~ ", formulaStr, " - 1")
+  formulaStr <- paste0("~ ", formulaStr)
   formula <- stats::as.formula(formulaStr)
   design <- stats::model.matrix(formula, data = data.frame(designMatrix))
-
+  
+  ## make designMatrix full rank by deleting columns of nested effectors, ie. linearly related vectors
+  ## compute QR decomposition of the designMatrix
+  q <- qr(design)
+  keep <- rep(TRUE, ncol(design))
+  ## select the indices in the pivot vector after the rank of the matrix
+  ## the columns of matrix that are linearly dependent (those that do not contribute to the rank)
+  keep[q$pivot[-seq(q$rank)]] <- FALSE
+  design <- design[, keep, drop = FALSE]
+  
   ## case when "none" regularization, fit classic model
   if (regularization == "none") {
     results <- lapply(seq_len(nrow(occurrence)), function(i) {
-      stats::glm(occurrence[i, ] ~ design,
+      stats::glm(occurrence[i, ] ~ design -1,
         family = "binomial"
       ) %>% summary()
     })
@@ -100,7 +108,7 @@ testDiffOcc <- function(Barbie, regularization = "firth",
   } else if (regularization == "firth") {
     ## case when "firth" regularization, fit penalized logistic model
     results <- lapply(seq_len(nrow(occurrence)), function(i) {
-      invisible(logistf::logistf(occurrence[i, ] ~ design))
+      invisible(logistf::logistf(occurrence[i, ] ~ design -1))
     })
     tag <- paste0("design", primaryVar)
     ## extract stats

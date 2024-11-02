@@ -26,6 +26,7 @@ test_that("testing differential proportions works", {
     block = Block
   )
   expect_equal(rownames(resultStat2), rownames(Barbie$proportion))
+  
 })
 
 test_that("testing differential occurrence works", {
@@ -46,14 +47,31 @@ test_that("testing differential occurrence works", {
     designMatrix = model.matrix(~ 0 + Treat + Time)
   )
   expect_equal(rownames(resultStat), rownames(Barbie$occurrence))
+  
+  ## check one factor
+  resultStat <- testDiffOcc(
+    Barbie = Barbie,
+    regularization = "firth",
+    mycontrasts = c(-1, 1),
+    contrastLevels = c("ctrl", "drug"),
+    designMatrix = model.matrix(~ 0 + Treat)
+  )
+  
+  resultStat <- testDiffOcc(
+    Barbie = Barbie,
+    regularization = "firth",
+    mycontrasts = c(1),
+    designMatrix = model.matrix(~ 0 + Time)
+  )
+  
+  ## this will cause warings, because of 
+  resultStat <- testDiffOcc(
+    Barbie = Barbie,
+    regularization = "firth",
+    mycontrasts = c(1, 0, 0),
+    designMatrix = model.matrix(~ 0+ Time + Treat)
+  )
 
-  # resultStat2 <- testDiffOcc(
-  #   Barbie = Barbie,
-  #   regularization = "firth",
-  #   mycontrasts = c(0, 0, 1),
-  #   designMatrix = model.matrix(~0 + Treat + Time)
-  # )
-  # expect_equal(rownames(resultStat2), rownames(Barbie$occurrence))
 })
 
 test_that("barcode test extracting correct arguments, dispatching right function", {
@@ -94,10 +112,45 @@ test_that("barcode test extracting correct arguments, dispatching right function
     testBB1111$testBarcodes$diffProp_Treat$result,
     testBB11111$testBarcodes$diffProp_Treat$result
   )
+  
+  ## confirm `targets` is updated; design matrix and formula are updated accordingly
+  testBB12 <- testBarcodeBias(Barbie,
+    sampleGroups = "Treat", contrastLevels = c("drug", "ctrl"),
+    targets = data.frame(Treat = Treat)
+  )
+  expect_equal(colnames(testBB12$testBarcodes$diffProp_Treat$targets), "Treat")
+  expect_equal(
+    as.character(testBB12$testBarcodes$diffProp_Treat$methods$formula), 
+    "~0 + Treat")
+  
+  ## with specified `designMatrix` used for test, should expect not using default formula
+  testBB13 <- testBarcodeBias(Barbie,
+    sampleGroups = "Treat", contrastLevels = c("drug", "ctrl"),
+    designMatrix = model.matrix(~ 0 + Treat)
+  )
+  expect_equal(testBB13$testBarcodes$diffProp_Treat$methods$formula, "NA")
+  expect_equal(
+    testBB13$testBarcodes$diffProp_Treat$methods$design, 
+    model.matrix(~ 0 + Treat), ignore_attr=TRUE)
+  
+  ## with specified `designFormula`, should expect updated formula and `designMatrix`
+  testBB14 <- testBarcodeBias(Barbie,
+    sampleGroups = "Treat", contrastLevels = c("drug", "ctrl"),
+    designFormula = formula("~ 0 + Treat")
+  )
+  expect_equal(
+    testBB14$testBarcodes$diffProp_Treat$methods$design, 
+    model.matrix(~ 0 + Treat), ignore_attr=TRUE)
 
   testBB2 <- testBarcodeBias(Barbie, sampleGroups = "Time")
 
-  testBB3 <- testBarcodeBias(Barbie, sampleGroups = "Treat", method = "diffOcc")
+  testBB3 <- testBarcodeBias(
+    Barbie, sampleGroups = "Time", method = "diffOcc",
+    designFormula = formula("~ 0 + Time + Treat"))
+  
+  testBB4 <- testBarcodeBias(
+    Barbie, sampleGroups = "Time", method = "diffOcc",
+    designFormula = formula("~ 0 + Time"))
 
   testBB <- testBarcodeBias(Barbie, sampleGroups = rep(seq_len(4), each = 3))
 })

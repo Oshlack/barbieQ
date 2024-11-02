@@ -101,16 +101,17 @@ testBarcodeBias <- function(
   ## if designFormula not specified, taking all effectors from 'mytargets' into account
   ## prioritize the column of sampleGroups to be compared
   if (is.null(designFormula)) {
-    designFormula <- paste(
-      "~0 + ", paste(
-        groupTitle,
-        paste0("+ ", dplyr::setdiff(
-          colnames(mytargets), groupTitle
-        ), collapse = " ")
-      )
-    ) %>%
-      stats::as.formula()
+    otherCols <- dplyr::setdiff(colnames(mytargets), groupTitle)
+    ## create the formula string based on the presence of other columns
+    formulaStr <- if (length(otherCols) > 0) {
+      paste("~0 +", groupTitle, "+", paste(otherCols, collapse = " + "))
+    } else {
+      paste("~0 +", groupTitle)
+    }
+    ## convert to formula
+    designFormula <- stats::as.formula(formulaStr)
   }
+    
   ## check designFormula format
   if (!inherits(designFormula, "formula")) {
     stop("The 'designFormula' argument must be a valid formula.")
@@ -133,6 +134,9 @@ testBarcodeBias <- function(
     if (is.matrix(designMatrix) || is.data.frame(designMatrix)) {
       if (nrow(designMatrix) != nrow(mytargets)) {
         stop("row dimension of 'designMatrix' doean't match row dimension of 'targets' or 'Barbie$metadata'.")
+      } else {
+        ## using specified `designMatrix` and deleting the default `designFormula` to avoid confusion
+        designFormula <- "NA"
       }
     } else {
       stop("'designMatrix' should always be a matrix. use fucntion model.matrix() to generate a 'designMatrix'.")
@@ -205,6 +209,7 @@ testBarcodeBias <- function(
   testMethods <- list(
     aim = "",
     formula = designFormula,
+    design = designMatrix,
     method = "",
     transformation = "",
     regularization = "",
