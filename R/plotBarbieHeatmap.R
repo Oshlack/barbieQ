@@ -120,7 +120,8 @@ plotBarbieHeatmap <- function(Barbie, value = "CPM", splitSamples = FALSE,
     top_annotation = sampleAnnotation,
     bottom_annotation = groupAnnotation,
     column_split = splitBy,
-    cluster_column_slices = FALSE
+    cluster_column_slices = FALSE,
+    use_raster = TRUE
   )
 
   return(hp)
