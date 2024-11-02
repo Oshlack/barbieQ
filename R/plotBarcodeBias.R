@@ -187,11 +187,11 @@ plotBarcodeBiasHeatmap <- function(Barbie, value = "CPM", elementName = NULL,
 
   ## customize row annotation
   barcodeAnnotation <- rowAnnotation(
-    Bias = statMat$direction,
+    Direction = statMat$direction,
     annotation_name_side = "top",
     annotation_name_gp = grid::gpar(fontsize = 10),
     col = list(
-      Bias = customColor
+      Direction = customColor
     ),
     show_legend = TRUE,
     show_annotation_name = TRUE

@@ -80,7 +80,13 @@ test_that("barcode test extracting correct arguments, dispatching right function
   Time <- rep(rep(seq_len(2), each = 3), 2)
   nbarcodes <- 50
   nsamples <- 12
-  count <- matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples) |> abs()
+  ## Generate the base counts
+  base_counts <- rnorm(nbarcodes, mean = 10, sd = 5) |> abs()
+  count <- matrix(0, nbarcodes, nsamples)
+  ## Decrease counts based on time
+  for (i in seq_len(nbarcodes)) {
+    count[i, ] <- base_counts[i] * (1 - (Time - 1) * 0.1)  
+  }
   rownames(count) <- paste0("Barcode", seq_len(nbarcodes))
   Barbie <- createBarbie(count, data.frame(Treat = Treat, Time = Time))
 
