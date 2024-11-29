@@ -1,14 +1,15 @@
-Package: Barbie
+Package: barbieQ
 Type: Package
 Title: Analyze Barcode Data from Clonal Tracking Experiments
 Version: 0.99.0
-Description: The Barbie package provides a suite of robust statistical tools 
-  for analysing Barcode count data generated from clonal tracking experiments.
-  By tracking the incorporation of unique DNA Barcodes into progenitor cells 
-  and sequencing the Barcodes from progeny cells, researchers can quantify 
-  clonal populations and assess their dynamics before and after experimental 
-  perturbations. Barbie covers data preprocessing, statistical testing, and 
-  visualizations.
+Description: The barbieQ package provides a series of robust statistical tools 
+  for analysing barcode count data generated from cell clonal tracking (i.e., lineage tracing) experiments.
+  In these experiments, an initial cell and its offspring collectively form a clone (i.e., lineage).
+  A unique barcode sequence, incorporated into the DNA of the inital cell, is inherited within the clone. 
+  This one-to-one mapping of barcodes to clones enables clonal tracking of their behaviors.
+  By counting barcodes, researchers can quantify the population abundance
+  of individual clones under specific experimental perturbations. 
+  barbieQ supports barcode count data preprocessing, statistical testing, and visualization.
 Authors@R:
   c(person(given = "Liyang", 
            family = "Fei",
@@ -39,8 +40,8 @@ Imports:
     utils,
     data.table
 biocViews: Sequencing, Regression, Preprocessing, Visualization
-BugReports: https://github.com/Oshlack/Barbie
-URL: https://github.com/Oshlack/Barbie/issues
+BugReports: https://github.com/Oshlack/barbieQ
+URL: https://github.com/Oshlack/barbieQ/issues
 RoxygenNote: 7.3.2
 Config/testthat/edition: 3
 Depends: 

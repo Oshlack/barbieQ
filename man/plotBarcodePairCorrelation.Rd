@@ -5,7 +5,7 @@
 \title{Plot Barcode pairwise correlation}
 \usage{
 plotBarcodePairCorrelation(
-  Barbie,
+  barbieQ,
   method = "pearson",
   dataVisual = "mean",
   corCutoff = 0.95,
@@ -14,7 +14,7 @@ plotBarcodePairCorrelation(
 )
 }
 \arguments{
-\item{Barbie}{A \code{Barbie} object created by the \link{createBarbie} function.}
+\item{barbieQ}{A \code{barbieQ} object created by the \link{createBarbieQ} function.}
 
 \item{method}{A string specifying the correlation method to use.
 Defaults to "pearson". Options include: "pearson", "kendall", "spearman".}
@@ -39,7 +39,7 @@ between each pair of Barcodes, plotted against the mean or max of their CPM.
 }
 \description{
 \code{plotBarcodePairCorrelation()} visualizes the correlation of each pair of
-Barcodes in the \code{Barbie} object using a dot plot.
+Barcodes in the \code{barbieQ} object using a dot plot.
 "Co-existing" Barcodes are identified as showing high correlation in
 Barcode proportions across samples using the \link{clusterCorrelatingBarcodes}
 function.
@@ -50,7 +50,7 @@ for tagging the highly correlated co-exisitng Barcode clusters.
 nbarcodes <- 50
 nsamples <- 12
 count <- abs(matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples))
-rownames(count) <- paste0("Barcode", 1:nbarcodes)
-Barbie <- createBarbie(count)
-plotBarcodePairCorrelation(Barbie, BarcodeClusters = c(rep(1:10, 5)))
+rownames(count) <- paste0("Barcode", seq_len(nbarcodes))
+barbieQ <- createBarbieQ(count)
+plotBarcodePairCorrelation(barbieQ, BarcodeClusters = c(rep(seq_len(10), 5)))
 }

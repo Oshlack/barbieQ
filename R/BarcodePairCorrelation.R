@@ -1,14 +1,14 @@
 #' Plot Barcode pairwise correlation
 #'
 #' `plotBarcodePairCorrelation()` visualizes the correlation of each pair of
-#'  Barcodes in the `Barbie` object using a dot plot.
+#'  Barcodes in the `barbieQ` object using a dot plot.
 #'  "Co-existing" Barcodes are identified as showing high correlation in
 #'  Barcode proportions across samples using the [clusterCorrelatingBarcodes]
 #'  function.
 #'  Visualizing the pair wise correlation assists in determining the threshold
 #'  for tagging the highly correlated co-exisitng Barcode clusters.
 #'
-#' @param Barbie A `Barbie` object created by the [createBarbie] function.
+#' @param barbieQ A `barbieQ` object created by the [createBarbieQ] function.
 #' @param method A string specifying the correlation method to use.
 #'  Defaults to "pearson". Options include: "pearson", "kendall", "spearman".
 #' @param dataVisual A string indicating what to present against
@@ -36,17 +36,17 @@
 #' nsamples <- 12
 #' count <- abs(matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples))
 #' rownames(count) <- paste0("Barcode", seq_len(nbarcodes))
-#' Barbie <- createBarbie(count)
-#' plotBarcodePairCorrelation(Barbie, BarcodeClusters = c(rep(seq_len(10), 5)))
+#' barbieQ <- createBarbieQ(count)
+#' plotBarcodePairCorrelation(barbieQ, BarcodeClusters = c(rep(seq_len(10), 5)))
 plotBarcodePairCorrelation <- function(
-    Barbie, method = "pearson", dataVisual = "mean",
+    barbieQ, method = "pearson", dataVisual = "mean",
     corCutoff = 0.95, dataCutoff = 0, BarcodeClusters = NULL) {
   ## check dataVisual
   dataVisual <- match.arg(dataVisual, c("mean", "max"))
 
   ## call preprocessing function to extract pair wise information
   processedInfo <- extractBarcodePairs(
-    Barbie,
+    barbieQ,
     method = method, BarcodeClusters = BarcodeClusters
   )
   corTestResults <- processedInfo$corTestResults
@@ -107,7 +107,7 @@ plotBarcodePairCorrelation <- function(
 #'  These two parameters can be manually optimized using the visualization
 #'  function [plotBarcodePairCorrelation].
 #'
-#' @param Barbie A `Barbie` object created by the [createBarbie] function.
+#' @param barbieQ A `barbieQ` object created by the [createBarbieQ] function.
 #' @param method A string specifying the correlation method to use.
 #'  Defaults to "pearson". Options include: "pearson", "kendall", "spearman".
 #' @param corCutoff A numeric value that sets the threshold for high correlation
@@ -118,10 +118,10 @@ plotBarcodePairCorrelation <- function(
 #' @param BarcodeClusters A `list` of known groups containing different Barcodes
 #'  or a `vector`/`array` indicating Barcode groups. Defaults to NULL.
 #' @param plotClusters A logical value. TRUE returns a plot showing
-#'  the predicted Barcode clusters. FALSE returns an updated `Barbie` object.
+#'  the predicted Barcode clusters. FALSE returns an updated `barbieQ` object.
 #'  Defaults to FALSE.
 #'
-#' @return A `Barbie` object updated with adding a `data.frame` component of
+#' @return A `barbieQ` object updated with adding a `data.frame` component of
 #'  Barcode cluster, called `BarcodeCluster`.
 #'
 #' @export
@@ -136,14 +136,14 @@ plotBarcodePairCorrelation <- function(
 #' nsamples <- 12
 #' count <- abs(matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples))
 #' rownames(count) <- paste0("Barcode", seq_len(nbarcodes))
-#' Barbie <- createBarbie(count)
-#' clusterCorrelatingBarcodes(Barbie, BarcodeClusters = c(rep(seq_len(10), 5)))
+#' barbieQ <- createBarbieQ(count)
+#' clusterCorrelatingBarcodes(barbieQ, BarcodeClusters = c(rep(seq_len(10), 5)))
 clusterCorrelatingBarcodes <- function(
-    Barbie, method = "pearson", corCutoff = 0.95, dataCutoff = 0,
+    barbieQ, method = "pearson", corCutoff = 0.95, dataCutoff = 0,
     BarcodeClusters = NULL, plotClusters = FALSE) {
   ## call preprocessing function to extract pair wise information
   processedInfo <- extractBarcodePairs(
-    Barbie,
+    barbieQ,
     method = method, BarcodeClusters = BarcodeClusters
   )
   corTestResults <- processedInfo$corTestResults
@@ -172,14 +172,14 @@ clusterCorrelatingBarcodes <- function(
   if (length(groups) > 0L) predictList <- split(names(groups), groups)
   ## create an array indicating which group Barcodes belong to
   BarcodeGroupArray <- setNames(
-    numeric(nrow(Barbie$assay)), rownames(Barbie$assay)
+    numeric(nrow(barbieQ$assay)), rownames(barbieQ$assay)
   )
   BarcodeGroupArray[names(groups)] <- groups
   ## assign single Barcodes by unique group names
   tagNoGroup <- which(BarcodeGroupArray == 0)
   BarcodeGroupArray[tagNoGroup] <- -seq_along(tagNoGroup)
-  ## save Barcode groups in Barbie object
-  Barbie$BarcodeCluster <- data.frame(corCluster = BarcodeGroupArray)
+  ## save Barcode groups in barbieQ object
+  barbieQ$BarcodeCluster <- data.frame(corCluster = BarcodeGroupArray)
   ## message discovered clusters
   message(
     "predicting ", length(predictList), " clusters, including ", length(groups), " Barcodes."
@@ -188,7 +188,7 @@ clusterCorrelatingBarcodes <- function(
   if (plotClusters) {
     returnWhat <- p
   } else {
-    returnWhat <- Barbie
+    returnWhat <- barbieQ
   }
 
   return(returnWhat)
@@ -197,7 +197,7 @@ clusterCorrelatingBarcodes <- function(
 #' Generate pairwise Barcode correlation and standardize
 #'  known Barcode cluster information
 #'
-#' @param Barbie A `Barbie` object created by the [createBarbie] function.
+#' @param barbieQ A `barbieQ` object created by the [createBarbieQ] function.
 #' @param method A string specifying the correlation method to use.
 #'  Defaults to "pearson". Options include: "pearson", "kendall", "spearman".
 #' @param BarcodeClusters A `list` of known groups containing different Barcodes
@@ -221,22 +221,22 @@ clusterCorrelatingBarcodes <- function(
 #' nsamples <- 12
 #' count <- abs(matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples))
 #' rownames(count) <- paste0("Barcode", seq_len(nbarcodes))
-#' Barbie <- createBarbie(count)
-#' Barbie:::extractBarcodePairs(
-#'   Barbie,
+#' barbieQ <- createBarbieQ(count)
+#' barbieQ:::extractBarcodePairs(
+#'   barbieQ,
 #'   BarcodeClusters = c(rep(seq_len(10), 5))
 #' )
 #' }
 extractBarcodePairs <- function(
-    Barbie, method = "pearson", BarcodeClusters = NULL) {
-  ## check Barbie
-  checkBarbieDimensions(Barbie)
+    barbieQ, method = "pearson", BarcodeClusters = NULL) {
+  ## check barbieQ
+  checkBarbieQDimensions(barbieQ)
   ## check method
   method <- match.arg(method, c("pearson", "kendall", "spearman"))
   ## extract data
-  mat <- Barbie$CPM
+  mat <- barbieQ$CPM
   ## confirm Barcodde IDs are provided
-  if (is.null(rownames(mat))) rownames(mat) <- rownames(Barbie$assay)
+  if (is.null(rownames(mat))) rownames(mat) <- rownames(barbieQ$assay)
   if (is.null(rownames(mat))) {
     rownames(mat) <- paste0(
       "Barcode", seq_len(nrow(mat))
@@ -245,16 +245,16 @@ extractBarcodePairs <- function(
   rownames(mat) <- make.unique(rownames(mat))
   ## check BarcodeClusters
   if (is.null(BarcodeClusters)) {
-    BarcodeClusters <- seq_along(rownames(Barbie$assay))
+    BarcodeClusters <- seq_along(rownames(barbieQ$assay))
   }
   ## if BarcodeClusters is a vector or array
   if ((is.vector(BarcodeClusters) || is.factor(BarcodeClusters)) &&
     !is.list(BarcodeClusters)) {
-    if (length(BarcodeClusters) != nrow(Barbie$assay)) {
+    if (length(BarcodeClusters) != nrow(barbieQ$assay)) {
       stop("'BarcodeCluster' must be of the same dimension as Barcodes.")
     }
     if (is.null(names(BarcodeClusters))) {
-      names(BarcodeClusters) <- rownames(Barbie$assay)
+      names(BarcodeClusters) <- rownames(barbieQ$assay)
     }
     ## convert the BarcodeCluster array into a list of groups
     BarcodeClustersList <- split(names(BarcodeClusters), BarcodeClusters)

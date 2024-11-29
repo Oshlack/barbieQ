@@ -5,7 +5,7 @@
 \title{Plot sample pairwise correlation in a Heatmap}
 \usage{
 plotSamplePairCorrelation(
-  Barbie,
+  barbieQ,
   sampleOrder = NULL,
   targets = NULL,
   sampleGroups = NULL,
@@ -13,19 +13,19 @@ plotSamplePairCorrelation(
 )
 }
 \arguments{
-\item{Barbie}{A \code{Barbie} object created by the \link{createBarbie} function.}
+\item{barbieQ}{A \code{barbieQ} object created by the \link{createBarbieQ} function.}
 
 \item{sampleOrder}{A character vector of names of the factors in the
-sample conditions provided by \code{Barbie} or \code{targets},
+sample conditions provided by \code{barbieQ} or \code{targets},
 specifying the order in which samples should be arranged.
 Defaults to the original order of factors in the sample conditions.}
 
 \item{targets}{A \code{matrix} or \code{data.frame} of sample conditions,
 where each factor is represented in a separate column. Defaults to NULL,
-in which case sample conditions are inherited from \code{Barbie$metadata}.}
+in which case sample conditions are inherited from \code{barbieQ$metadata}.}
 
 \item{sampleGroups}{A string representing the name of a factor from the
-sample conditions passed by \code{Barbie} or \code{targets}, or a vector of
+sample conditions passed by \code{barbieQ} or \code{targets}, or a vector of
 sample conditions, indicating the primary factor to split sample slices.}
 
 \item{method}{A string specifying the correlation method to use.
@@ -37,14 +37,14 @@ samples in a Heatmap.
 }
 \description{
 \code{plotSamplePairCorrelation()} visualizes the pairwise correlation of
-CPM values across samples in a \code{Barbie} object,
+CPM values across samples in a \code{barbieQ} object,
 using a heatmap with a checkerboard-like pattern.
 }
 \examples{
 ## sample conditions and color palettes
 sampleConditions <- data.frame(
   Treat = factor(rep(c("ctrl", "drug"), each = 6)),
-  Time = rep(rep(1:2, each = 3), 2)
+  Time = rep(rep(seq_len(2), each = 3), 2)
 )
 conditionColor <- list(
   Treat = c(ctrl = "#999999", drug = "#112233"),
@@ -54,9 +54,9 @@ conditionColor <- list(
 nbarcodes <- 50
 nsamples <- 12
 barcodeCount <- abs(matrix(10, nbarcodes, nsamples))
-barcodeCount[21:50, ] <- 0.0001
-rownames(barcodeCount) <- paste0("Barcode", 1:nbarcodes)
-## create a `Barbie` object
-myBarbie <- createBarbie(barcodeCount, sampleConditions, conditionColor)
-plotSamplePairCorrelation(myBarbie)
+barcodeCount[seq(21, 50), ] <- 0.0001
+rownames(barcodeCount) <- paste0("Barcode", seq_len(nbarcodes))
+## create a `barbieQ` object
+myBarbieQ <- createBarbieQ(barcodeCount, sampleConditions, conditionColor)
+plotSamplePairCorrelation(myBarbieQ)
 }

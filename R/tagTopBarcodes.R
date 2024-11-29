@@ -9,10 +9,10 @@
 #'  if it is tagged as \emph{top} in a number of samples,
 #'  meeting a specified appearance threshold across all selected samples.
 #'
-#' @param Barbie An object created by the [createBarbie] function.
+#' @param barbieQ An object created by the [createBarbieQ] function.
 #' @param activeSamples a logical vector indicating which samples (columns)
 #'  to consider when determining the \emph{top} Barcodes across the entire
-#'  dataset. Default to considering all samples in the `Barbie` object.
+#'  dataset. Default to considering all samples in the `barbieQ` object.
 #' @param proportionThreshold A numeric value ranging from 0 to 1,
 #'  used as a threshold for determining \emph{top} Barcodes in each sample
 #'  based on their combined proportion in theat sample. Default to 0.99.
@@ -21,9 +21,9 @@
 #'  (specified by `activeSamples`) in order to be considered \emph{top}
 #'  for the entire dataset. Default to 1.
 #'
-#' @return A `Barbie` object updating `isTop` while inheriting other components
-#' from the `Barbie` object passed into the function.
-#' See `Barbie` structure in [createBarbie].
+#' @return A `barbieQ` object updating `isTop` while inheriting other components
+#' from the `barbieQ` object passed into the function.
+#' See `barbieQ` structure in [createBarbieQ].
 #' `isTop` is a list including:
 #'  * `vec`: a logical vector tagging Barcodes as \emph{top}
 #'    across the entire dataset.
@@ -32,7 +32,7 @@
 #' @export
 #'
 #' @examples
-#' ## create a `Barbie` object
+#' ## create a `barbieQ` object
 #' ## sample conditions and color palettes
 #' sampleConditions <- data.frame(
 #'   Treat = factor(rep(c("ctrl", "drug"), each = 6)),
@@ -47,18 +47,18 @@
 #' nsamples <- 12
 #' barcodeCount <- abs(matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples))
 #' rownames(barcodeCount) <- paste0("Barcode", seq_len(nbarcodes))
-#' ## create a `Barbie` object
-#' myBarbie <- createBarbie(barcodeCount, sampleConditions, conditionColor)
+#' ## create a `barbieQ` object
+#' myBarbieQ <- createBarbieQ(barcodeCount, sampleConditions, conditionColor)
 #' ## tag top Barcodes
-#' tagTopBarcodes(myBarbie)
-tagTopBarcodes <- function(Barbie, activeSamples = NULL,
+#' tagTopBarcodes(myBarbieQ)
+tagTopBarcodes <- function(barbieQ, activeSamples = NULL,
                            proportionThreshold = 0.99, minTopFrequency = 1) {
-  mat <- Barbie$assay
+  mat <- barbieQ$assay
   ## dispatch 'returnNumMat' function to ensure the object is a numeric matrix apart from NAs.
   if (inherits(mat, "data.frame") || inherits(mat, "matrix") || is.vector(mat)) {
     mat <- returnNumMat(mat)
   } else {
-    stop("`Barbie$assay` should be a data.frame, matrix or vector of Barcode counts.")
+    stop("`barbieQ$assay` should be a data.frame, matrix or vector of Barcode counts.")
   }
   ## if 'activeSamples' is not specified, assume all columns are active.
   if (is.null(activeSamples)) activeSamples <- rep(TRUE, ncol(mat))
@@ -73,26 +73,26 @@ tagTopBarcodes <- function(Barbie, activeSamples = NULL,
   ## store
   updatedObject <- list(
     ## retain other components
-    assay = Barbie$assay,
-    metadata = Barbie$metadata,
-    proportion = Barbie$proportion,
-    CPM = Barbie$CPM,
-    occurrence = Barbie$occurrence,
-    rank = Barbie$rank,
+    assay = barbieQ$assay,
+    metadata = barbieQ$metadata,
+    proportion = barbieQ$proportion,
+    CPM = barbieQ$CPM,
+    occurrence = barbieQ$occurrence,
+    rank = barbieQ$rank,
     ## update `isTop`
     isTop = list(
       vec = topOverall,
       mat = topsInMat
     ),
     ## retain other components
-    clusters = Barbie$clusters,
-    factorColors = Barbie$factorColors
+    clusters = barbieQ$clusters,
+    factorColors = barbieQ$factorColors
   )
 
-  # include other existing elements in 'Barbie' that are not mentioned above.
-  for (elementName in names(Barbie)) {
+  # include other existing elements in 'barbieQ' that are not mentioned above.
+  for (elementName in names(barbieQ)) {
     if (!(elementName %in% names(updatedObject))) {
-      updatedObject[[elementName]] <- Barbie[[elementName]]
+      updatedObject[[elementName]] <- barbieQ[[elementName]]
     }
   }
 
@@ -115,12 +115,12 @@ tagTopBarcodes <- function(Barbie, activeSamples = NULL,
 #'
 #' @examples \donttest{
 #' myCount <- c(1, 2, 3, 98, NA, NA)
-#' Barbie:::tagTopEachColumn(myCount, 0.99)
+#' barbieQ:::tagTopEachColumn(myCount, 0.99)
 #' }
 tagTopEachColumn <- function(tempCol, proportionThreshold = 0.99) {
   ## set up default threshold at 0.99
   if (is.null(proportionThreshold)) proportionThreshold <- 0.99
-  ## NAs are retained as NA in 'Barbie$rank', but we want NAs to be placed last in the ranking here.
+  ## NAs are retained as NA in 'barbieQ$rank', but we want NAs to be placed last in the ranking here.
   ## setting 'na.last=TRUE' will place NAs last in the ranking.
   ## setting 'ties.method="first"' will handle equal values by assigning the first the lowest rank.
   ## setting 'minus x' will rank 'x' by decreasing order.

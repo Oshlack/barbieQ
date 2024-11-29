@@ -14,8 +14,8 @@ test_that("plotting total Barcode proportion in Sankey plot works", {
   barcodeCount <- abs(matrix(10, nbarcodes, nsamples))
   barcodeCount[seq(21, 50), ] <- 0.0001
   rownames(barcodeCount) <- paste0("Barcode", seq_len(nbarcodes))
-  ## create a `Barbie` object
-  object1 <- createBarbie(barcodeCount, sampleConditions, conditionColor)
+  ## create a `barbieQ` object
+  object1 <- createBarbieQ(barcodeCount, sampleConditions, conditionColor)
   object1 <- tagTopBarcodes(object1)
   p <- plotBarcodeSankey(object1)
   expect_s3_class(p, "ggplot")

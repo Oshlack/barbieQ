@@ -5,7 +5,7 @@
 \title{Plot Barcodes catogorized by significant change using a dot plot}
 \usage{
 plotBarcodeBiasScatterPlot(
-  Barbie,
+  barbieQ,
   elementName = NULL,
   reorderRank = FALSE,
   pValuesAdjusted = TRUE,
@@ -13,11 +13,11 @@ plotBarcodeBiasScatterPlot(
 )
 }
 \arguments{
-\item{Barbie}{A \code{Barbie} object created by the \link{createBarbie} function,
+\item{barbieQ}{A \code{barbieQ} object created by the \link{createBarbieQ} function,
 updated with Barcode test results by calling the \link{testBarcodeBias} function.}
 
 \item{elementName}{A string indicating name of the test
-conducted and stored in \code{Barbie$testBarcode}. Default to the last
+conducted and stored in \code{barbieQ$testBarcode}. Default to the last
 test conducted and stored.}
 
 \item{reorderRank}{A logical value deciding whether to reorder
@@ -46,12 +46,12 @@ specified by \code{xAxis}.
 \examples{
 Block <- c(1, 1, 2, 3, 3, 4, 1, 1, 2, 3, 3, 4)
 Treat <- factor(rep(c("ctrl", "drug"), each = 6))
-Time <- rep(rep(1:2, each = 3), 2)
+Time <- rep(rep(seq_len(2), each = 3), 2)
 nbarcodes <- 50
 nsamples <- 12
 count <- abs(matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples))
-rownames(count) <- paste0("Barcode", 1:nbarcodes)
-Barbie <- createBarbie(count, data.frame(Treat = Treat, Time = Time))
-testBB <- testBarcodeBias(Barbie, sampleGroups = "Treat")
-plotBarcodeBiasScatterPlot(Barbie = testBB, elementName = "diffProp_Treat")
+rownames(count) <- paste0("Barcode", seq_len(nbarcodes))
+barbieQ <- createBarbieQ(count, data.frame(Treat = Treat, Time = Time))
+testBB <- testBarcodeBias(barbieQ, sampleGroups = "Treat")
+plotBarcodeBiasScatterPlot(barbieQ = testBB, elementName = "diffProp_Treat")
 }

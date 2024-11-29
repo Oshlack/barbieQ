@@ -5,10 +5,10 @@
 \title{Plot contributions of Barcodes split by \emph{top} v.s. \emph{bottom}
 in a circular bar plot.}
 \usage{
-plotBarcodePareto(Barbie)
+plotBarcodePareto(barbieQ)
 }
 \arguments{
-\item{Barbie}{A \code{Barbie} object created by the \link{createBarbie} function.}
+\item{barbieQ}{A \code{barbieQ} object created by the \link{createBarbieQ} function.}
 }
 \value{
 A \code{ggplot} S3 class object displaying a circular bar plot,
@@ -29,7 +29,7 @@ or an equivalent size.
 ## sample conditions and color palettes
 sampleConditions <- data.frame(
   Treat = factor(rep(c("ctrl", "drug"), each = 6)),
-  Time = rep(rep(1:2, each = 3), 2)
+  Time = rep(rep(seq_len(2), each = 3), 2)
 )
 conditionColor <- list(
   Treat = c(ctrl = "#999999", drug = "#112233"),
@@ -39,10 +39,10 @@ conditionColor <- list(
 nbarcodes <- 50
 nsamples <- 12
 barcodeCount <- abs(matrix(10, nbarcodes, nsamples))
-barcodeCount[21:50, ] <- 0.0001
-rownames(barcodeCount) <- paste0("Barcode", 1:nbarcodes)
-## create a `Barbie` object
-myBarbie <- createBarbie(barcodeCount, sampleConditions, conditionColor)
-myBarbie <- tagTopBarcodes(myBarbie)
-plotBarcodePareto(myBarbie)
+barcodeCount[seq(21, 50), ] <- 0.0001
+rownames(barcodeCount) <- paste0("Barcode", seq_len(nbarcodes))
+## create a `barbieQ` object
+myBarbieQ <- createBarbieQ(barcodeCount, sampleConditions, conditionColor)
+myBarbieQ <- tagTopBarcodes(myBarbieQ)
+plotBarcodePareto(myBarbieQ)
 }

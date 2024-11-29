@@ -2,12 +2,12 @@
 % Please edit documentation in R/modifierMethods.R
 \name{collapseSamples}
 \alias{collapseSamples}
-\title{Collapse samples of a \code{Barbie} object based on sample grouping}
+\title{Collapse samples of a \code{barbieQ} object based on sample grouping}
 \usage{
-collapseSamples(Barbie, groupArray = NULL, method = mean)
+collapseSamples(barbieQ, groupArray = NULL, method = mean)
 }
 \arguments{
-\item{Barbie}{A \code{Barbie} object created by the \link{createBarbie} function.}
+\item{barbieQ}{A \code{barbieQ} object created by the \link{createBarbieQ} function.}
 
 \item{groupArray}{A vector indicating the group to which each sample belongs.
 Defaults to each sample being treated as a unique group.}
@@ -16,7 +16,7 @@ Defaults to each sample being treated as a unique group.}
 within the same group. Defaults to \code{mean}.}
 }
 \value{
-A \code{Barbie} object with updated components reflecting the collapsed
+A \code{barbieQ} object with updated components reflecting the collapsed
 sample groups, including:
 \itemize{
 \item \code{assay}, \code{proportion}, and \code{CPM} aggregated by the specified \code{method}
@@ -24,19 +24,19 @@ sample groups, including:
 \item \code{occurrence} aggregated by \code{any} within the group
 \item \code{rank} aggregated by \code{min} within the group
 \item \code{isTop$mat} aggregated by \code{any} within the group
-\item Other components inherited from the original \code{Barbie} object.
+\item Other components inherited from the original \code{barbieQ} object.
 }
 }
 \description{
-In the \code{matrix} and \code{data.frame} components of a \code{Barbie} object,
+In the \code{matrix} and \code{data.frame} components of a \code{barbieQ} object,
 samples are organized in columns and Barcodes in rows. \code{collapseSamples()}
 merges the columns based on specified \code{groupArray}. Samples within the same
 group are collapsed into a single column using specified aggregation method.
 }
 \examples{
-myBarbie <- createBarbie(
-  object = matrix(c(1:20), nrow = 5, ncol = 4),
+myBarbieQ <- createBarbieQ(
+  object = matrix(seq_len(20), nrow = 5, ncol = 4),
   target = data.frame(fac = c(1, 1, 2, 2))
 )
-collapseSamples(Barbie = myBarbie, groupArray = c(1, 1, 2, 2))
+collapseSamples(barbieQ = myBarbieQ, groupArray = c(1, 1, 2, 2))
 }

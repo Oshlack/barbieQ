@@ -6,7 +6,7 @@
 between sample groups}
 \usage{
 testBarcodeBias(
-  Barbie,
+  barbieQ,
   method = "diffProp",
   targets = NULL,
   sampleGroups = NULL,
@@ -19,17 +19,17 @@ testBarcodeBias(
 )
 }
 \arguments{
-\item{Barbie}{A \code{Barbie} object created by the \link{createBarbie} function.}
+\item{barbieQ}{A \code{barbieQ} object created by the \link{createBarbieQ} function.}
 
 \item{method}{A string specifying what is to be tested.
 Options: "diffProp" and "diffOcc". Defaults to "diffProp".}
 
 \item{targets}{A \code{matrix} or \code{data.frame} of sample conditions,
 where each factor is represented in a separate column. Defaults to NULL,
-in which case sample conditions are inherited from \code{Barbie$metadata}.}
+in which case sample conditions are inherited from \code{barbieQ$metadata}.}
 
 \item{sampleGroups}{A string representing the name of a factor from the
-sample conditions passed by \code{Barbie} or \code{targets}, or a vector of
+sample conditions passed by \code{barbieQ} or \code{targets}, or a vector of
 sample conditions, indicating the primary factor to be tested.
 Defaults to the first factor in the sample conditions.}
 
@@ -56,7 +56,7 @@ Defaults to "asin-sqrt".}
 testing "diffOcc". Options: "firth" and "none". Defaults to "firth".}
 }
 \value{
-A \code{Barbie} object updated with a \code{testBarcodes} component, adding
+A \code{barbieQ} object updated with a \code{testBarcodes} component, adding
 a \code{list} named by the test name, containing:
 \itemize{
 \item \code{results}: a \code{data.frame} of statistical test results,
@@ -75,12 +75,12 @@ The results can be visualized by \link{plotBarcodeBiasScatterPlot} and
 }
 \examples{
 Block <- c(1, 1, 2, 3, 3, 4, 1, 1, 2, 3, 3, 4)
-Treat <- factor(rep(1:2, each = 6))
-Time <- rep(rep(1:2, each = 3), 2)
+Treat <- factor(rep(seq_len(2), each = 6))
+Time <- rep(rep(seq_len(2), each = 3), 2)
 nbarcodes <- 50
 nsamples <- 12
 count <- abs(matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples))
-rownames(count) <- paste0("Barcode", 1:nbarcodes)
-Barbie <- createBarbie(count, data.frame(Treat = Treat, Time = Time))
-testBarcodeBias(Barbie, sampleGroups = "Treat")
+rownames(count) <- paste0("Barcode", seq_len(nbarcodes))
+barbieQ <- createBarbieQ(count, data.frame(Treat = Treat, Time = Time))
+testBarcodeBias(barbieQ, sampleGroups = "Treat")
 }

@@ -2,21 +2,21 @@
 % Please edit documentation in R/modifierMethods.R
 \name{subsetSamplesByMetadata}
 \alias{subsetSamplesByMetadata}
-\title{Trim samples of a \code{Barbie} object based on specified specified
+\title{Trim samples of a \code{barbieQ} object based on specified specified
 sample conditions}
 \usage{
 subsetSamplesByMetadata(
-  Barbie,
+  barbieQ,
   factor = NULL,
   specifiedConditions = NULL,
   keep = TRUE
 )
 }
 \arguments{
-\item{Barbie}{A \code{Barbie} object created by the \link{createBarbie} function.}
+\item{barbieQ}{A \code{barbieQ} object created by the \link{createBarbieQ} function.}
 
 \item{factor}{A string representing the name of a factor in
-\code{Barbie$metadata}. Defaults to the first factor in \code{Barbie$metadata}.}
+\code{barbieQ$metadata}. Defaults to the first factor in \code{barbieQ$metadata}.}
 
 \item{specifiedConditions}{A string vector specifying the conditions
 in the specified factor. Defaults to all conditions in the specified factor.}
@@ -25,27 +25,27 @@ in the specified factor. Defaults to all conditions in the specified factor.}
 the columns (samples) of the specified conditions. Defaults to TRUE.}
 }
 \value{
-A \code{Barbie} object with:
+A \code{barbieQ} object with:
 \itemize{
 \item Updated components reflecting the subsetted samples, including \code{assay},
 \code{metadata}, \code{proportion}, \code{CPM}, \code{occurrence}, \code{rank}, and \code{isTop$mat}.
-\item Other components are inherited from the original \code{Barbie} object.
+\item Other components are inherited from the original \code{barbieQ} object.
 }
 }
 \description{
-In the \code{matrix} and \code{data.frame} components of a \code{Barbie} object,
+In the \code{matrix} and \code{data.frame} components of a \code{barbieQ} object,
 samples are organized in columns and Barcodes in rows. The \code{metadata}
-component in \code{Barbie} is a \code{data.frame} representing sample conditions,
+component in \code{barbieQ} is a \code{data.frame} representing sample conditions,
 organized by various experimental factors.
 \code{subsetSamplesByMetadata()} trims the columns based on specified
-\code{specifiedConditions} in the specified \code{factor} in \code{Barbie$metadata}.
+\code{specifiedConditions} in the specified \code{factor} in \code{barbieQ$metadata}.
 }
 \examples{
-myBarbie <- createBarbie(
-  object = matrix(c(1:20), nrow = 5, ncol = 4),
+myBarbieQ <- createBarbieQ(
+  object = matrix(seq_len(20), nrow = 5, ncol = 4),
   target = data.frame(fac = c(1, 1, 2, 2))
 )
 subsetSamplesByMetadata(
-  Barbie = myBarbie, factor = "fac", specifiedConditions = 1, keep = TRUE
+  barbieQ = myBarbieQ, factor = "fac", specifiedConditions = 1, keep = TRUE
 )
 }

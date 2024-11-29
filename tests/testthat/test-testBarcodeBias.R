@@ -6,26 +6,26 @@ test_that("testing differential proportions works", {
   nsamples <- 12
   count <- matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples) |> abs()
   rownames(count) <- paste0("Barcode", 1:nbarcodes)
-  Barbie <- createBarbie(count, data.frame(Treat = Treat, Time = Time))
+  barbieQ <- createBarbieQ(count, data.frame(Treat = Treat, Time = Time))
 
   resultStat <- testDiffProp(
-    Barbie = Barbie,
+    barbieQ = barbieQ,
     mycontrasts = c(-1, 1, 0),
     contrastLevels = c("ctrl", "drug"),
     designMatrix = model.matrix(~ 0 + Treat + Time),
     transformation = "asin-sqrt",
     block = Block
   )
-  expect_equal(rownames(resultStat), rownames(Barbie$proportion))
+  expect_equal(rownames(resultStat), rownames(barbieQ$proportion))
 
   resultStat2 <- testDiffProp(
-    Barbie = Barbie,
+    barbieQ = barbieQ,
     mycontrasts = c(0, 0, 1),
     designMatrix = model.matrix(~ 0 + Treat + Time),
     transformation = "asin-sqrt",
     block = Block
   )
-  expect_equal(rownames(resultStat2), rownames(Barbie$proportion))
+  expect_equal(rownames(resultStat2), rownames(barbieQ$proportion))
   
 })
 
@@ -37,20 +37,20 @@ test_that("testing differential occurrence works", {
   nsamples <- 12
   count <- matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples) |> abs()
   rownames(count) <- paste0("Barcode", 1:nbarcodes)
-  Barbie <- createBarbie(count, data.frame(Treat = Treat, Time = Time))
+  barbieQ <- createBarbieQ(count, data.frame(Treat = Treat, Time = Time))
 
   resultStat <- testDiffOcc(
-    Barbie = Barbie,
+    barbieQ = barbieQ,
     regularization = "firth",
     mycontrasts = c(-1, 1, 0),
     contrastLevels = c("ctrl", "drug"),
     designMatrix = model.matrix(~ 0 + Treat + Time)
   )
-  expect_equal(rownames(resultStat), rownames(Barbie$occurrence))
+  expect_equal(rownames(resultStat), rownames(barbieQ$occurrence))
   
   ## check one factor
   resultStat <- testDiffOcc(
-    Barbie = Barbie,
+    barbieQ = barbieQ,
     regularization = "firth",
     mycontrasts = c(-1, 1),
     contrastLevels = c("ctrl", "drug"),
@@ -58,7 +58,7 @@ test_that("testing differential occurrence works", {
   )
   
   resultStat <- testDiffOcc(
-    Barbie = Barbie,
+    barbieQ = barbieQ,
     regularization = "firth",
     mycontrasts = c(1),
     designMatrix = model.matrix(~ 0 + Time)
@@ -66,7 +66,7 @@ test_that("testing differential occurrence works", {
   
   ## this will cause warings, because of 
   resultStat <- testDiffOcc(
-    Barbie = Barbie,
+    barbieQ = barbieQ,
     regularization = "firth",
     mycontrasts = c(1, 0, 0),
     designMatrix = model.matrix(~ 0+ Time + Treat)
@@ -88,16 +88,16 @@ test_that("barcode test extracting correct arguments, dispatching right function
     count[i, ] <- base_counts[i] * (1 - (Time - 1) * 0.1)  
   }
   rownames(count) <- paste0("Barcode", seq_len(nbarcodes))
-  Barbie <- createBarbie(count, data.frame(Treat = Treat, Time = Time))
+  barbieQ <- createBarbieQ(count, data.frame(Treat = Treat, Time = Time))
 
-  testBB1 <- testBarcodeBias(Barbie, sampleGroups = "Treat")
+  testBB1 <- testBarcodeBias(barbieQ, sampleGroups = "Treat")
   testBB11 <- testBarcodeBias(
-    Barbie,
+    barbieQ,
     sampleGroups = "Treat",
     contrastLevels = c("ctrl", "drug")
   )
   testBB111 <- testBarcodeBias(
-    Barbie,
+    barbieQ,
     sampleGroups = "Treat",
     contrastLevels = c("drug", "ctrl")
   )
@@ -106,11 +106,11 @@ test_that("barcode test extracting correct arguments, dispatching right function
     testBB111$testBarcodes$diffProp_Treat$results$direction
   )
 
-  testBB1111 <- testBarcodeBias(Barbie,
+  testBB1111 <- testBarcodeBias(barbieQ,
     sampleGroups = "Treat", contrastLevels = c("drug", "ctrl"),
     designFormula = formula("~0 + Treat + Time")
   )
-  testBB11111 <- testBarcodeBias(Barbie,
+  testBB11111 <- testBarcodeBias(barbieQ,
     sampleGroups = "Treat", contrastLevels = c("drug", "ctrl"),
     designMatrix = model.matrix(~ 0 + Treat + Time)
   )
@@ -120,7 +120,7 @@ test_that("barcode test extracting correct arguments, dispatching right function
   )
   
   ## confirm `targets` is updated; design matrix and formula are updated accordingly
-  testBB12 <- testBarcodeBias(Barbie,
+  testBB12 <- testBarcodeBias(barbieQ,
     sampleGroups = "Treat", contrastLevels = c("drug", "ctrl"),
     targets = data.frame(Treat = Treat)
   )
@@ -130,7 +130,7 @@ test_that("barcode test extracting correct arguments, dispatching right function
     "~0 + Treat")
   
   ## with specified `designMatrix` used for test, should expect not using default formula
-  testBB13 <- testBarcodeBias(Barbie,
+  testBB13 <- testBarcodeBias(barbieQ,
     sampleGroups = "Treat", contrastLevels = c("drug", "ctrl"),
     designMatrix = model.matrix(~ 0 + Treat)
   )
@@ -140,7 +140,7 @@ test_that("barcode test extracting correct arguments, dispatching right function
     model.matrix(~ 0 + Treat), ignore_attr=TRUE)
   
   ## with specified `designFormula`, should expect updated formula and `designMatrix`
-  testBB14 <- testBarcodeBias(Barbie,
+  testBB14 <- testBarcodeBias(barbieQ,
     sampleGroups = "Treat", contrastLevels = c("drug", "ctrl"),
     designFormula = formula("~ 0 + Treat")
   )
@@ -148,15 +148,15 @@ test_that("barcode test extracting correct arguments, dispatching right function
     testBB14$testBarcodes$diffProp_Treat$methods$design, 
     model.matrix(~ 0 + Treat), ignore_attr=TRUE)
 
-  testBB2 <- testBarcodeBias(Barbie, sampleGroups = "Time")
+  testBB2 <- testBarcodeBias(barbieQ, sampleGroups = "Time")
 
   testBB3 <- testBarcodeBias(
-    Barbie, sampleGroups = "Time", method = "diffOcc",
+    barbieQ, sampleGroups = "Time", method = "diffOcc",
     designFormula = formula("~ 0 + Time + Treat"))
   
   testBB4 <- testBarcodeBias(
-    Barbie, sampleGroups = "Time", method = "diffOcc",
+    barbieQ, sampleGroups = "Time", method = "diffOcc",
     designFormula = formula("~ 0 + Time"))
 
-  testBB <- testBarcodeBias(Barbie, sampleGroups = rep(seq_len(4), each = 3))
+  testBB <- testBarcodeBias(barbieQ, sampleGroups = rep(seq_len(4), each = 3))
 })

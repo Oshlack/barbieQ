@@ -1,0 +1,193 @@
+---
+title: "barbieQ: An R package for analysing Barcode count data from clonal tracking experiments"
+output: 
+  BiocStyle::html_document:
+    toc: true
+    toc_depth: 2
+vignette: >
+  %\VignetteIndexEntry{Quick start to barbieQ}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+date: "`r Sys.Date()`"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Introduction
+
+The barbieQ package provides a series of robust statistical tools for analysing barcode count data generated from cell clonal tracking (i.e., lineage tracing) experiments. 
+
+In these experiments, an initial cell and its offspring collectively form a clone (i.e., lineage). A unique barcode sequence, incorporated into the DNA of the initial cell, is inherited within the clone. This one-to-one mapping of barcodes to clones enables clonal tracking of their behaviours. By counting barcodes, researchers can quantify the population abundance of individual clones under specific experimental perturbations. 
+
+In the field of barcode count data analysis, published tools interpret barcodes qualitatively by visualization, lacking robust methods to understand the sources of barcode variability.^[1](https://bioconductor.org/packages/barcodetrackR/), [2](https://github.com/TeamPerie/CellDestiny),  [3](https://CRAN.R-project.org/package=genBaRcode)^
+
+With an advance in modelling various sources of barcode variability, this R software package, **barbieQ**, supports statistical testing, as well as preprocessing and visualizations. It offers key functions for initializing data structures, filtering for essential barcodes, and identifying barcodes that show significant difference in proportions or occurrences across conditions using regression models.
+
+Key functions include:
+
+ * `createBarbieQ()`
+ 
+ * `tagTopBarcodes()`
+ 
+ * `plotBarcodePairCorrelation()`
+ 
+ * `clusterCorrelatingBarcodes()`
+ 
+ * `plotSamplePairCorrelation()`
+ 
+ * `plotBarcodeProportion()`
+ 
+ * `testBarcodeBias()`
+ 
+ * `plotBarcodeBiasScatterPlot()`
+
+# Intallation
+
+```{r install, eval=FALSE}
+## Install the development version of barbieQ from github
+devtools::install_github("Oshlack/barbieQ")
+```
+
+# Load Dependecy
+
+```{r library}
+suppressPackageStartupMessages({
+  library(barbieQ)
+  library(magrittr)
+  library(tidyr)
+  library(dplyr)
+  library(ggplot2)
+  library(circlize)
+  library(logistf)
+  library(igraph)
+  library(data.table)
+  library(ComplexHeatmap)
+  library(limma)
+})
+
+```
+
+# Simulate Data to Use
+
+An example dataset on Barcode count will be implemented from published clonal track research for better demonstrating the function in the package.
+
+```{r data}
+## Sample conditions and color palettes
+sampleConditions <- data.frame(
+  Treat = factor(rep(c("ctrl", "drug"), each = 6)),
+  Time = rep(rep(seq_len(2), each = 3), 2)
+)
+conditionColor <- list(
+  Treat = c(ctrl = "#999999", drug = "#112233"),
+  Time = c("1" = "#778899", "2" = "#998877")
+)
+## Barcode count data
+nbarcodes <- 50
+nsamples <- 12
+barcodeCount <- abs(matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples))
+rownames(barcodeCount) <- paste0("Barcode", seq_len(nbarcodes))
+```
+
+# Example
+
+## Create barbieQ Object
+
+Please start with creating a `barbieQ` structure by taking the barcode count matrix as input, using function `createBarbieQ()`.
+
+By creating a `barbieQ` object, you've automatically processed a series of data transformation and saved transformed data separately in the `barbieQ` object, for the convenience of the following analyses.
+
+```{r example, fig.width=8, fig.height=6}
+## Passing `object`, `target` and `factorColors`
+exampleBBQ <- createBarbieQ(
+  object = barcodeCount, target = sampleConditions, factorColors = conditionColor
+)
+```
+
+## Tag Top Contributing Barcodes
+
+A filtering step is recommended at the beginning of analysis to filter out barcodes that consistently show low counts across the dataset. The retained barcodes are considered with essential contribution, called *"top barcodes"*. 
+
+ - By applying the function `tagTopBarcodes()` to the `barbieQ` object, you're deciding which barcodes are *"top barcodes"* while tagging them in the object.
+
+```{r tag top}
+## Tag top Barcodes
+exampleBBQ <- tagTopBarcodes(barbieQ = exampleBBQ)
+```
+
+ - Once *"top barcodes"* are decided and tagged, it's good to check their contributions before actually cutting off the *"bottom barcodes"* (that show consistent low count). 
+ 
+     - By applying the function `plotBarcodePareto()` to the `barbieQ` object, you are visualizing the contribution of each barcode colour coded by *"top"* or *"bottom"*. (Here, the contribution refers to the average abundance of individual barcodes across samples in the dataset.)
+     
+     - By applying the function `plotBarcodeSankey()` to the `barbieQ` object, you are visualizing the collective contribution of the *"top"* or *"bottom"* barcode groups. 
+
+```{r tag top v1, fig.width=8, fig.height=6}
+## visualize contribution of top vs. bottom barcodes
+plotBarcodePareto(barbieQ = exampleBBQ) |> plot()
+```
+
+```{r tag top v2, fig.width=4, fig.height=3}
+## visualize collective contribution of top vs. bottom barcodes
+plotBarcodeSankey(barbieQ = exampleBBQ) |> plot()
+```
+
+ - Once you are happy with the classification of *"top"* and *"bottom"* barcodes, you can filter out the *"bottom"* barcodes by applying function `subsetBarcodes()` based on the tagged vector.
+ 
+```{r subset top barcodes}
+exampleBBQ <- subsetBarcodes(barbieQ = exampleBBQ, retainedRows = exampleBBQ$isTop$vec)
+```
+
+## Visualize Sample Correlation
+
+To generally understand the sources of barcode variability, you can visualize sample pair-wise correlations in a check board style by applying the function `plotSamplePairCorrelation()` to the `barbieQ()` object.
+
+```{r sample pair cor, fig.width=5, fig.height=4}
+## visualize sample pair wise correlation
+plotSamplePairCorrelation(barbieQ = exampleBBQ) |> plot()
+```
+
+## Test Barcodes and Identify Significant Changes
+
+Based on the understanding of sample conditions that likely result in the differences in barcode abundance, you can robustly test the significance of the barcode changes under a specific comparison between the sample conditions, by applying the function `testBarcodeBias()` to the `barbieQ` object. The testing results will be saved in the object, and be further visualized using functions: `plotBarcodeBiasHeatmap()` and `plotBarcodeBiasScatterPlot()`.
+ 
+ - By specifying the parameter `method` by `diffProp` (defaulted), you are testing individual barcodes' **differential proportion** between conditions.
+
+```{r test diffProp, fig.width=5, fig.height=4}
+## test Barcode differential proportion between sample groups
+exampleBBQ <- testBarcodeBias(
+  barbieQ = exampleBBQ,
+  sampleGroups = "Treat",
+  contrastLevels = c("ctrl", "drug"),
+  method = "diffProp"
+)
+plotBarcodeBiasHeatmap(exampleBBQ) |> plot()
+plotBarcodeBiasScatterPlot(exampleBBQ) |> plot()
+```
+
+ - By specifying the parameter `method` by `diffOcc`, you are testing individual barcodes' **differential occurrence** between conditions.
+
+```{r test diffOcc, fig.width=5, fig.height=4}
+## test Barcode differential occurrence between sample groups
+exampleBBQ <- testBarcodeBias(
+  barbieQ = exampleBBQ,
+  sampleGroups = "Treat",
+  contrastLevels = c("ctrl", "drug"),
+  method = "diffOcc"
+)
+plotBarcodeBiasHeatmap(exampleBBQ) |> plot()
+plotBarcodeBiasScatterPlot(exampleBBQ) |> plot()
+```
+
+# References
+
+We are currently writing a paper to introduce the methods and approaches implemented in this `barbieQ` package and will update with a citation once available.
+
+# SessionInfo
+
+```{r session info}
+sessionInfo()
+```

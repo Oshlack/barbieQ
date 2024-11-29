@@ -5,10 +5,10 @@
 \title{Plot total contributions of Barcodes grouped by \emph{top} vs. \emph{bottom}
 in a stacked bar plot.}
 \usage{
-plotBarcodeSankey(Barbie)
+plotBarcodeSankey(barbieQ)
 }
 \arguments{
-\item{Barbie}{A \code{Barbie} object created by the \link{createBarbie} function.}
+\item{barbieQ}{A \code{barbieQ} object created by the \link{createBarbieQ} function.}
 }
 \value{
 A \code{ggplot} S3 class object displaying the Sankey-like stacked bar
@@ -24,7 +24,7 @@ a stacked bar plot, resembling a Sankey plot.
 ## sample conditions and color palettes
 sampleConditions <- data.frame(
   Treat = factor(rep(c("ctrl", "drug"), each = 6)),
-  Time = rep(rep(1:2, each = 3), 2)
+  Time = rep(rep(seq_len(2), each = 3), 2)
 )
 conditionColor <- list(
   Treat = c(ctrl = "#999999", drug = "#112233"),
@@ -34,10 +34,10 @@ conditionColor <- list(
 nbarcodes <- 50
 nsamples <- 12
 barcodeCount <- abs(matrix(10, nbarcodes, nsamples))
-barcodeCount[21:50, ] <- 0.0001
-rownames(barcodeCount) <- paste0("Barcode", 1:nbarcodes)
-## create a `Barbie` object
-myBarbie <- createBarbie(barcodeCount, sampleConditions, conditionColor)
-myBarbie <- tagTopBarcodes(myBarbie)
-plotBarcodeSankey(myBarbie)
+barcodeCount[seq(21, 50), ] <- 0.0001
+rownames(barcodeCount) <- paste0("Barcode", seq_len(nbarcodes))
+## create a `barbieQ` object
+myBarbieQ <- createBarbieQ(barcodeCount, sampleConditions, conditionColor)
+myBarbieQ <- tagTopBarcodes(myBarbieQ)
+plotBarcodeSankey(myBarbieQ)
 }

@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(Barbie)
+library(barbieQ)
 
-test_check("Barbie")
+test_check("barbieQ")

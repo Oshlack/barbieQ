@@ -2,36 +2,36 @@
 % Please edit documentation in R/modifierMethods.R
 \name{subsetBarcodes}
 \alias{subsetBarcodes}
-\title{Trim Barcodes of a \code{Barbie} object based on specified rows}
+\title{Trim Barcodes of a \code{barbieQ} object based on specified rows}
 \usage{
-subsetBarcodes(Barbie, retainedRows = NULL)
+subsetBarcodes(barbieQ, retainedRows = NULL)
 }
 \arguments{
-\item{Barbie}{A \code{Barbie} object created by the \link{createBarbie} function.}
+\item{barbieQ}{A \code{barbieQ} object created by the \link{createBarbieQ} function.}
 
 \item{retainedRows}{A logical vector indicating each row
 to be retained or excluded. Default to retaining all Barcodes.}
 }
 \value{
-A \code{Barbie} object with:
+A \code{barbieQ} object with:
 \itemize{
 \item Updated components reflecting the subsetted Barcodes, including \code{assay},
 \code{proportion}, \code{CPM}, \code{occurrence}, \code{rank}, \code{isTop$mat}, \code{isTop$vec},
 and \code{clusters}.
-\item Other components are inherited from the original \code{Barbie} object.
+\item Other components are inherited from the original \code{barbieQ} object.
 }
 }
 \description{
-In the \code{matrix} and \code{data.frame} components of a \code{Barbie} object,
+In the \code{matrix} and \code{data.frame} components of a \code{barbieQ} object,
 samples are organized in columns and Barcodes in rows. \code{subsetBarcodes()}
 trims the rows based on specified \code{retainedRows}.
 }
 \examples{
-myBarbie <- createBarbie(
-  object = matrix(c(1:20), nrow = 5, ncol = 4),
+myBarbieQ <- createBarbieQ(
+  object = matrix(seq_len(20), nrow = 5, ncol = 4),
   target = data.frame(fac = c(1, 1, 2, 2))
 )
 subsetBarcodes(
-  Barbie = myBarbie, retainedRows = c(TRUE, TRUE, FALSE, FALSE, FALSE)
+  barbieQ = myBarbieQ, retainedRows = c(TRUE, TRUE, FALSE, FALSE, FALSE)
 )
 }

@@ -6,11 +6,11 @@ test_that("plot Barcode test results - scatter plot - works", {
   nsamples <- 12
   count <- matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples) |> abs()
   rownames(count) <- paste0("Barcode", seq_len(nbarcodes))
-  Barbie <- createBarbie(count, data.frame(Treat = Treat, Time = Time))
+  barbieQ <- createBarbieQ(count, data.frame(Treat = Treat, Time = Time))
 
-  testBB <- testBarcodeBias(Barbie, sampleGroups = "Treat")
+  testBB <- testBarcodeBias(barbieQ, sampleGroups = "Treat")
   p <- plotBarcodeBiasScatterPlot(
-    Barbie = testBB, elementName = "diffProp_Treat"
+    barbieQ = testBB, elementName = "diffProp_Treat"
   )
 
   expect_s3_class(p, "ggplot")
@@ -29,9 +29,9 @@ test_that("plot Barcode test results - heatmap works", {
   nsamples <- 12
   count <- matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples) |> abs()
   rownames(count) <- paste0("Barcode", seq_len(nbarcodes))
-  Barbie <- createBarbie(count, data.frame(Treat = Treat, Time = Time))
+  barbieQ <- createBarbieQ(count, data.frame(Treat = Treat, Time = Time))
 
-  testBB <- testBarcodeBias(Barbie, sampleGroups = "Treat")
+  testBB <- testBarcodeBias(barbieQ, sampleGroups = "Treat")
 
   hp <- plotBarcodeBiasHeatmap(testBB)
   expect_s4_class(hp, "Heatmap")
@@ -41,7 +41,7 @@ test_that("plot Barcode test results - heatmap works", {
   )
 
   testBB <- testBarcodeBias(
-    Barbie,
+    barbieQ,
     sampleGroups = "Treat", contrastLevels = c("drug", "ctrl")
   )
   hp <- plotBarcodeBiasHeatmap(testBB)

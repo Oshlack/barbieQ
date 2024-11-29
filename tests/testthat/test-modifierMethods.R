@@ -1,25 +1,25 @@
-test_that("subset Barbie by metadata works", {
-  myBarbie <- createBarbie(
+test_that("subset barbieQ by metadata works", {
+  myBarbieQ <- createBarbieQ(
     object = matrix(seq_len(20), nrow = 5, ncol = 4),
     target = data.frame(fac = c(1, 1, 2, 2))
   )
-  subBarbie <- subsetSamplesByMetadata(
-    Barbie = myBarbie, factor = "fac", specifiedConditions = 1, keep = TRUE
+  subBarbieQ <- subsetSamplesByMetadata(
+    barbieQ = myBarbieQ, factor = "fac", specifiedConditions = 1, keep = TRUE
   )
-  expect_equal(subBarbie$metadata$fac, c(1, 1))
+  expect_equal(subBarbieQ$metadata$fac, c(1, 1))
 })
 
-test_that("subset Barbie samples works", {
-  myBarbie <- createBarbie(
+test_that("subset barbieQ samples works", {
+  myBarbieQ <- createBarbieQ(
     object = matrix(seq_len(20), nrow = 5, ncol = 4),
     target = data.frame(fac = c(1, 1, 2, 2))
   )
-  subBarbie <- subsetSamples(Barbie = myBarbie, retainedColumns = c(TRUE, TRUE, FALSE, FALSE))
-  expect_equal(subBarbie$metadata$fac, c(1, 1))
+  subBarbieQ <- subsetSamples(barbieQ = myBarbieQ, retainedColumns = c(TRUE, TRUE, FALSE, FALSE))
+  expect_equal(subBarbieQ$metadata$fac, c(1, 1))
 })
 
-test_that("combining Barbie samples works", {
-  Barbie1 <- createBarbie(
+test_that("combining barbieQ samples works", {
+  barbieQ1 <- createBarbieQ(
     object = matrix(seq_len(20), nrow = 5, ncol = 4),
     target = data.frame(
       a = c("a", "a", "b", "b"),
@@ -30,7 +30,7 @@ test_that("combining Barbie samples works", {
       b = c("x" = "#000099")
     )
   )
-  Barbie2 <- createBarbie(
+  barbieQ2 <- createBarbieQ(
     object = matrix(seq(21, 30), nrow = 5, ncol = 2),
     target = data.frame(
       a = c("a", "c"),
@@ -41,15 +41,15 @@ test_that("combining Barbie samples works", {
       c = c("u" = "#CCCCCC")
     )
   )
-  Barbie3 <- createBarbie(
+  barbieQ3 <- createBarbieQ(
     object = matrix(seq(31, 35), nrow = 5, ncol = 1),
     target = data.frame(b = c("x")),
     factorColors = list(b = c("x" = "#999999"))
   )
 
-  combinedBarbie <- combineBarbies(Barbie1, Barbie2, Barbie3)
+  combinedBarbieQ <- combineBarbieQs(barbieQ1, barbieQ2, barbieQ3)
 
-  manualBarbie <- createBarbie(
+  manualBarbieQ <- createBarbieQ(
     object = matrix(seq_len(35), nrow = 5, ncol = 7),
     target = data.frame(
       a = c("a", "a", "b", "b", "a", "c", ""),
@@ -62,13 +62,13 @@ test_that("combining Barbie samples works", {
       c = c("u" = "#CCCCCC")
     )
   )
-  rownames(manualBarbie$metadata) <- rownames(combinedBarbie$metadata)
-  expect_equal(combinedBarbie$metadata, manualBarbie$metadata)
+  rownames(manualBarbieQ$metadata) <- rownames(combinedBarbieQ$metadata)
+  expect_equal(combinedBarbieQ$metadata, manualBarbieQ$metadata)
 
-  Barbie4 <- createBarbie(
+  barbieQ4 <- createBarbieQ(
     object = matrix(seq(31, 34), nrow = 4, ncol = 1)
   )
-  expect_error(combineBarbies(Barbie1, Barbie4))
+  expect_error(combineBarbieQs(barbieQ1, barbieQ4))
 })
 
 test_that("merging lists works", {
@@ -90,29 +90,29 @@ test_that("merging lists works", {
   expect_equal(mergedList, expectdcList)
 })
 
-test_that("subset Barbie Barcodes works", {
-  myBarbie <- createBarbie(
+test_that("subset barbieQ Barcodes works", {
+  myBarbieQ <- createBarbieQ(
     object = matrix(seq_len(20), nrow = 5, ncol = 4),
     target = data.frame(fac = c(1, 1, 2, 2))
   )
-  subBarbie <- subsetBarcodes(
-    Barbie = myBarbie, retainedRows = c(TRUE, TRUE, FALSE, FALSE, FALSE)
+  subBarbieQ <- subsetBarcodes(
+    barbieQ = myBarbieQ, retainedRows = c(TRUE, TRUE, FALSE, FALSE, FALSE)
   )
   expectedAssay <- as.data.frame(
     matrix(c(1, 2, 6, 7, 11, 12, 16, 17), nrow = 2, ncol = 4)
   )
-  expect_equal(subBarbie$assay, expectedAssay)
+  expect_equal(subBarbieQ$assay, expectedAssay)
 })
 
-test_that("collapsing Barbie samples works", {
-  myBarbie <- createBarbie(
+test_that("collapsing barbieQ samples works", {
+  myBarbieQ <- createBarbieQ(
     object = matrix(seq_len(30), nrow = 5, ncol = 6),
     target = data.frame(fac = letters[seq_len(6)])
   )
-  collapsedBarbie <- collapseSamples(
-    Barbie = myBarbie, groupArray = c(8, 8, 8, 9, 9, 9)
+  collapsedBarbieQ <- collapseSamples(
+    barbieQ = myBarbieQ, groupArray = c(8, 8, 8, 9, 9, 9)
   )
-  expect_equal(collapsedBarbie$metadata[1, 1], "a.b.c")
+  expect_equal(collapsedBarbieQ$metadata[1, 1], "a.b.c")
 })
 
 test_that("collapsing columns works", {
@@ -126,29 +126,29 @@ test_that("collapsing columns works", {
   expect_equal(collapsedMat, expectedMat)
 })
 
-test_that("collapsing Barbie Barcodes works", {
-  myBarbie <- createBarbie(
+test_that("collapsing barbieQ Barcodes works", {
+  myBarbieQ <- createBarbieQ(
     object = matrix(seq_len(30), nrow = 6, ncol = 5),
     target = data.frame(fac = letters[seq_len(5)])
   )
-  collapsedBarbie <- collapseBarcodes(
-    Barbie = myBarbie, groupArray = c(8, 8, 8, 9, 9, 9)
+  collapsedBarbieQ <- collapseBarcodes(
+    barbieQ = myBarbieQ, groupArray = c(8, 8, 8, 9, 9, 9)
   )
-  expect_equal(collapsedBarbie$metadata, myBarbie$metadata)
+  expect_equal(collapsedBarbieQ$metadata, myBarbieQ$metadata)
   expectMat <- matrix(
     c(3, 9, 15, 21, 27, 6, 12, 18, 24, 30),
     ncol = 2, nrow = 5
   ) |>
     t() |>
     as.data.frame()
-  expect_equal(collapsedBarbie$assay, expectMat, ignore_attr = TRUE)
-  myBarbie <- tagTopBarcodes(myBarbie)
-  collapsedBarbie <- collapseBarcodes(
-    Barbie = myBarbie, groupArray = c(7, 8, 8, 9, 9, 9)
+  expect_equal(collapsedBarbieQ$assay, expectMat, ignore_attr = TRUE)
+  myBarbieQ <- tagTopBarcodes(myBarbieQ)
+  collapsedBarbieQ <- collapseBarcodes(
+    barbieQ = myBarbieQ, groupArray = c(7, 8, 8, 9, 9, 9)
   )
-  expect_equal(collapsedBarbie$isTop$vec, rep(TRUE, 3), ignore_attr = TRUE)
+  expect_equal(collapsedBarbieQ$isTop$vec, rep(TRUE, 3), ignore_attr = TRUE)
   expect_equal(
-    collapsedBarbie$isTop$mat,
+    collapsedBarbieQ$isTop$mat,
     matrix(TRUE, nrow = 3, ncol = 5),
     ignore_attr = TRUE
   )

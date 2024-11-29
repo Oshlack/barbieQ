@@ -6,7 +6,7 @@
 #'  proportion of each Barcode and separates them by these tags
 #'  in a circular bar plot, also known as a Pareto plot.
 #'
-#' @param Barbie A `Barbie` object created by the [createBarbie] function.
+#' @param barbieQ A `barbieQ` object created by the [createBarbieQ] function.
 #'
 #' @return A `ggplot` S3 class object displaying a circular bar plot,
 #'  highlighting the relative total proportion of each Barcode across samples.
@@ -45,13 +45,13 @@
 #' barcodeCount <- abs(matrix(10, nbarcodes, nsamples))
 #' barcodeCount[seq(21, 50), ] <- 0.0001
 #' rownames(barcodeCount) <- paste0("Barcode", seq_len(nbarcodes))
-#' ## create a `Barbie` object
-#' myBarbie <- createBarbie(barcodeCount, sampleConditions, conditionColor)
-#' myBarbie <- tagTopBarcodes(myBarbie)
-#' plotBarcodePareto(myBarbie)
-plotBarcodePareto <- function(Barbie) {
-  flag <- Barbie$isTop$vec
-  contribution <- Barbie$CPM
+#' ## create a `barbieQ` object
+#' myBarbieQ <- createBarbieQ(barcodeCount, sampleConditions, conditionColor)
+#' myBarbieQ <- tagTopBarcodes(myBarbieQ)
+#' plotBarcodePareto(myBarbieQ)
+plotBarcodePareto <- function(barbieQ) {
+  flag <- barbieQ$isTop$vec
+  contribution <- barbieQ$CPM
   ## create dataset
   ntop <- sum(flag)
   nbottom <- sum(!flag)

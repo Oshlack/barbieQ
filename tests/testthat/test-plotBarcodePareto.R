@@ -12,10 +12,10 @@ test_that("plotting circular bar plot of Barcode proportion works.", {
   nbarcodes <- 50
   nsamples <- 12
   barcodeCount <- abs(matrix(10, nbarcodes, nsamples))
-  barcodeCount[sseq(21, 50), ] <- 0.0001
+  barcodeCount[seq(21, 50), ] <- 0.0001
   rownames(barcodeCount) <- paste0("Barcode", seq_len(nbarcodes))
-  ## create a `Barbie` object
-  object1 <- createBarbie(barcodeCount, sampleConditions, conditionColor)
+  ## create a `barbieQ` object
+  object1 <- createBarbieQ(barcodeCount, sampleConditions, conditionColor)
   object1 <- tagTopBarcodes(object1)
   p <- plotBarcodePareto(object1)
   expect_s3_class(p, "ggplot")
