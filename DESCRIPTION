@@ -14,7 +14,7 @@ Authors@R:
   c(person(given = "Liyang", 
            family = "Fei",
            role = c("aut", "cre"),
-           email = "liyang.fei@petermac.org",
+           email = liyang.fei@petermac.org,
            comment = c(ORCID = "0000-0002-3293-2094"))
     )
 License: GPL-3
@@ -45,5 +45,5 @@ URL: https://github.com/Oshlack/barbieQ/issues
 RoxygenNote: 7.3.2
 Config/testthat/edition: 3
 Depends: 
-    R (>= 4.4.0)
+    R (>= 4.5.0)
 Roxygen: list(markdown = TRUE)

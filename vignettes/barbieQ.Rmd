@@ -69,7 +69,6 @@ suppressPackageStartupMessages({
   library(ComplexHeatmap)
   library(limma)
 })
-
 ```
 
 # Simulate Data to Use
