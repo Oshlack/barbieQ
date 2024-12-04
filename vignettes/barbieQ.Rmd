@@ -1,5 +1,5 @@
 ---
-title: "barbieQ: An R package for analysing Barcode count data from clonal tracking experiments"
+title: "barbieQ: An R package for analysing barcode count data from clonal tracking experiments"
 output: 
   BiocStyle::html_document:
     toc: true
@@ -20,15 +20,15 @@ knitr::opts_chunk$set(
 
 # Introduction
 
-The barbieQ package provides a series of robust statistical tools for analysing barcode count data generated from cell clonal tracking (i.e., lineage tracing) experiments. 
+The barbieQ package provides a series of robust statistical tools for analysing barcode count data generated from cell *clonal tracking* (*lineage tracing*) experiments. 
 
-In these experiments, an initial cell and its offspring collectively form a clone (i.e., lineage). A unique barcode sequence, incorporated into the DNA of the initial cell, is inherited within the clone. This one-to-one mapping of barcodes to clones enables clonal tracking of their behaviours. By counting barcodes, researchers can quantify the population abundance of individual clones under specific experimental perturbations. 
+In these experiments, an initial cell and its offspring collectively form a *clone* (or *lineage*). A unique DNA barcode, incorporated into the genome of an initial cell, is inherited by all its progeny within the clone. This one-to-one mapping of barcodes to clones enables  tracking of clonal behaviours. By quantifying barcode counts, researchers can measure the abundance of individual clones under various experimental conditions or perturbations. 
 
-In the field of barcode count data analysis, published tools interpret barcodes qualitatively by visualization, lacking robust methods to understand the sources of barcode variability.^[1](https://bioconductor.org/packages/barcodetrackR/), [2](https://github.com/TeamPerie/CellDestiny),  [3](https://CRAN.R-project.org/package=genBaRcode)^
+While existing tools for barcode count data analysis primarily rely on qualitative interpretation through visualizations, they often lack robust methods to model the sources of barcode variability. ^[[barcodetrackR](https://bioconductor.org/packages/barcodetrackR/), [CellDestiny](https://github.com/TeamPerie/CellDestiny), [genBaRcode](https://CRAN.R-project.org/package=genBaRcode)]^
 
-With an advance in modelling various sources of barcode variability, this R software package, **barbieQ**, supports statistical testing, as well as preprocessing and visualizations. It offers key functions for initializing data structures, filtering for essential barcodes, and identifying barcodes that show significant difference in proportions or occurrences across conditions using regression models.
+To address this gap, this R software package, **barbieQ**, provides advanced statistical methods to model barcode variability. The package supports preprocessing, visualization, and statistical testing to identify barcodes with significant differences in proportions or occurrences across experimental conditions. Key functionalities include initializing data structures, filtering barcodes, and applying regression models to test for significant clonal changes.
 
-Key functions include:
+The main functions include:
 
  * `createBarbieQ()`
  
@@ -73,7 +73,7 @@ suppressPackageStartupMessages({
 
 # Simulate Data to Use
 
-An example dataset on Barcode count will be implemented from published clonal track research for better demonstrating the function in the package.
+An example dataset on barcode count will be implemented from published clonal track research for better demonstrating the function in the package.
 
 ```{r data}
 ## Sample conditions and color palettes
@@ -98,7 +98,7 @@ rownames(barcodeCount) <- paste0("Barcode", seq_len(nbarcodes))
 
 Please start with creating a `barbieQ` structure by taking the barcode count matrix as input, using function `createBarbieQ()`.
 
-By creating a `barbieQ` object, you've automatically processed a series of data transformation and saved transformed data separately in the `barbieQ` object, for the convenience of the following analyses.
+By creating a `barbieQ` object, you've automatically processed a series of data transformation and saved transformed data in the `barbieQ` object, for the convenience of the following analyses.
 
 ```{r example, fig.width=8, fig.height=6}
 ## Passing `object`, `target` and `factorColors`
