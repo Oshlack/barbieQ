@@ -1,22 +1,24 @@
 #' Tag each Barcode as being part of the major contributors or not
 #'
-#' `tagTopBarcodes()` is designed for better filtering out the background noise,
-#'  i.e., Barcodes that consistently have low contributions across samples.
-#'  Each Barcode is tagged as one of the major contributing Barcodes
-#'  (\emph{top} Barcodes) or not in each sample, based on whether their
+#' `tagTopBarcodes()` tags \emph{top} Barcodes that collectively contribute to 
+#'  the majority of counts across the dataset.
+#'  It is designed for subsequently filtering out the background noise,
+#'  i.e., filtering out Barcodes that consistently have low contributions across samples.
+#'  In each sample, Barcodes are tagged as major contributing Barcodes
+#'  (\emph{top} Barcodes) or not, based on whether their
 #'  combined proportion passes a defined threshold in the sample.
 #'  Across the entire dataset, a Barcode is considered \emph{top}
 #'  if it is tagged as \emph{top} in a number of samples,
 #'  meeting a specified appearance threshold across all selected samples.
 #'
 #' @param barbieQ An object created by the [createBarbieQ] function.
-#' @param activeSamples a logical vector indicating which samples (columns)
+#' @param activeSamples A logical vector indicating which samples (columns)
 #'  to consider when determining the \emph{top} Barcodes across the entire
 #'  dataset. Default to considering all samples in the `barbieQ` object.
 #' @param proportionThreshold A numeric value ranging from 0 to 1,
 #'  used as a threshold for determining \emph{top} Barcodes in each sample
 #'  based on their combined proportion in theat sample. Default to 0.99.
-#' @param minTopFrequency An integer specifying the minimum number of times
+#' @param nSampleThreshold An integer specifying the minimum number of times
 #'  a Barcode must be tagged as \emph{top} across the selected samples
 #'  (specified by `activeSamples`) in order to be considered \emph{top}
 #'  for the entire dataset. Default to 1.
@@ -52,7 +54,7 @@
 #' ## tag top Barcodes
 #' tagTopBarcodes(myBarbieQ)
 tagTopBarcodes <- function(barbieQ, activeSamples = NULL,
-                           proportionThreshold = 0.99, minTopFrequency = 1) {
+                           proportionThreshold = 0.99, nSampleThreshold = 1) {
   mat <- barbieQ$assay
   ## dispatch 'returnNumMat' function to ensure the object is a numeric matrix apart from NAs.
   if (inherits(mat, "data.frame") || inherits(mat, "matrix") || is.vector(mat)) {
@@ -69,7 +71,7 @@ tagTopBarcodes <- function(barbieQ, activeSamples = NULL,
   ## select the active columns used to determine 'top Barcodes' out of the samples.
   subTopMat <- topsInMat[, activeSamples, drop = FALSE]
   ## determine the 'top Barcodes' based on the numbers of being true out of all 'active' samples.
-  topOverall <- rowSums(subTopMat, na.rm = TRUE) >= minTopFrequency
+  topOverall <- rowSums(subTopMat, na.rm = TRUE) >= nSampleThreshold
   ## store
   updatedObject <- list(
     ## retain other components
@@ -101,7 +103,7 @@ tagTopBarcodes <- function(barbieQ, activeSamples = NULL,
 
 #' Tag \emph{top} Barcodes in each sample.
 #'
-#' @param tempCol a numeric vector of Barcode counts in a sample,
+#' @param tempCol A numeric vector of Barcode counts in a sample,
 #'  usually being a column in a count matrix
 #' @param proportionThreshold A numeric value ranging from 0 to 1,
 #'  used as a threshold for determining \emph{top} Barcodes in each sample

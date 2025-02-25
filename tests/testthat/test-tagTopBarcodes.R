@@ -35,10 +35,10 @@ test_that("tagging top Barcodes across samples works", {
     proportionThreshold = 0.5
   )
   expect_equal(object4$isTop$vec, rep(c(TRUE, FALSE), each = 25))
-  ## check `minTopFrequency` setting up correct minimum frequency of *top*
+  ## check `nSampleThreshold` setting up correct minimum frequency of *top*
   object5 <- tagTopBarcodes(
     barbieQ = object1, activeSamples = rep(c(TRUE, FALSE), each = 6),
-    proportionThreshold = 0.5, minTopFrequency = 2
+    proportionThreshold = 0.5, nSampleThreshold = 2
   )
   expect_equal(object5$isTop$vec, rep(FALSE, 50))
 })
