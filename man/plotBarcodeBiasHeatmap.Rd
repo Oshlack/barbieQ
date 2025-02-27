@@ -16,7 +16,7 @@ plotBarcodeBiasHeatmap(
 updated with Barcode test results by calling the \link{testBarcodeBias} function.}
 
 \item{value}{A string indicating what to visualize.
-Defaults to "CPM". Options include: "CPM" and "occurrence".}
+Defaults to 'CPM'. Options include: 'CPM' and 'occurrence'.}
 
 \item{elementName}{A string indicating name of the test
 conducted and stored in \code{barbieQ$testBarcode}. Default to the last

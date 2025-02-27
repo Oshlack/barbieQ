@@ -28,8 +28,8 @@ TRUE to present adjusted p.values. FALSE to present original p.values.
 Defaults to TRUE.}
 
 \item{xAxis}{A string indicating what to visualise on the x scale of the
-dot plot. Options include: "avgRank", "totalOcc", "avgLogCPM",
-and "avgProportion". Defaults to "avgRank", representing the average
+dot plot. Options include: 'avgRank', 'totalOcc', 'avgLogCPM',
+and 'avgProportion'. Defaults to 'avgRank', representing the average
 rank of Barcodes across samples.}
 }
 \value{

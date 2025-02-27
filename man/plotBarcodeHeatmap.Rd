@@ -18,7 +18,7 @@ plotBarcodeHeatmap(
 \item{barbieQ}{A \code{barbieQ} object created by the \link{createBarbieQ} function.}
 
 \item{value}{A string indicating what to visualize.
-Defaults to "CPM". Options include: "CPM" and "occurrence".}
+Defaults to 'CPM'. Options include: 'CPM' and 'occurrence'.}
 
 \item{splitSamples}{A logical value deciding whether to split samples
 into slices. Defaults to FALSE.}

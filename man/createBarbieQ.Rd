@@ -8,37 +8,36 @@ subsequent analysis}
 createBarbieQ(object, target = NULL, factorColors = NULL)
 }
 \arguments{
-\item{object}{A numeric matrix of Barcode counts, with Barcodes in rows
+\item{object}{A numeric \code{matrix} of Barcode counts, with Barcodes in rows
 and samples in columns;
 Alternatively, you can pass an existing \code{barbieQ} object, from which
-barcode counts, sample conditions, and color palettes will be inherited.}
+barcode counts, sample conditions, and the mapping colors will be inherited.}
 
-\item{target}{A \code{matrix} or \code{data.frame} of sample conditions,
-with each factor in a separate column.
+\item{target}{A \code{matrix} or \code{data.frame} where rows represent samples
+and columns represent factors, each containing the specific condition assigned to a sample.
+If not specified, all samples are assigned the same condition.
 If a \code{barbieQ} object is passed to \code{object}, the sample conditions
-in \code{barbieQ} will be updated by \code{target}.
-If not specified, all samples are assigned the same condition.}
+will be updated by specifying \code{target}.}
 
-\item{factorColors}{A \code{list} of colour palettes corresponding to
-the factors in \code{target}.
-If a \code{barbieQ} object is passed to \code{object}, the color palettes
-in \code{barbieQ}will be updated by \code{factorColors}.
-If not specified, defaults to NULL.}
+\item{factorColors}{A \code{list} mapping factors in \code{target} to color palettes,
+where each element is a named \code{vector} assigning colors to specific sample conditions.
+If not specified, defaults to \code{NULL}.
+If a \code{barbieQ} object is passed to \code{object}, the mapping colors
+will be updated by specifying \code{factorColors}.}
 }
 \value{
 A \code{barbieQ} object, including several components:
 \itemize{
-\item \code{assay}: a \code{data.frame} containing Barcode counts across samples.
-\item \code{metadata}: a \code{data.frame} representing sample conditions,
-organized by various experimental factors.
-\item \code{factorColors}: a \code{list} of color palettes corresponding to
-the sample conditions.
+\item \code{assay}: a \code{data.frame} of Barcode counts, with Barcodes in rows and samples in columns.
+\item \code{metadata}: a \code{data.frame} of sample conditions, with samples in rows and
+experimental factors in columns.
+\item \code{factorColors}: A \code{list} mapping factors in \code{target} to color palettes,
+where each element is a named \code{vector} assigning colors to specific sample conditions.
 \item Matrices of \code{proportion}, \code{CPM}, \code{occurrence}, and \code{rank} representing
-the proportion, Counts Per Million (CPM), presence or absence, and ranking
-of Barcodes in each sample, based on the Barcode counts in \code{assay}.
-\item \code{isTop}: a list containing a vector \code{vec} and a matrix \code{mat}, tagging
-each Barcode as being part of the major contributors or not,
-by calling the function \link{tagTopBarcodes}.
+Barcode proportion, Counts Per Million (CPM), presence/absence, and ranking
+in each sample, based on the Barcode counts in \code{assay}.
+\item \code{isTop}: a \code{list} containing a \code{vector} (\code{vec}) and a \code{matrix} (\code{mat}),
+indicating whether each Barcode is a major contributor, determined by calling \link{tagTopBarcodes}.
 \item Additional processed information for further analysis.
 }
 }

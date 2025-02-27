@@ -22,7 +22,7 @@ testBarcodeBias(
 \item{barbieQ}{A \code{barbieQ} object created by the \link{createBarbieQ} function.}
 
 \item{method}{A string specifying what is to be tested.
-Options: "diffProp" and "diffOcc". Defaults to "diffProp".}
+Options: 'diffProp' and 'diffOcc'. Defaults to 'diffProp'.}
 
 \item{targets}{A \code{matrix} or \code{data.frame} of sample conditions,
 where each factor is represented in a separate column. Defaults to NULL,
@@ -49,11 +49,11 @@ the \link[stats:model.matrix]{stats::model.matrix} function. Defaults to be gene
 no duplicates among the samples.}
 
 \item{transformation}{A string specifying the transformation method when
-testing "diffProp". Options include: "asin-sqrt", "logit", and "none".
-Defaults to "asin-sqrt".}
+testing 'diffProp'. Options include: 'asin-sqrt', 'logit', and 'none'.
+Defaults to 'asin-sqrt'.}
 
 \item{regularization}{A string specifying the regularization method when
-testing "diffOcc". Options: "firth" and "none". Defaults to "firth".}
+testing 'diffOcc'. Options: 'firth' and 'none'. Defaults to 'firth'.}
 }
 \value{
 A \code{barbieQ} object updated with a \code{testBarcodes} component, adding

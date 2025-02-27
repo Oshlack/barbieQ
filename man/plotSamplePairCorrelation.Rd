@@ -29,10 +29,10 @@ sample conditions passed by \code{barbieQ} or \code{targets}, or a vector of
 sample conditions, indicating the primary factor to split sample slices.}
 
 \item{method}{A string specifying the correlation method to use.
-Defaults to "pearson". Options include: "pearson", "spearman".}
+Defaults to 'pearson'. Options include: 'pearson', 'spearman'.}
 }
 \value{
-A "Heatmap" S4 object displaying the pairwise correlation between
+A 'Heatmap' S4 object displaying the pairwise correlation between
 samples in a Heatmap.
 }
 \description{

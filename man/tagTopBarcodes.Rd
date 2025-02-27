@@ -8,13 +8,13 @@ tagTopBarcodes(
   barbieQ,
   activeSamples = NULL,
   proportionThreshold = 0.99,
-  minTopFrequency = 1
+  nSampleThreshold = 1
 )
 }
 \arguments{
 \item{barbieQ}{An object created by the \link{createBarbieQ} function.}
 
-\item{activeSamples}{a logical vector indicating which samples (columns)
+\item{activeSamples}{A logical vector indicating which samples (columns)
 to consider when determining the \emph{top} Barcodes across the entire
 dataset. Default to considering all samples in the \code{barbieQ} object.}
 
@@ -22,7 +22,7 @@ dataset. Default to considering all samples in the \code{barbieQ} object.}
 used as a threshold for determining \emph{top} Barcodes in each sample
 based on their combined proportion in theat sample. Default to 0.99.}
 
-\item{minTopFrequency}{An integer specifying the minimum number of times
+\item{nSampleThreshold}{An integer specifying the minimum number of times
 a Barcode must be tagged as \emph{top} across the selected samples
 (specified by \code{activeSamples}) in order to be considered \emph{top}
 for the entire dataset. Default to 1.}
@@ -39,10 +39,12 @@ across the entire dataset.
 }
 }
 \description{
-\code{tagTopBarcodes()} is designed for better filtering out the background noise,
-i.e., Barcodes that consistently have low contributions across samples.
-Each Barcode is tagged as one of the major contributing Barcodes
-(\emph{top} Barcodes) or not in each sample, based on whether their
+\code{tagTopBarcodes()} tags \emph{top} Barcodes that collectively contribute to
+the majority of counts across the dataset.
+It is designed for subsequently filtering out the background noise,
+i.e., filtering out Barcodes that consistently have low contributions across samples.
+In each sample, Barcodes are tagged as major contributing Barcodes
+(\emph{top} Barcodes) or not, based on whether their
 combined proportion passes a defined threshold in the sample.
 Across the entire dataset, a Barcode is considered \emph{top}
 if it is tagged as \emph{top} in a number of samples,
