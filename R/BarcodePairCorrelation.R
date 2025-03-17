@@ -56,8 +56,6 @@ plotBarcodePairCorrelation <- function(
   yAxis <- log2(corTestResults[, dataVisual] + 1)
   yTitle <- paste0("log2 (", dataVisual, " CPM +1)")
 
-  ## ggplot2 has a bug that gives wrong warning of 'Removed rows containing missing values'
-  suppressWarnings({
     ## plotting correlations
     p <- ggplot(corTestResults, aes(x = cor)) +
       geom_histogram(
@@ -90,7 +88,6 @@ plotBarcodePairCorrelation <- function(
         color = "#7CAE00", alpha = 1, size = 3,
         label = paste0("log2(", dataVisual, "+1)=", dataCutoff)
       )
-  })
 
   return(p)
 }

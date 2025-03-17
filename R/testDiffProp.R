@@ -29,72 +29,65 @@
 #'
 #' @examples \donttest{
 #' Block <- c(1, 1, 2, 3, 3, 4, 1, 1, 2, 3, 3, 4)
-#' Treat <- factor(rep(c("ctrl", "drug"), each = 6))
+#' Treat <- factor(rep(c('ctrl', 'drug'), each = 6))
 #' Time <- rep(rep(seq_len(2), each = 3), 2)
 #' nbarcodes <- 50
 #' nsamples <- 12
 #' count <- abs(matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples))
-#' rownames(count) <- paste0("Barcode", seq_len(nbarcodes))
+#' rownames(count) <- paste0('Barcode', seq_len(nbarcodes))
 #' barbieQ <- createBarbieQ(count, data.frame(Treat = Treat, Time = Time))
 #' barbieQ:::testDiffProp(
 #'   barbieQ = barbieQ,
 #'   mycontrasts = c(-1, 1, 0),
-#'   contrastLevels = c("ctrl", "drug"),
+#'   contrastLevels = c('ctrl', 'drug'),
 #'   designMatrix = model.matrix(~ 0 + Treat + Time)
 #' )
 #' }
-testDiffProp <- function(
-    barbieQ, transformation = "asin-sqrt", mycontrasts = NULL, contrastLevels = NULL,
+testDiffProp <- function(barbieQ, transformation = "asin-sqrt", mycontrasts = NULL, contrastLevels = NULL,
     designMatrix = NULL, block = NULL) {
-  if (is.null(rownames(barbieQ$proportion))) {
-    rownames(barbieQ$proportion) <- rownames(barbieQ$assay)
-  }
-  if (is.null(rownames(barbieQ$proportion))) {
-    rownames(barbieQ$proportion) <- paste0("barcode", seq(nrow(barbieQ$proportion)))
-  }
-  ## checking transformation
-  transformation <- match.arg(transformation, c("asin-sqrt", "logit", "none"))
-  ## arcsin square root transformation for proportion data
-  mydata <- asin(sqrt(barbieQ$proportion))
-  message("testing barbieQ$proportion after arcsin square root transformation.")
-  if (!is.null(block)) {
-    ## compute duplicates correction
-    dup <- limma::duplicateCorrelation(object = mydata, design = designMatrix, block = block)
-    message(
-      "Consensus correlation of Barcode proportion within sample duplicates: ",
-      dup$consensus.correlation
-    )
-    ## fit limma linear regression model taking duplicates
-    myfit1 <- limma::lmFit(object = mydata, design = designMatrix, block = block, correlation = dup$consensus.correlation)
-  } else {
-    ## ignore duplicates
-    message("no block specified, so there are no duplicate measurements.")
-    ## fit limma linear regression model without duplicates
-    myfit1 <- limma::lmFit(object = mydata, design = designMatrix)
-  }
-  ## fit contrast
-  myfit2 <- limma::contrasts.fit(fit = myfit1, contrasts = mycontrasts)
-  ## fit eBayes, moderated p.values obtained after applying empirical Bayes
-  myfit3 <- limma::eBayes(myfit2)
-  ## extract test result using multiple testing adjusted p.values
-  myresults <- limma::decideTests(myfit3, adjust.method = "BH")
-  direction <- dplyr::recode(as.vector(myresults),
-    `1` = contrastLevels[2], `-1` = contrastLevels[1],
-    `0` = "n.s."
-  )
-  names(direction) <- rownames(myresults)
-  ## extract adjusted p.values adjusted for multiple testing setting number to Inf
-  ## will retain all Barcodes setting sort.by to 'none' will stop sorting Barcodes
-  ## by p.values
-  rankedResults <- limma::topTable(myfit3, number = Inf, sort.by = "none")
-  reorderedResults <- rankedResults[names(direction), ]
+    if (is.null(rownames(barbieQ$proportion))) {
+        rownames(barbieQ$proportion) <- rownames(barbieQ$assay)
+    }
+    if (is.null(rownames(barbieQ$proportion))) {
+        rownames(barbieQ$proportion) <- paste0("barcode", seq(nrow(barbieQ$proportion)))
+    }
+    ## checking transformation
+    transformation <- match.arg(transformation, c("asin-sqrt", "logit", "none"))
+    ## arcsin square root transformation for proportion data
+    mydata <- asin(sqrt(barbieQ$proportion))
+    message("testing barbieQ$proportion after arcsin square root transformation.")
+    if (!is.null(block)) {
+        ## compute duplicates correction
+        dup <- limma::duplicateCorrelation(object = mydata, design = designMatrix, block = block)
+        message("Consensus correlation of Barcode proportion within sample duplicates: ",
+            dup$consensus.correlation)
+        ## fit limma linear regression model taking duplicates
+        myfit1 <- limma::lmFit(object = mydata, design = designMatrix, block = block, correlation = dup$consensus.correlation)
+    } else {
+        ## ignore duplicates
+        message("no block specified, so there are no duplicate measurements.")
+        ## fit limma linear regression model without duplicates
+        myfit1 <- limma::lmFit(object = mydata, design = designMatrix)
+    }
+    ## fit contrast
+    myfit2 <- limma::contrasts.fit(fit = myfit1, contrasts = mycontrasts)
+    ## fit eBayes, moderated p.values obtained after applying empirical Bayes
+    myfit3 <- limma::eBayes(myfit2)
+    ## extract test result using multiple testing adjusted p.values
+    myresults <- limma::decideTests(myfit3, adjust.method = "BH")
+    direction <- dplyr::recode(as.vector(myresults), `1` = contrastLevels[2], `-1` = contrastLevels[1],
+        `0` = "n.s.")
+    names(direction) <- rownames(myresults)
+    ## extract adjusted p.values adjusted for multiple testing setting number to Inf
+    ## will retain all Barcodes setting sort.by to 'none' will stop sorting Barcodes by
+    ## p.values
+    rankedResults <- limma::topTable(myfit3, number = Inf, sort.by = "none")
+    reorderedResults <- rankedResults[names(direction), ]
 
-  BarcodeBiasProp <- data.frame(
-    direction = direction, adj.p.value = reorderedResults$adj.P.Val,
-    p.value = reorderedResults$P.Value, logFC = reorderedResults$logFC, t = reorderedResults$t
-  )
+    BarcodeBiasProp <- data.frame(direction = direction, adj.p.value = reorderedResults$adj.P.Val,
+        p.value = reorderedResults$P.Value, logFC = reorderedResults$logFC, t = reorderedResults$t)
 
-  message("logFC is based on the data being tested, after being transformed.")
+    message("logFC is based on the data being tested, after being transformed.")
 
-  return(BarcodeBiasProp)
+    return(BarcodeBiasProp)
 }

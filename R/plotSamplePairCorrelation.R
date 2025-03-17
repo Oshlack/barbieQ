@@ -39,83 +39,67 @@
 #' @examples
 #' ## sample conditions and color palettes
 #' sampleConditions <- data.frame(
-#'   Treat = factor(rep(c("ctrl", "drug"), each = 6)),
+#'   Treat = factor(rep(c('ctrl', 'drug'), each = 6)),
 #'   Time = rep(rep(seq_len(2), each = 3), 2)
 #' )
 #' conditionColor <- list(
-#'   Treat = c(ctrl = "#999999", drug = "#112233"),
-#'   Time = c("1" = "#778899", "2" = "#998877")
+#'   Treat = c(ctrl = '#999999', drug = '#112233'),
+#'   Time = c('1' = '#778899', '2' = '#998877')
 #' )
 #' ## Barcode count data
 #' nbarcodes <- 50
 #' nsamples <- 12
 #' barcodeCount <- abs(matrix(10, nbarcodes, nsamples))
 #' barcodeCount[seq(21, 50), ] <- 0.0001
-#' rownames(barcodeCount) <- paste0("Barcode", seq_len(nbarcodes))
+#' rownames(barcodeCount) <- paste0('Barcode', seq_len(nbarcodes))
 #' ## create a `barbieQ` object
 #' myBarbieQ <- createBarbieQ(barcodeCount, sampleConditions, conditionColor)
 #' plotSamplePairCorrelation(myBarbieQ)
-plotSamplePairCorrelation <- function(
-    barbieQ, sampleOrder = NULL, targets = NULL, sampleGroups = NULL,
+plotSamplePairCorrelation <- function(barbieQ, sampleOrder = NULL, targets = NULL, sampleGroups = NULL,
     method = "pearson") {
-  ## check barbieQ dimensions
-  checkBarbieQDimensions(barbieQ)
-  ## extract targets and primary effector based on arguments
-  targetsInfo <- extractTargetsAndPrimaryFactor(
-    barbieQ = barbieQ, targets = targets,
-    sampleGroups = sampleGroups
-  )
-  mytargets <- targetsInfo$mytargets
-  pointer <- targetsInfo$pointer
-  ## set the primary effector as sample splitter displaying at bottom
-  bottomTargets <- mytargets[, pointer, drop = FALSE]
-  ## the rest of effectors displayed at top
-  topTargets <- mytargets[, dplyr::setdiff(seq_along(colnames(mytargets)), pointer),
-    drop = FALSE
-  ]
-  ## check sampleOrder
-  if (is.null(sampleOrder)) {
-    sampleOrder <- c(colnames(bottomTargets), colnames(topTargets))
-  }
-  ## check method
-  method <- match.arg(method, c("pearson", "spearman"))
+    ## check barbieQ dimensions
+    checkBarbieQDimensions(barbieQ)
+    ## extract targets and primary effector based on arguments
+    targetsInfo <- extractTargetsAndPrimaryFactor(barbieQ = barbieQ, targets = targets, sampleGroups = sampleGroups)
+    mytargets <- targetsInfo$mytargets
+    pointer <- targetsInfo$pointer
+    ## set the primary effector as sample splitter displaying at bottom
+    bottomTargets <- mytargets[, pointer, drop = FALSE]
+    ## the rest of effectors displayed at top
+    topTargets <- mytargets[, dplyr::setdiff(seq_along(colnames(mytargets)), pointer), drop = FALSE]
+    ## check sampleOrder
+    if (is.null(sampleOrder)) {
+        sampleOrder <- c(colnames(bottomTargets), colnames(topTargets))
+    }
+    ## check method
+    method <- match.arg(method, c("pearson", "spearman"))
 
-  ## reorder the columns of the data.frame based on the specified order
-  mytargets <- mytargets[, sampleOrder, drop = FALSE]
-  ## extract sample order
-  rowOrder <- mytargets %>%
-    dplyr::mutate(rowNumber = dplyr::row_number()) %>%
-    dplyr::arrange(dplyr::across(dplyr::all_of(sampleOrder))) %>%
-    dplyr::pull(rowNumber)
-  ## if sampleGroups column is automatically added, remove it
-  if (all(mytargets[, pointer] == 1) && colnames(mytargets)[pointer] == "sampleGroups") {
-    mytargets <- mytargets[, -pointer, drop = FALSE]
-  }
-  ## compute annotation obejct
-  sampleAnnotationColumn <- HeatmapAnnotation(
-    df = mytargets, annotation_name_side = "left",
-    annotation_name_gp = grid::gpar(fontsize = 10), col = barbieQ$factorColors
-  )
-  sampleAnnotationRow <- rowAnnotation(
-    df = mytargets, annotation_name_side = "bottom",
-    annotation_name_gp = grid::gpar(fontsize = 10), col = barbieQ$factorColors, show_legend = FALSE,
-    show_annotation_name = FALSE
-  )
-  ## calculate correlation
-  corMat <- stats::cor(log2(barbieQ$CPM + 1), method = method)
-  message("displaying", method, "correlation of Barcode log2 CPM+1.")
+    ## reorder the columns of the data.frame based on the specified order
+    mytargets <- mytargets[, sampleOrder, drop = FALSE]
+    ## extract sample order
+    rowOrder <- mytargets %>%
+        dplyr::mutate(rowNumber = dplyr::row_number()) %>%
+        dplyr::arrange(dplyr::across(dplyr::all_of(sampleOrder))) %>%
+        dplyr::pull(rowNumber)
+    ## if sampleGroups column is automatically added, remove it
+    if (all(mytargets[, pointer] == 1) && colnames(mytargets)[pointer] == "sampleGroups") {
+        mytargets <- mytargets[, -pointer, drop = FALSE]
+    }
+    ## compute annotation obejct
+    sampleAnnotationColumn <- HeatmapAnnotation(df = mytargets, annotation_name_side = "left",
+        annotation_name_gp = grid::gpar(fontsize = 10), col = barbieQ$factorColors)
+    sampleAnnotationRow <- rowAnnotation(df = mytargets, annotation_name_side = "bottom",
+        annotation_name_gp = grid::gpar(fontsize = 10), col = barbieQ$factorColors, show_legend = FALSE,
+        show_annotation_name = FALSE)
+    ## calculate correlation
+    corMat <- stats::cor(log2(barbieQ$CPM + 1), method = method)
+    message("displaying", method, "correlation of Barcode log2 CPM+1.")
 
-  hp <- Heatmap(corMat,
-    name = "correlation", width = unit(6, "cm"), height = unit(
-      6,
-      "cm"
-    ), col = circlize::colorRamp2(c(-1, 0, 1), c("blue", "white", "red")), heatmap_legend_param = list(at = c(
-      -1,
-      0, 1
-    )), cluster_rows = FALSE, cluster_columns = FALSE, show_row_names = FALSE,
-    show_column_names = FALSE, top_annotation = sampleAnnotationColumn, left_annotation = sampleAnnotationRow,
-    column_order = rowOrder, row_order = rowOrder
-  )
+    hp <- Heatmap(corMat, name = "correlation", width = unit(6, "cm"), height = unit(6, "cm"),
+        col = circlize::colorRamp2(c(-1, 0, 1), c("blue", "white", "red")), heatmap_legend_param = list(at = c(-1,
+            0, 1)), cluster_rows = FALSE, cluster_columns = FALSE, show_row_names = FALSE,
+        show_column_names = FALSE, top_annotation = sampleAnnotationColumn, left_annotation = sampleAnnotationRow,
+        column_order = rowOrder, row_order = rowOrder)
 
-  return(hp)
+    return(hp)
 }

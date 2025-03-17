@@ -93,7 +93,6 @@ plotBarcodePareto <- function(barbieQ) {
   ## total length of all bars
   pi <- max(data$id)
 
-  suppressWarnings({
     p <- ggplot(data, aes(x = as.factor(id), y = value)) +
       ## add the bars with a blue color
       geom_bar(stat = "identity", alpha = 1, color = "#999966", linewidth = 0.5) +
@@ -159,7 +158,6 @@ plotBarcodePareto <- function(barbieQ) {
         values = c("TRUE" = "#FF3399", "FALSE" = "#0066FF"),
         labels = c("Top Barcodes", "Others")
       )
-  })
 
   return(p)
 }

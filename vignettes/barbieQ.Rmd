@@ -49,8 +49,11 @@ The main functions include:
 # Intallation
 
 ```{r install, eval=FALSE}
-## Install the development version of barbieQ from github
-devtools::install_github("Oshlack/barbieQ")
+# You can install the development version of barbieQ like so:
+BiocManager::install("barbieQ")
+
+## Alternatively, you can install the development version of barbieQ from GitHub
+# devtools::install_github("Oshlack/barbieQ")
 ```
 
 # Load Dependecy
