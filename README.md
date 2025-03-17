@@ -12,10 +12,17 @@ count data preprocessing, statistical testing, and visualization.
 
 ## Installation
 
-You can install the development version of barbieQ like so:
+You can install the development version of barbieQ from GitHub:
 
 ``` r
-BiocManager::install("Oshlack/barbieQ")
+devtools::install_github("Oshlack/barbieQ")
+```
+
+Alternatively, you can install the stable version of barbieQ from
+BioConductor:
+
+``` r
+BiocManager::install("barbieQ")
 ```
 
 ## Getting started

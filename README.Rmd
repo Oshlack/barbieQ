@@ -22,7 +22,13 @@ The goal of barbieQ is to analyse barcode count data generated from cell clonal 
 
 ## Installation
 
-You can install the development version of barbieQ like so:
+You can install the development version of barbieQ from GitHub:
+
+``` r
+devtools::install_github("Oshlack/barbieQ")
+```
+
+Alternatively, you can install the stable version of barbieQ from BioConductor:
 
 ``` r
 BiocManager::install("barbieQ")
