@@ -3,8 +3,8 @@
 #' A subset of data from a study on monkey HSPC cell expansion using barcoding technique.
 #' Unique barcodes were initially integrated into hematopoietic stem and progenitor cells (HSPCs)  
 #' and subsequently passed to daughter cells.
-#' After a defined period of expansion, offspring cells were collected and sorted into various cell types. 
-#' Barcode counts within different cell types were used to interpret the patterns of HSPC differentiation.
+#' After a defined period of cell expansion, progeny cells were collected and sorted into various cell types as samples. 
+#' Barcode counts within different samples were used to interpret the patterns of HSPC differentiation.
 #' 
 #' The original monkey HSPC barcoding data were published in the following paper:
 #'   [Wu, Chuanfeng, et al. "Clonal expansion and compartmentalized maintenance of rhesus macaque NK cell subsets." Science Immunology (2018)](http://dx.doi.org/10.1126/sciimmunol.aat9781)
@@ -14,7 +14,7 @@
 #' 
 #' Here, we directly source the raw data from `barcodetrackRData`.
 #' 
-#' This dataset includes data from the "ZG66" monkey only. Additional datasets are available at the source link.
+#' This dataset includes data from the "ZG66" monkey individual only. Additional datasets are available at the source link.
 #'
 #' @format ## `monkeyHSPC`
 #' A list containing:
