@@ -17,7 +17,7 @@
 #' This dataset includes data from the "ZG66" monkey individual only. Additional datasets are available at the source link.
 #'
 #' @format ## `monkeyHSPC`
-#' A list containing:
+#' A `SummarizedExperiment` object containing:
 #' - A barcode count matrix with 16,603 rows and 62 columns,
 #' - A a data frame of sample metadata.
 #' - other components associated with this `barbieQ` package.
@@ -52,7 +52,7 @@ colnames(metadata)[grepl("Cell_type", colnames(metadata))] <- "Celltype"
 metadata$Timepoint <- NULL
 
 ## create an object to store the barcode count matrix and sample metadata.
-monkeyHSPC <- barbieQ::createBarbieQ(object = count, target = metadata)
+monkeyHSPC <- barbieQ::createBarbieQ(object = count, sampleMetadata = metadata)
 
 ## save the package exported data.
 usethis::use_data(monkeyHSPC, overwrite = TRUE)

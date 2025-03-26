@@ -42,9 +42,9 @@ The main functions include:
  
  * `plotBarcodeProportion()`
  
- * `testBarcodeBias()`
+ * `testBarcodeSignif()`
  
- * `plotBarcodeBiasScatterPlot()`
+ * `plotSignifBarcodeProportion()`
 
 # Intallation
 
@@ -71,15 +71,18 @@ suppressPackageStartupMessages({
   library(data.table)
   library(ComplexHeatmap)
   library(limma)
+  library(SummarizedExperiment)
+  library(S4Vectors)
 })
 ```
 
-# Simulate Data to Use
+# Load Package Data
 
 An example dataset on barcode count will be implemented from published clonal track research for better demonstrating the function in the package.
 
 ```{r data}
 ## Sample conditions and color palettes
+data(monkeyHSPC, package = "barbieQ")
 sampleConditions <- data.frame(
   Treat = factor(rep(c("ctrl", "drug"), each = 6)),
   Time = rep(rep(seq_len(2), each = 3), 2)
@@ -106,7 +109,7 @@ By creating a `barbieQ` object, you've automatically processed a series of data 
 ```{r example, fig.width=8, fig.height=6}
 ## Passing `object`, `target` and `factorColors`
 exampleBBQ <- createBarbieQ(
-  object = barcodeCount, target = sampleConditions, factorColors = conditionColor
+  object = barcodeCount, sampleMetadata = sampleConditions, factorColors = conditionColor
 )
 ```
 
