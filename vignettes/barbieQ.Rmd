@@ -81,7 +81,7 @@ set.seed(2025)
  
 - Monkey HSPC Cell Barcoding Data (monkeyHSPC)
 
-A subset of data from a study on monkey HSPC cell expansion using barcoding technique.
+A subset of data from a study on monkey HSPC cell expansion using barcoding technique.^[NK clonal expansion](http://dx.doi.org/10.1126/sciimmunol.aat9781)),  [barcodetrackRData](https://github.com/dunbarlabNIH/barcodetrackRData)^
 Barcode counts within different samples were used to interpret the patterns of HSPC differentiation.
 
 It is a `SummarizedExperiment` object created using function `barbieQ::createBarbie`, containing a barcode count matrix with 16,603 rows and 62 columns, and a data frame of sample metadata.
@@ -133,7 +133,7 @@ plotBarcodePareto(barbieQ = exampleBBQ) |> plot()
 plotBarcodeSankey(barbieQ = exampleBBQ) |> plot()
 ```
 
- - Once you are happy with the classification of *"top"* and *"bottom"* barcodes, you can filter out the *"bottom"* barcodes by applying function `subsetBarcodes()` based on the tagged vector.
+ - Once you are happy with the classification of *"top"* and *"bottom"* barcodes, you can filter out the *"bottom"* barcodes by subsetting the `SE` object based on the tagged array.
  
 ```{r subset top barcodes}
 exampleBBQ <- exampleBBQ[SummarizedExperiment::rowData(exampleBBQ)$isTopBarcode$isTop,]
@@ -150,34 +150,34 @@ plotSamplePairCorrelation(barbieQ = exampleBBQ) |> plot()
 
 ## Test Barcodes and Identify Significant Changes
 
-Based on the understanding of sample conditions that likely result in the differences in barcode abundance, you can robustly test the significance of the barcode changes under a specific comparison between the sample conditions, by applying the function `testBarcodeBias()` to the `barbieQ` object. The testing results will be saved in the object, and be further visualized using functions: `plotBarcodeBiasHeatmap()` and `plotBarcodeBiasScatterPlot()`.
+Based on the understanding of sample conditions that likely result in the differences in barcode abundance, you can robustly test the significance of the barcode changes under a specific comparison between the sample conditions, by applying the function `testBarcodeSignif()` to the `barbieQ` object. The testing results will be saved in the object, and be further visualized using functions: `plotSignifBarcodeHeatmap()`, `plotSignifBarcodeProportion()`, `plotBarcodeMA()`, and etc.
  
  - By specifying the parameter `method` by `diffProp` (defaulted), you are testing individual barcodes' **differential proportion** between conditions.
 
 ```{r test diffProp, fig.width=5, fig.height=4}
 ## test Barcode differential proportion between sample groups
-exampleBBQ <- testBarcodeBias(
+exampleBBQ <- testBarcodeSignif(
   barbieQ = exampleBBQ,
-  sampleGroups = "Treat",
-  contrastLevels = c("ctrl", "drug"),
+  sampleGroup = "Treat",
   method = "diffProp"
 )
-plotBarcodeBiasHeatmap(exampleBBQ) |> plot()
-plotBarcodeBiasScatterPlot(exampleBBQ) |> plot()
+plotSignifBarcodeHeatmap(exampleBBQ) |> plot()
+plotSignifBarcodeProportion(exampleBBQ) |> plot()
+plotBarcodeMA(exampleBBQ) |> plot()
 ```
 
  - By specifying the parameter `method` by `diffOcc`, you are testing individual barcodes' **differential occurrence** between conditions.
 
 ```{r test diffOcc, fig.width=5, fig.height=4}
 ## test Barcode differential occurrence between sample groups
-exampleBBQ <- testBarcodeBias(
+exampleBBQ <- testBarcodeSignif(
   barbieQ = exampleBBQ,
-  sampleGroups = "Treat",
-  contrastLevels = c("ctrl", "drug"),
+  sampleGroup = "Treat",
   method = "diffOcc"
 )
-plotBarcodeBiasHeatmap(exampleBBQ) |> plot()
-plotBarcodeBiasScatterPlot(exampleBBQ) |> plot()
+plotSignifBarcodeHeatmap(exampleBBQ) |> plot()
+plotSignifBarcodeProportion(exampleBBQ) |> plot()
+plotBarcodeMA(exampleBBQ) |> plot()
 ```
 
 # References
