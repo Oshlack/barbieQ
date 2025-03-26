@@ -74,28 +74,20 @@ suppressPackageStartupMessages({
   library(SummarizedExperiment)
   library(S4Vectors)
 })
+set.seed(2025)
 ```
 
 # Load Package Data
+ 
+- Monkey HSPC Cell Barcoding Data (monkeyHSPC)
 
-An example dataset on barcode count will be implemented from published clonal track research for better demonstrating the function in the package.
+A subset of data from a study on monkey HSPC cell expansion using barcoding technique.
+Barcode counts within different samples were used to interpret the patterns of HSPC differentiation.
+
+It is a `SummarizedExperiment` object created using function `barbieQ::createBarbie`, containing a barcode count matrix with 16,603 rows and 62 columns, and a data frame of sample metadata.
 
 ```{r data}
-## Sample conditions and color palettes
 data(monkeyHSPC, package = "barbieQ")
-sampleConditions <- data.frame(
-  Treat = factor(rep(c("ctrl", "drug"), each = 6)),
-  Time = rep(rep(seq_len(2), each = 3), 2)
-)
-conditionColor <- list(
-  Treat = c(ctrl = "#999999", drug = "#112233"),
-  Time = c("1" = "#778899", "2" = "#998877")
-)
-## Barcode count data
-nbarcodes <- 50
-nsamples <- 12
-barcodeCount <- abs(matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples))
-rownames(barcodeCount) <- paste0("Barcode", seq_len(nbarcodes))
 ```
 
 # Example
@@ -109,7 +101,8 @@ By creating a `barbieQ` object, you've automatically processed a series of data 
 ```{r example, fig.width=8, fig.height=6}
 ## Passing `object`, `target` and `factorColors`
 exampleBBQ <- createBarbieQ(
-  object = barcodeCount, sampleMetadata = sampleConditions, factorColors = conditionColor
+  object = SummarizedExperiment::assay(monkeyHSPC), 
+  sampleMetadata = SummarizedExperiment::colData(monkeyHSPC)$sampleMetadata
 )
 ```
 
@@ -143,7 +136,7 @@ plotBarcodeSankey(barbieQ = exampleBBQ) |> plot()
  - Once you are happy with the classification of *"top"* and *"bottom"* barcodes, you can filter out the *"bottom"* barcodes by applying function `subsetBarcodes()` based on the tagged vector.
  
 ```{r subset top barcodes}
-exampleBBQ <- subsetBarcodes(barbieQ = exampleBBQ, retainedRows = exampleBBQ$isTop$vec)
+exampleBBQ <- exampleBBQ[SummarizedExperiment::rowData(exampleBBQ)$isTopBarcode$isTop,]
 ```
 
 ## Visualize Sample Correlation
