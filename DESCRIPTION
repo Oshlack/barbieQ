@@ -39,7 +39,7 @@ Imports:
     igraph,
     utils,
     data.table
-biocViews: Sequencing, Regression, Preprocessing, Visualization
+biocViews: Sequencing, Software, Regression, Preprocessing, Visualization
 BugReports: https://github.com/Oshlack/barbieQ
 URL: https://github.com/Oshlack/barbieQ/issues
 RoxygenNote: 7.3.2

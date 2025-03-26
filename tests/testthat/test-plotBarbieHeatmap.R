@@ -16,7 +16,7 @@ test_that("plotting barcode Heatmap works", {
   rownames(barcodeCount) <- paste0("Barcode", seq_len(nbarcodes))
 
   object1 <- createBarbieQ(
-    object = barcodeCount, target = sampleConditions, factorColors = conditionColor
+    object = barcodeCount, sampleMetadata = sampleConditions, factorColors = conditionColor
   )
 
   hp <- plotBarcodeHeatmap(barbieQ = object1)
@@ -25,25 +25,25 @@ test_that("plotting barcode Heatmap works", {
   hp <- plotBarcodeHeatmap(barbieQ = object1, splitSamples = TRUE)
   expect_equal(
     hp@top_annotation@anno_list %>% names(),
-    c("Time")
+    c("Treat")
   )
   hp <- plotBarcodeHeatmap(
-    barbieQ = object1, splitSamples = TRUE, sampleGroups = "Treat"
+    barbieQ = object1, splitSamples = TRUE, sampleGroup = "Treat"
   )
-  expect_equal(hp@bottom_annotation@anno_list %>% names(), "Treat")
+  expect_equal(hp@bottom_annotation@anno_list %>% names(), "Time")
 
-  object1$metadata$Treat <- factor(
-    object1$metadata$Treat,
+  SummarizedExperiment::colData(object1)$sampleMetadata$Treat <- factor(
+    SummarizedExperiment::colData(object1)$sampleMetadata$Treat,
     levels = c("drug", "ctrl")
   )
   hp <- plotBarcodeHeatmap(
-    barbieQ = object1, splitSamples = TRUE, sampleGroups = "Treat"
+    barbieQ = object1, splitSamples = TRUE, sampleGroup = "Treat"
   )
   expect_equal(
     hp@matrix_param[["column_split"]][[1]] %>% levels(),
     c("drug", "ctrl")
   )
 
-  hp <- plotBarcodeHeatmap(barbieQ = object1, value = "occurrence")
+  hp <- plotBarcodeHeatmap(barbieQ = object1, barcodeMetric = "occurrence")
   expect_equal(hp@name, "occurrence")
 })

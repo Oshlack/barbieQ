@@ -5,10 +5,15 @@
 \title{Plot contributions of Barcodes split by \emph{top} v.s. \emph{bottom}
 in a circular bar plot.}
 \usage{
-plotBarcodePareto(barbieQ)
+plotBarcodePareto(barbieQ, absoluteProportion = FALSE)
 }
 \arguments{
-\item{barbieQ}{A \code{barbieQ} object created by the \link{createBarbieQ} function.}
+\item{barbieQ}{A \code{SummarizedExperiment} object created by the \link{createBarbieQ} function.}
+
+\item{absoluteProportion}{A logical value indicating whether to present
+absolute Barcode mean proportion (across samples) or relative values across Barcodes,
+Defaults to FALSE,
+which means it will present the percentage of (Barcode mean proportion) across Barcodes.}
 }
 \value{
 A \code{ggplot} S3 class object displaying a circular bar plot,

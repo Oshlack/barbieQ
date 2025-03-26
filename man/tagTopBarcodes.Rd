@@ -12,10 +12,10 @@ tagTopBarcodes(
 )
 }
 \arguments{
-\item{barbieQ}{An object created by the \link{createBarbieQ} function.}
+\item{barbieQ}{A \code{SummarizedExperiment} object created by the \link{createBarbieQ} function.}
 
-\item{activeSamples}{A logical vector indicating which samples (columns)
-to consider when determining the \emph{top} Barcodes across the entire
+\item{activeSamples}{A logical vector indicating individual samples (columns)
+to consider or avoid when determining the \emph{top} Barcodes across the entire
 dataset. Default to considering all samples in the \code{barbieQ} object.}
 
 \item{proportionThreshold}{A numeric value ranging from 0 to 1,
@@ -28,14 +28,14 @@ a Barcode must be tagged as \emph{top} across the selected samples
 for the entire dataset. Default to 1.}
 }
 \value{
-A \code{barbieQ} object updating \code{isTop} while inheriting other components
-from the \code{barbieQ} object passed into the function.
-See \code{barbieQ} structure in \link{createBarbieQ}.
-\code{isTop} is a list including:
+A \code{barbieQ} object with slots \code{isTopAssay} and \code{isTopBarcode} added or updated,
+while inheriting other components from the \code{barbieQ} object passed into the function.
+See \code{barbieQ} structure (as a \code{SummarizedExperiment} object) in \link{createBarbieQ}.
 \itemize{
-\item \code{vec}: a logical vector tagging Barcodes as \emph{top}
-across the entire dataset.
-\item \code{mat}: a logical matrix tagging Barcodes as \emph{top} in each sample.
+\item \code{isTopAssay}: a logical matrix stored in \code{assays(barbieQ)}
+tagging Barcodes as \emph{top} in each sample.
+\item \code{isTopBarcode}: a \code{DataFrame} stored in \code{rowData(barbieQ)}
+with a single logical column tagging Barcodes as \emph{top} or not across the entire dataset.
 }
 }
 \description{

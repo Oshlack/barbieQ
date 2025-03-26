@@ -145,28 +145,33 @@ call createBarbieQ() to generate proper `barbieQ` object - don't modify by hand.
     return(TRUE)
 }
 
-#' Extract targets and primary factor
+#' Extract sampleMetadata and primary factor
 #'
-#' `extractTargetsAndPrimaryFactor()` extracts targets `data.frame` from the
-#' specified `targets` (prioritised) and `sampleGroups`, or inherits from
-#' `barbieQ`, and identifies the primary factor based on the `sampleGroups`.
+#' `extractSampleMetadataAndPrimaryFactor()` extracts sampleMetadata `data.frame` from the
+#' specified `sampleMetadata` (prioritised) and `sampleGroup`, or inherits from
+#' `barbieQ`, and identifies the primary factor based on the `sampleGroup`.
 #'
-#' @param barbieQ A `barbieQ` object created by the [createBarbieQ] function.
-#' @param targets A `matrix` or `data.frame` of sample conditions,
+#' @param barbieQ A `barbieQ` object based on `SummarizedExperiment` created by the [createBarbieQ] function.
+#' @param sampleMetadata A `matrix`, `data.frame` or `DataFrame` of sample conditions,
 #'  where each factor is represented in a separate column. Defaults to NULL,
-#'  in which case sample conditions are inherited from `barbieQ$metadata`.
-#' @param sampleGroups A string representing the name of a factor from the
-#'  sample conditions passed by `barbieQ` or `targets`, or a vector of
+#'  in which case sample conditions are inherited from `colData(barbieQ)$sampleMetadata`.
+#' @param sampleGroup A string representing the name of a factor from the
+#'  sample conditions passed by `barbieQ` or `sampleMetadata`, or a `vector` of
 #'  sample conditions, indicating the primary factor to be evaluated.
-#'  Defaults to the first factor in the sample conditions.
+#'  Defaults to the first factor in the sample conditions, or a `list` with a vector like this,
+#'  or a `data.frame` or `DataFrame` with a single column of sample conditions.
 #'
-#' @return A list including:
-#'  * A `data.frame` of targets (sample conditions) with each factor
-#'    in a separate column.
-#'  * A vector indicating which column in the targets represents the
-#'    primary factor.
+#' @return A `DataFrame` object:
+#'  * `listData` with samples in rows and conditions in columns
+#'  * `medadata$primaryFactor` storing the name of the primary factor
 #'
 #' @noRd
+#' 
+#' @importClassesFrom S4Vectors DataFrame
+#' @importClassesFrom SummarizedExperiment SummarizedExperiment
+#' @importFrom SummarizedExperiment SummarizedExperiment
+#' @importFrom SummarizedExperiment colData
+#' @importFrom S4Vectors metadata
 #'
 #' @examples \donttest{
 #' Treat <- factor(rep(seq_len(2), each = 6))
@@ -176,72 +181,110 @@ call createBarbieQ() to generate proper `barbieQ` object - don't modify by hand.
 #' count <- abs(matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples))
 #' rownames(count) <- paste0('Barcode', seq_len(nbarcodes))
 #' barbieQ <- createBarbieQ(count, data.frame(Treat = Treat, Time = Time))
-#' barbieQ:::extarctTargetsAndPrimaryFactor(
-#'   barbieQ = barbieQ, sampleGroups = 'Treat'
+#' barbieQ:::extarctSampleMetadataAndPrimaryFactor(
+#'   barbieQ = barbieQ, sampleGroup = 'Treat'
 #' )
 #' }
-extractTargetsAndPrimaryFactor <- function(barbieQ, targets = NULL, sampleGroups = NULL) {
-    ## check targets: if 'targets' is not specified, assign barbieQ$metadata (could
-    ## still be NULL)
-    if (is.null(targets)) {
-        targets <- barbieQ$metadata
+extractSampleMetadataAndPrimaryFactor <- function(barbieQ, sampleMetadata = NULL, sampleGroup = NULL) {
+    ## check sampleMetadata: if 'sampleMetadata' is not specified, inherit from
+    ## barbieQ (could still be NULL)
+    if (is.null(sampleMetadata)) {
+        sampleMetadata <- SummarizedExperiment::colData(barbieQ)$sampleMetadata
     }
-    ## case when targets is specified or provided by barbieQ$metadata in right format
-    if (is.vector(targets) || is.factor(targets)) {
-        targets <- data.frame(V1 = targets)
-    } else if (is.matrix(targets) || is.data.frame(targets)) {
-        if (nrow(targets) != ncol(barbieQ$assay)) {
-            stop("the row dimension of 'targets' doesn't match the column dimension (sample size) of 'barbieQ$assay'.")
+    ## case when sampleMetadata is specified or provided by barbieQ in right format
+    if (is.vector(sampleMetadata) || is.factor(sampleMetadata)) {
+        sampleMetadata <- S4Vectors::DataFrame(V1 = sampleMetadata)
+        ## check dimensions - sample size
+        if (nrow(sampleMetadata) != ncol(barbieQ)) {
+            stop("sample size don't match between `sampleMetadata` and `barbieQ`.")
+        }
+    } else if (is.matrix(sampleMetadata) || is.data.frame(sampleMetadata) || is(sampleMetadata,
+        "DataFrame")) {
+        sampleMetadata <- S4Vectors::DataFrame(sampleMetadata)
+        ## check dimensions - sample size
+        if (nrow(sampleMetadata) != ncol(barbieQ)) {
+            stop("sample size don't match between `sampleMetadata` and `barbieQ`.")
         }
     } else {
-        ## case when targets is still NULL or not in right format if group is a vector
-        ## or factor of correct length, add it to targets
-        if ((is.vector(sampleGroups) || is.factor(sampleGroups)) && length(sampleGroups) >
-            1L) {
-            ## check sampleGroups length
-            if (length(sampleGroups) != ncol(barbieQ$assay)) {
-                stop("the length of 'sampleGroups' doesn't match the column dimention (sample size) of 'barbieQ$assay'.")
+        ## case when sampleMetadata is not specified by `object` or `sampleMetadata`
+        ## or not any of the above formats when group is a vector, or factor with
+        ## length of sample size assign it to sampleMetadata
+        if (((is.vector(sampleGroup) && !is.list(sampleGroup)) || is.factor(sampleGroup)) &&
+            length(sampleGroup) > 1L) {
+            ## check sampleGroup length
+            if (length(sampleGroup) != ncol(barbieQ)) {
+                stop("sample size don't match between `sampleGroup` and `barbieQ`.")
             } else {
-                mytargets <- data.frame(sampleGroups = sampleGroups)
-                pointer <- which(colnames(mytargets) == "sampleGroups")
-                message("adding sampleGroups to targets.")
+                sampleMetadata <- S4Vectors::DataFrame(sampleGroup = sampleGroup)
+                ## as `sampleGroup` will be the only columnn in `sampleMetadata` set
+                ## it up as primary factor and store in metadata of `sampleMetadata`
+                S4Vectors::metadata(sampleMetadata)$primaryFactor <- "sampleGroup"
+                message("assigning `sampleGroup` to `sampleMetadata`, set up as primary factor.")
+            }
+        } else if ((is.list(sampleGroup) && length(sampleGroup) == 1L) || (is(sampleGroup,
+            "DataFrame") && ncol(sampleGroup) == 1L)) {
+            ## case when `sampleGroup` is a list with a named vector of proper length
+            ## or data.frame or DataFrame of a single column of proper rows
+            if (length(sampleGroup[[1]]) != ncol(barbieQ)) {
+                stop("sample size don't match between `sampleGroup` and `barbieQ`.")
+            } else {
+                ## assign `sampleGroup` to `sampleMetadata`
+                sampleMetadata <- S4Vectors::DataFrame(sampleGroup)
+                S4Vectors::metadata(sampleMetadata)$primaryFactor <- names(sampleGroup)[1]
+                message("assigning ", names(sampleGroup)[1], " to `sampleMetadata`, set up as primary factor.")
             }
         } else {
-            stop("target not properly specified; barbieQ$metadata not provided; sampleGroups not properly specified.
-           at least one of them is needed in right format.")
+            ## case when `sampleMetadata` is still NULL or not properly specified
+            stop("no valid `sampleMetadata` or `sampleGroup` specified.")
         }
     }
 
-    ## now targets should be a matrix or data.frame already default sampleGroups to the
-    ## first factor in targets
-    if (is.null(sampleGroups)) {
-        sampleGroups <- colnames(targets)[1]
+    ## now sampleMetadata should be a matrix, data.frame or DataFrame already this
+    ## section if to set up the primary factor and save it to sampleGroup if
+    ## unspecified, default sampleGroup to the first factor in sampleMetadata
+    if (is.null(sampleGroup)) {
+        S4Vectors::metadata(sampleMetadata)$primaryFactor <- colnames(sampleMetadata)[1]
+        message("setting ", colnames(sampleMetadata)[1], " as the primary factor in `sampleMetadata`.")
     }
-    ## check sampleGroups: if 'sampleGroups' is a specified effector name, extract the
-    ## entire vector
-    if (is.character(sampleGroups) && length(sampleGroups) == 1L) {
-        if (sampleGroups %in% colnames(targets)) {
-            pointer <- which(colnames(targets) == sampleGroups)
-            sampleGroups <- targets[, sampleGroups]
-            mytargets <- targets
-            message("setting ", colnames(targets)[pointer], " as the primary effector of sample conditions.")
+    ## if `sampleGroup` is a specified column name of the `sampleMetadata`, extract
+    ## the entire vector
+    if (is.character(sampleGroup) && length(sampleGroup) == 1L) {
+        ## case when `sampleGroup` is the name of a factor in `sampleMetadata`
+        if (sampleGroup %in% colnames(sampleMetadata)) {
+            S4Vectors::metadata(sampleMetadata)$primaryFactor <- sampleGroup
+            message("setting ", sampleGroup, " as the primary factor in `sampleMetadata`.")
         } else {
-            stop("sampleGroups not correspond to an effector name of sample conditionss. please ensure it is spelled correctly.")
+            stop("cannot find `sampleGroup` in factor names in `sampleMetadata`.")
         }
-    } else if (is.vector(sampleGroups) || is.factor(sampleGroups)) {
-        if (length(sampleGroups) != ncol(barbieQ$assay)) {
-            stop("the length of 'sampleGroups' doesn't match the column dimention (sample size) of 'targets' or'barbieQ$assay'.")
+    } else if (((is.vector(sampleGroup) && !is.list(sampleGroup)) || is.factor(sampleGroup)) &&
+        length(sampleGroup) > 1L) {
+        ## case when `sampleGroup` is specified with the existence of proper
+        ## `sampleMetadata`
+        if (length(sampleGroup) != ncol(barbieQ)) {
+            stop("sample size don't match between `sampleGroup` and `barbieQ`.")
         } else {
-            mytargets <- data.frame(sampleGroups = sampleGroups, targets)
-            pointer <- which(colnames(mytargets) == "sampleGroups")
-            message("binding 'sampleGroups' to 'targets'.")
+            ## cbind `sampleGroup` to `sampleMetadata`
+            sampleMetadata <- cbind(sampleGroup, sampleMetadata)
+            S4Vectors::metadata(sampleMetadata)$primaryFactor <- "sampleGroup"
+            message("binding `sampleGroup` to `sampleMetadata`, set up as primary factor in `sampleMetadata`.")
         }
-    } else {
-        sampleGroups <- rep(1, ncol(barbieQ$assay))
-        mytargets <- data.frame(sampleGroups = sampleGroups, targets)
-        pointer <- which(colnames(mytargets) == "sampleGroups")
-        message("no properly specified 'sampleGroups'. setting samples by homogenenous group.")
+    } else if ((is.list(sampleGroup) && length(sampleGroup) == 1L) || (is(sampleGroup, "DataFrame") &&
+        ncol(sampleGroup) == 1L)) {
+        ## case when `sampleGroup` is a list with a named vector of proper length or
+        ## data.frame or DataFrame of a single column of proper rows
+        if (length(sampleGroup[[1]]) != ncol(barbieQ)) {
+            stop("sample size don't match between `sampleGroup` and `barbieQ`.")
+        } else {
+            ## cbind `sampleGroup` to `sampleMetadata`
+            sampleMetadata <- S4Vectors::DataFrame(cbind(sampleGroup, sampleMetadata))
+            S4Vectors::metadata(sampleMetadata)$primaryFactor <- names(sampleGroup)[1]
+            message("binding ", names(sampleGroup)[1], " to `sampleMetadata`, set up as primary factor in `sampleMetadata`.")
+        }
+    } else if (!is.null(sampleGroup)) {
+        ## case when `sampleGroup` is not properly specified
+        S4Vectors::metadata(sampleMetadata)$primaryFactor <- colnames(sampleMetadata)[1]
+        message("setting ", colnames(sampleMetadata)[1], " as the primary factor in `sampleMetadata`.")
     }
 
-    return(list(mytargets = mytargets, pointer = pointer))
+    return(sampleMetadata)
 }

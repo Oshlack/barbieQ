@@ -2,15 +2,14 @@
 % Please edit documentation in R/BarcodePairCorrelation.R
 \name{clusterCorrelatingBarcodes}
 \alias{clusterCorrelatingBarcodes}
-\title{Cluster "co-existing" Barcodes based on pairwise correlation}
+\title{Cluster correlated Barcodes based on pairwise correlation}
 \usage{
 clusterCorrelatingBarcodes(
   barbieQ,
   method = "pearson",
-  corCutoff = 0.95,
-  dataCutoff = 0,
-  BarcodeClusters = NULL,
-  plotClusters = FALSE
+  corThresh = 0.95,
+  cpmThresh = 2^10,
+  preDefinedCluster = NULL
 )
 }
 \arguments{
@@ -19,33 +18,33 @@ clusterCorrelatingBarcodes(
 \item{method}{A string specifying the correlation method to use.
 Defaults to "pearson". Options include: "pearson", "kendall", "spearman".}
 
-\item{corCutoff}{A numeric value that sets the threshold for high correlation
+\item{corThresh}{A numeric value that sets the threshold for high correlation
 Defaults to 0.95}
 
-\item{dataCutoff}{A numeric value that sets the minimum level of
-Barcode pair's log2(mean CPM) for a Barcode pair to be considered as
-highly correlated co-existing Barcodes. Defaults to 0}
+\item{cpmThresh}{A numeric value that sets the minimum level of
+Barcode pair's mean CPM for a Barcode pair to be considered as
+highly correlated co-existing Barcodes. Defaults to 2^10.}
 
-\item{BarcodeClusters}{A \code{list} of known groups containing different Barcodes
-or a \code{vector}/\code{array} indicating Barcode groups. Defaults to NULL.}
-
-\item{plotClusters}{A logical value. TRUE returns a plot showing
-the predicted Barcode clusters. FALSE returns an updated \code{barbieQ} object.
-Defaults to FALSE.}
+\item{preDefinedCluster}{A \code{list} of known groups containing different Barcodes,
+or a \code{vector}/\code{array} indicating Barcode groups;
+or an equivalent \code{matrix}, \code{data.frame}, or \code{DataFrame} with a single column.
+Defaults to NULL.}
 }
 \value{
-A \code{barbieQ} object updated with adding a \code{data.frame} component of
-Barcode cluster, called \code{BarcodeCluster}.
+A \code{barbieQ} object updated with \code{barcodeCorrelatedCluster}
+as a \code{DataFrame} saved to the \code{rowData} of \code{barbieQ},
+containing a single column of identified Barcode cluster groups,
+where the \code{metadata} saves a plot of the identified Barcode clusters.
 }
 \description{
-\code{clusterCorrelatingBarcodes()} groups "co-existing" Barcode into clusters by
-identifying "co-existing" Barcode pairs based on two criteria:
+\code{clusterCorrelatingBarcodes()} groups Barcode into clusters by
+identifying correlated Barcode pairs based on two criteria:
 \itemize{
 \item The proportions of Barcodes across samples exhibit high correlation,
-exceeding the threshold specified by \code{corCutoff}.
-\item The log2(mean CPM) of the Barcode pair exceeds the threshold specified
-by \code{dataCutoff}.
-These two parameters can be manually optimized using the visualization
+exceeding the threshold specified by \code{corThresh}.
+\item The mean CPM of the Barcode pair exceeds the threshold specified
+by \code{cpmThresh}.
+These two parameters can be optimized up to the users using the visualization
 function \link{plotBarcodePairCorrelation}.
 }
 }
@@ -55,5 +54,7 @@ nsamples <- 12
 count <- abs(matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples))
 rownames(count) <- paste0("Barcode", seq_len(nbarcodes))
 barbieQ <- createBarbieQ(count)
-clusterCorrelatingBarcodes(barbieQ, BarcodeClusters = c(rep(seq_len(10), 5)))
+clusterCorrelatingBarcodes(barbieQ, preDefinedCluster = c(rep(seq_len(10), 5)))
+clusterCorrelatingBarcodes(barbieQ, preDefinedCluster = list(
+ group1 = c("Barcode1", "Barcode2", "Barcode3"), group2 = c("Barcode4", "Barcode5")))
 }

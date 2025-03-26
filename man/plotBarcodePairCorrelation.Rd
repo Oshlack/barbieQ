@@ -7,10 +7,10 @@
 plotBarcodePairCorrelation(
   barbieQ,
   method = "pearson",
-  dataVisual = "mean",
-  corCutoff = 0.95,
-  dataCutoff = 0,
-  BarcodeClusters = NULL
+  yScaleMetric = "mean",
+  corThresh = 0.95,
+  cpmThresh = 2^10,
+  preDefinedCluster = NULL
 )
 }
 \arguments{
@@ -19,19 +19,21 @@ plotBarcodePairCorrelation(
 \item{method}{A string specifying the correlation method to use.
 Defaults to "pearson". Options include: "pearson", "kendall", "spearman".}
 
-\item{dataVisual}{A string indicating what to present against
+\item{yScaleMetric}{A string indicating what to present against
 correlation in the dot plot. Defaults to \code{mean}, representing the mean CPM
 for each pair. The alternative option is "max".}
 
-\item{corCutoff}{A numeric value that sets the threshold for high correlation
+\item{corThresh}{A numeric value that sets the threshold for high correlation
 Defaults to 0.95}
 
-\item{dataCutoff}{A numeric value that sets the minimum level of
-Barcode pair's log2(mean CPM) for a Barcode pair to be considered as
-highly correlated co-existing Barcodes. Defaults to 0}
+\item{cpmThresh}{A numeric value that sets the minimum level of
+Barcode pair's mean CPM for a Barcode pair to be considered as
+highly correlated co-existing Barcodes. Defaults to 2^10}
 
-\item{BarcodeClusters}{A \code{list} of known groups containing different Barcodes
-or a \code{vector}/\code{array} indicating Barcode groups. Defaults to NULL.}
+\item{preDefinedCluster}{preDefinedCluster A \code{list} of known groups containing different Barcodes,
+or a \code{vector}/\code{array} indicating Barcode groups;
+or an equivalent \code{matrix}, \code{data.frame}, or \code{DataFrame} with a single column.
+Defaults to NULL.}
 }
 \value{
 A \code{ggplot} S3 object displaying a dot plot of the correlation in CPM
@@ -40,11 +42,12 @@ between each pair of Barcodes, plotted against the mean or max of their CPM.
 \description{
 \code{plotBarcodePairCorrelation()} visualizes the correlation of each pair of
 Barcodes in the \code{barbieQ} object using a dot plot.
-"Co-existing" Barcodes are identified as showing high correlation in
+Correlated Barcodes can be identified as showing high correlation in
 Barcode proportions across samples using the \link{clusterCorrelatingBarcodes}
 function.
 Visualizing the pair wise correlation assists in determining the threshold
-for tagging the highly correlated co-exisitng Barcode clusters.
+for tagging the highly correlated Barcode clusters, which are considered
+multiple Barcodes existing in the same clone.
 }
 \examples{
 nbarcodes <- 50
@@ -52,5 +55,7 @@ nsamples <- 12
 count <- abs(matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples))
 rownames(count) <- paste0("Barcode", seq_len(nbarcodes))
 barbieQ <- createBarbieQ(count)
-plotBarcodePairCorrelation(barbieQ, BarcodeClusters = c(rep(seq_len(10), 5)))
+plotBarcodePairCorrelation(barbieQ, preDefinedCluster = c(rep(seq_len(10), 5)))
+plotBarcodePairCorrelation(barbieQ, preDefinedCluster = list(
+ group1 = c("Barcode1", "Barcode2", "Barcode3"), group2 = c("Barcode4", "Barcode5")))
 }

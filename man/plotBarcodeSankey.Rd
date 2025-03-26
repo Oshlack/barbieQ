@@ -8,7 +8,7 @@ in a stacked bar plot.}
 plotBarcodeSankey(barbieQ)
 }
 \arguments{
-\item{barbieQ}{A \code{barbieQ} object created by the \link{createBarbieQ} function.}
+\item{barbieQ}{A \code{SummarizedExperiment} object created by the \link{createBarbieQ} function.}
 }
 \value{
 A \code{ggplot} S3 class object displaying the Sankey-like stacked bar
@@ -23,19 +23,19 @@ a stacked bar plot, resembling a Sankey plot.
 \examples{
 ## sample conditions and color palettes
 sampleConditions <- data.frame(
-  Treat = factor(rep(c("ctrl", "drug"), each = 6)),
+  Treat = factor(rep(c('ctrl', 'drug'), each = 6)),
   Time = rep(rep(seq_len(2), each = 3), 2)
 )
 conditionColor <- list(
-  Treat = c(ctrl = "#999999", drug = "#112233"),
-  Time = c("1" = "#778899", "2" = "#998877")
+  Treat = c(ctrl = '#999999', drug = '#112233'),
+  Time = c('1' = '#778899', '2' = '#998877')
 )
 ## Barcode count data
 nbarcodes <- 50
 nsamples <- 12
 barcodeCount <- abs(matrix(10, nbarcodes, nsamples))
 barcodeCount[seq(21, 50), ] <- 0.0001
-rownames(barcodeCount) <- paste0("Barcode", seq_len(nbarcodes))
+rownames(barcodeCount) <- paste0('Barcode', seq_len(nbarcodes))
 ## create a `barbieQ` object
 myBarbieQ <- createBarbieQ(barcodeCount, sampleConditions, conditionColor)
 myBarbieQ <- tagTopBarcodes(myBarbieQ)

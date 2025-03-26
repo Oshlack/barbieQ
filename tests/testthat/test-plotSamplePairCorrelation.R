@@ -16,24 +16,24 @@ test_that("plotting sample pair-wise correlation in Heatmap works", {
   rownames(barcodeCount) <- paste0("Barcode", seq_len(nbarcodes))
 
   object1 <- createBarbieQ(
-    object = barcodeCount, target = sampleConditions, factorColors = conditionColor
+    object = barcodeCount, sampleMetadata = sampleConditions, factorColors = conditionColor
   )
 
   p <- plotSamplePairCorrelation(barbieQ = object1)
   expect_s4_class(p, "Heatmap")
 
-  object1$metadata$Treat <- factor(
-    object1$metadata$Treat,
+  SummarizedExperiment::colData(object1)$sampleMetadata$Treat <- factor(
+    SummarizedExperiment::colData(object1)$sampleMetadata$Treat,
     levels = c("drug", "ctrl")
   )
-  object1$metadata$Time <- factor(
-    object1$metadata$Time,
+  SummarizedExperiment::colData(object1)$sampleMetadata$Time <- factor(
+    SummarizedExperiment::colData(object1)$sampleMetadata$Time,
     levels = c(2, 1)
   )
   sampleOrder <- c("Time", "Treat")
   p <- plotSamplePairCorrelation(barbieQ = object1, sampleOrder = sampleOrder)
   expect_equal(
-    object1$metadata$Time[p@column_order] %>% table() %>% names(),
+    SummarizedExperiment::colData(object1)$sampleMetadata$Time[p@column_order] %>% table() %>% names(),
     c("2", "1")
   )
 })

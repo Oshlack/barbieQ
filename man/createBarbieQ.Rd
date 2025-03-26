@@ -5,7 +5,7 @@
 \title{Extract Barcode count data and build into a \code{barbieQ} object for
 subsequent analysis}
 \usage{
-createBarbieQ(object, target = NULL, factorColors = NULL)
+createBarbieQ(object, sampleMetadata = NULL, factorColors = NULL)
 }
 \arguments{
 \item{object}{A numeric \code{matrix} of Barcode counts, with Barcodes in rows
@@ -13,32 +13,33 @@ and samples in columns;
 Alternatively, you can pass an existing \code{barbieQ} object, from which
 barcode counts, sample conditions, and the mapping colors will be inherited.}
 
-\item{target}{A \code{matrix} or \code{data.frame} where rows represent samples
+\item{sampleMetadata}{A \code{matrix} or \code{data.frame} where rows represent samples
 and columns represent factors, each containing the specific condition assigned to a sample.
 If not specified, all samples are assigned the same condition.
 If a \code{barbieQ} object is passed to \code{object}, the sample conditions
-will be updated by specifying \code{target}.}
+will be updated by specifying \code{sampleMetadata}.}
 
-\item{factorColors}{A \code{list} mapping factors in \code{target} to color palettes,
+\item{factorColors}{A \code{list} mapping factors in \code{sampleMetadata} to color palettes,
 where each element is a named \code{vector} assigning colors to specific sample conditions.
 If not specified, defaults to \code{NULL}.
 If a \code{barbieQ} object is passed to \code{object}, the mapping colors
 will be updated by specifying \code{factorColors}.}
 }
 \value{
-A \code{barbieQ} object, including several components:
+A \code{barbieQ} is a \code{SummarizedExperimnt} object, including several components:
 \itemize{
-\item \code{assay}: a \code{data.frame} of Barcode counts, with Barcodes in rows and samples in columns.
-\item \code{metadata}: a \code{data.frame} of sample conditions, with samples in rows and
+\item \code{assay}:A \code{data.frame} in \code{assays} storing Barcode counts, with Barcodes in rows and samples in columns.
+\item \code{sampleMetadata}: A \code{DataFrame} in \code{colData} storing sample conditions, with samples in rows and
 experimental factors in columns.
-\item \code{factorColors}: A \code{list} mapping factors in \code{target} to color palettes,
+\item \code{factorColors}: A \code{list} mapping factors in \code{sampleMetadata} to color palettes,
 where each element is a named \code{vector} assigning colors to specific sample conditions.
-\item Matrices of \code{proportion}, \code{CPM}, \code{occurrence}, and \code{rank} representing
+\item Other matrices in \code{assays}: \code{proportion}, \code{CPM}, \code{occurrence}, and \code{rank} representing
 Barcode proportion, Counts Per Million (CPM), presence/absence, and ranking
 in each sample, based on the Barcode counts in \code{assay}.
-\item \code{isTop}: a \code{list} containing a \code{vector} (\code{vec}) and a \code{matrix} (\code{mat}),
-indicating whether each Barcode is a major contributor, determined by calling \link{tagTopBarcodes}.
-\item Additional processed information for further analysis.
+\item \code{isTopBarcode}: A \code{DataFrame} in \code{elementMetadata} (\code{rowData}) containing a single logical column
+indicating whether each Barcode is a major contributor. It is initially set to \code{TRUE} for all Barcodes,
+but should be refined by calling \link{tagTopBarcodes}.
+\item Additional processed information during further analysis.
 }
 }
 \description{
@@ -63,20 +64,20 @@ nsamples <- 12
 barcodeCount <- abs(matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples))
 rownames(barcodeCount) <- paste0("Barcode", seq_len(nbarcodes))
 
-## Passing `object`, `target` and `factorColors`
+## Passing `object`, `sampleMetadata` and `factorColors`
 createBarbieQ(object = barcodeCount)
-createBarbieQ(object = barcodeCount, target = sampleConditions)
+createBarbieQ(object = barcodeCount, sampleMetadata = sampleConditions)
 createBarbieQ(
-  object = barcodeCount, target = sampleConditions, factorColors = conditionColor
+  object = barcodeCount, sampleMetadata = sampleConditions, factorColors = conditionColor
 )
 
-## Updating a `barbieQ` object by passing new `target` and `factorColors`
+## Updating a `barbieQ` object by passing new `sampleMetadata` and `factorColors`
 myBarbieQ <- createBarbieQ(barcodeCount, sampleConditions, conditionColor)
 createBarbieQ(
-  object = myBarbieQ, target = data.frame(Mouse = rep(seq_len(4), each = 3))
+  object = myBarbieQ, sampleMetadata = data.frame(Mouse = rep(seq_len(4), each = 3))
 )
 createBarbieQ(
-  object = myBarbieQ, target = data.frame(Mouse = rep(seq_len(4), each = 3)),
+  object = myBarbieQ, sampleMetadata = data.frame(Mouse = rep(seq_len(4), each = 3)),
   factorColors = list(
     Mouse = c("1" = "#111199", "2" = "#112200", "3" = "#441111", "4" = "#000000")
   )

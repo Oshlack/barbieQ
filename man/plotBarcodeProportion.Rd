@@ -2,12 +2,22 @@
 % Please edit documentation in R/plotBarcodeProportion.R
 \name{plotBarcodeProportion}
 \alias{plotBarcodeProportion}
-\title{Plot Barcode contributions as average Barcode proportion across samples}
+\title{Plot Barcode contributions as mean Barcode proportion across samples}
 \usage{
-plotBarcodeProportion(barbieQ, coordFixed = FALSE, colorGradient = FALSE)
+plotBarcodeProportion(
+  barbieQ,
+  absoluteProportion = FALSE,
+  coordFixed = FALSE,
+  colorGradient = FALSE
+)
 }
 \arguments{
-\item{barbieQ}{A \code{barbieQ} object created by the \link{createBarbieQ} function.}
+\item{barbieQ}{A \code{SummarizedExperiment} object created by the \link{createBarbieQ} function.}
+
+\item{absoluteProportion}{A logical value indicating whether to present
+absolute Barcode mean proportion (across samples) or relative values across Barcodes,
+Defaults to FALSE,
+which means it will present the percentage of (Barcode mean proportion) across Barcodes.}
 
 \item{coordFixed}{A logical value indicating whether to coordinate the x
 and y scales. Defaults to FALSE, meaning the scales are not coordinated.}
@@ -21,26 +31,26 @@ A \code{ggplot} S3 class object displaying Barcode contributions in a
 bar plot.
 }
 \description{
-\code{plotBarcodeProportion()} visualizes the average proportion of each Barcode
+\code{plotBarcodeProportion()} visualizes the mean proportion of each Barcode
 across samples using a bar plot, allowing for an easy comparison of
 Barcode contributions.
 }
 \examples{
 ## sample conditions and color palettes
 sampleConditions <- data.frame(
-  Treat = factor(rep(c("ctrl", "drug"), each = 6)),
+  Treat = factor(rep(c('ctrl', 'drug'), each = 6)),
   Time = rep(rep(seq_len(2), each = 3), 2)
 )
 conditionColor <- list(
-  Treat = c(ctrl = "#999999", drug = "#112233"),
-  Time = c("1" = "#778899", "2" = "#998877")
+  Treat = c(ctrl = '#999999', drug = '#112233'),
+  Time = c('1' = '#778899', '2' = '#998877')
 )
 ## Barcode count data
 nbarcodes <- 50
 nsamples <- 12
 barcodeCount <- abs(matrix(10, nbarcodes, nsamples))
 barcodeCount[seq(21, 50), ] <- 0.0001
-rownames(barcodeCount) <- paste0("Barcode", seq_len(nbarcodes))
+rownames(barcodeCount) <- paste0('Barcode', seq_len(nbarcodes))
 ## create a `barbieQ` object
 myBarbieQ <- createBarbieQ(barcodeCount, sampleConditions, conditionColor)
 plotBarcodeProportion(myBarbieQ)

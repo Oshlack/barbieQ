@@ -37,13 +37,13 @@ Barcode counts within different samples were used to interpret the patterns of H
 }
 \details{
 The original monkey HSPC barcoding data were published in the following paper:
-\href{http://dx.doi.org/10.1126/sciimmunol.aat9781}{Wu, Chuanfeng, et al. "Clonal expansion and compartmentalized maintenance of rhesus macaque NK cell subsets." Science Immunology (2018)}
+\href{http://dx.doi.org/10.1126/sciimmunol.aat9781}{Wu, Chuanfeng, et al. 'Clonal expansion and compartmentalized maintenance of rhesus macaque NK cell subsets.' Science Immunology (2018)}
 
 However, the barcode count data were analysed by the original authors using the \href{10.18129/B9.bioc.barcodetrackR}{barcodetrackR} package
 and made available through the compatible \href{https://github.com/dunbarlabNIH/barcodetrackRData}{barcodetrackRData} repository on GitHub.
 
 Here, we directly source the raw data from \code{barcodetrackRData}.
 
-This dataset includes data from the "ZG66" monkey individual only. Additional datasets are available at the source link.
+This dataset includes data from the 'ZG66' monkey individual only. Additional datasets are available at the source link.
 }
 \keyword{datasets}

@@ -6,7 +6,11 @@
 #'  proportion of each Barcode and separates them by these tags
 #'  in a circular bar plot, also known as a Pareto plot.
 #'
-#' @param barbieQ A `barbieQ` object created by the [createBarbieQ] function.
+#' @param barbieQ A `SummarizedExperiment` object created by the [createBarbieQ] function.
+#' @param absoluteProportion A logical value indicating whether to present
+#'  absolute Barcode mean proportion (across samples) or relative values across Barcodes, 
+#'  Defaults to FALSE,
+#'  which means it will present the percentage of (Barcode mean proportion) across Barcodes.
 #'
 #' @return A `ggplot` S3 class object displaying a circular bar plot,
 #'  highlighting the relative total proportion of each Barcode across samples.
@@ -28,6 +32,9 @@
 #' @importFrom stats start
 #' @import ggplot2
 #' @import data.table
+#' @importClassesFrom SummarizedExperiment SummarizedExperiment
+#' @importFrom SummarizedExperiment assays
+#' @importFrom SummarizedExperiment rowData
 #'
 #' @examples
 #' ## sample conditions and color palettes
@@ -49,17 +56,30 @@
 #' myBarbieQ <- createBarbieQ(barcodeCount, sampleConditions, conditionColor)
 #' myBarbieQ <- tagTopBarcodes(myBarbieQ)
 #' plotBarcodePareto(myBarbieQ)
-plotBarcodePareto <- function(barbieQ) {
-  flag <- barbieQ$isTop$vec
-  contribution <- barbieQ$CPM
+plotBarcodePareto <- function(barbieQ, absoluteProportion = FALSE) {
+  ## extract the top tag for each barcode.
+  flag <- SummarizedExperiment::rowData(barbieQ)$isTopBarcode$isTop
+  proportion <- SummarizedExperiment::assays(barbieQ)$proportion
+  contribution <- rowMeans(proportion)
+  relativeContribution <- contribution/sum(contribution) * 100
   ## create dataset
   ntop <- sum(flag)
-  nbottom <- sum(!flag)
+  nbottom <- sum((!flag))
   topTag <- factor(flag, levels = c(TRUE, FALSE))
+  
+  ## choose y axis to plot relative or absolute contribution
+  if(absoluteProportion) {
+    contributionToPlot <- contribution
+    yTitle <- "Barcode Mean Proportion"
+  } else {
+    contributionToPlot <- relativeContribution
+    yTitle <- "Relative Barcode Mean Proportion (%)"
+  }
+  
   data <- data.frame(
-    individual = rownames(contribution),
+    individual = rownames(barbieQ),
     group = topTag,
-    value = rowSums(contribution) / sum(rowSums(contribution)) * 100
+    value = contributionToPlot
   )
   ## set a number of 'empty bar' to add at the end of each group
   emptyBar <- 5
@@ -121,7 +141,7 @@ plotBarcodePareto <- function(barbieQ) {
       annotate("text",
         x = c(rep(pi * 0.995, 4), pi * 0.05),
         y = c(5, 10, 15, 20, 30),
-        label = c("5%", "10%", "15%", "20%", "relative mean Barcode Proportion"),
+        label = c("5%", "10%", "15%", "20%", yTitle),
         color = "#999966", size = 3, angle = 0, fontface = "bold", hjust = 1
       ) +
       ## the negative value controls the size of the central circle, the positive to add size over each bar

@@ -19,6 +19,6 @@ test_that("plotting Barcode average proportion works", {
   p <- plotBarcodeProportion(object1)
   ## check correct ggplot object
   expect_s3_class(p, "ggplot")
-  expect_equal(sum(p$data$percentage), 100)
+  expect_equal(sum(p$data$contributionToPlot), 100)
   expect_equal(mean(p$data$rank), mean(seq_len(nrow(barcodeCount))))
 })
