@@ -50,6 +50,9 @@ The main functions include:
 
 ```{r install, eval=FALSE}
 # You can install the development version of barbieQ like so:
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
 BiocManager::install("barbieQ")
 
 ## Alternatively, you can install the development version of barbieQ from GitHub

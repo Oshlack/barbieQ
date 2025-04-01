@@ -17,11 +17,11 @@ plotBarcodePairCorrelation(
 \item{barbieQ}{A \code{barbieQ} object created by the \link{createBarbieQ} function.}
 
 \item{method}{A string specifying the correlation method to use.
-Defaults to "pearson". Options include: "pearson", "kendall", "spearman".}
+Defaults to 'pearson'. Options include: 'pearson', 'kendall', 'spearman'.}
 
 \item{yScaleMetric}{A string indicating what to present against
 correlation in the dot plot. Defaults to \code{mean}, representing the mean CPM
-for each pair. The alternative option is "max".}
+for each pair. The alternative option is 'max'.}
 
 \item{corThresh}{A numeric value that sets the threshold for high correlation
 Defaults to 0.95}
@@ -53,9 +53,9 @@ multiple Barcodes existing in the same clone.
 nbarcodes <- 50
 nsamples <- 12
 count <- abs(matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples))
-rownames(count) <- paste0("Barcode", seq_len(nbarcodes))
+rownames(count) <- paste0('Barcode', seq_len(nbarcodes))
 barbieQ <- createBarbieQ(count)
 plotBarcodePairCorrelation(barbieQ, preDefinedCluster = c(rep(seq_len(10), 5)))
 plotBarcodePairCorrelation(barbieQ, preDefinedCluster = list(
- group1 = c("Barcode1", "Barcode2", "Barcode3"), group2 = c("Barcode4", "Barcode5")))
+ group1 = c('Barcode1', 'Barcode2', 'Barcode3'), group2 = c('Barcode4', 'Barcode5')))
 }

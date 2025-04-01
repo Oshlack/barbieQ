@@ -7,7 +7,7 @@
 \format{
 \subsection{\code{monkeyHSPC}}{
 
-A list containing:
+A \code{SummarizedExperiment} object containing:
 \itemize{
 \item A barcode count matrix with 16,603 rows and 62 columns,
 \item A a data frame of sample metadata.

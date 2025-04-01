@@ -26,8 +26,8 @@ Time <- rep(rep(seq_len(2), each = 3), 2)
 nbarcodes <- 50
 nsamples <- 12
 count <- abs(matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples))
-rownames(count) <- paste0("Barcode", seq_len(nbarcodes))
+rownames(count) <- paste0('Barcode', seq_len(nbarcodes))
 barbieQ <- createBarbieQ(count, data.frame(Treat = Treat, Time = Time))
-testBB <- testBarcodeBias(barbieQ, sampleGroups = "Treat")
+testBB <- testBarcodeBias(barbieQ, sampleGroups = 'Treat')
 plotBarcodeMA(barbieQ = testBB)
 }
