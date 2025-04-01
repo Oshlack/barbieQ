@@ -12,18 +12,14 @@ plotSignifBarcodeHeatmap(
 }
 \arguments{
 \item{barbieQ}{A \code{barbieQ} object created by the \link{createBarbieQ} function,
-updated with Barcode test results by calling the \link{testBarcodeBias} function.}
+updated with Barcode test results by calling the \link{testBarcodeSignif} function.}
+
+\item{barcodeMetric}{A string indicating what to visualize.
+Defaults to \code{CPM}. Options include: 'CPM' and 'occurrence'.}
 
 \item{sampleAnnotation}{A column Annotation object created by the
 \link[ComplexHeatmap:HeatmapAnnotation]{ComplexHeatmap::HeatmapAnnotation} function. Defaults to samples annotated
 by the groups to be compared.}
-
-\item{value}{A string indicating what to visualize.
-Defaults to 'CPM'. Options include: 'CPM' and 'occurrence'.}
-
-\item{elementName}{A string indicating name of the test
-conducted and stored in \code{barbieQ$testBarcode}. Default to the last
-test conducted and stored.}
 }
 \value{
 A \code{Heatmap} S4 class object displaying the significance level
@@ -32,7 +28,7 @@ of Barcodes in Heatmap annotations.
 \description{
 \code{plotSignifBarcodeHeatmap()} uses the Heatmap annotations to visualize the
 significance level of each Barcode in differential proportion or occurrence,
-as determined by the \link{testBarcodeBias} function.
+as determined by the \link{testBarcodeSignif} function.
 }
 \examples{
 Block <- c(1, 1, 2, 3, 3, 4, 1, 1, 2, 3, 3, 4)
@@ -43,6 +39,6 @@ nsamples <- 12
 count <- abs(matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples))
 rownames(count) <- paste0('Barcode', seq_len(nbarcodes))
 barbieQ <- createBarbieQ(count, data.frame(Treat = Treat, Time = Time))
-testBB <- testBarcodeBias(barbieQ, sampleGroups = 'Treat')
+testBB <- testBarcodeSignif(barbieQ, sampleGroup = 'Treat')
 plotSignifBarcodeHeatmap(barbieQ = testBB)
 }

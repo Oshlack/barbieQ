@@ -24,7 +24,8 @@ VignetteBuilder: knitr
 Suggests: 
     knitr,
     rmarkdown,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    BiocStyle
 Imports: 
     magrittr,
     tidyr,
@@ -38,7 +39,9 @@ Imports:
     stats,
     igraph,
     utils,
-    data.table
+    data.table,
+    S4Vectors,
+    SummarizedExperiment
 biocViews: Sequencing, Software, Regression, Preprocessing, Visualization
 BugReports: https://github.com/Oshlack/barbieQ
 URL: https://github.com/Oshlack/barbieQ/issues

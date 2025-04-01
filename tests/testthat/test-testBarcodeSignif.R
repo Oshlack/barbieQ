@@ -230,7 +230,7 @@ test_that("barcode test extracting correct arguments, dispatching right function
   ## handling comlex design
   testBB5 <- testBarcodeSignif(
     barbieQ, sampleMetadata = data.frame(Treat = as.factor(rep(seq_len(4), each = 3))),
-    sampleGroup = "Treat", contrastLevels = c(1,2),
+    sampleGroup = "Treat", 
     designFormula = formula("~ 0 + Treat")
   )
 })

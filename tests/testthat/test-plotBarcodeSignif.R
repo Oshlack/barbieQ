@@ -8,7 +8,7 @@ test_that("plot Barcode test results - scatter plot - works", {
   rownames(count) <- paste0("Barcode", seq_len(nbarcodes))
   barbieQ <- createBarbieQ(count, data.frame(Treat = Treat, Time = Time))
 
-  testBB <- testBarcodeBias(barbieQ, sampleGroup = "Treat")
+  testBB <- testBarcodeSignif(barbieQ, sampleGroup = "Treat")
   p <- plotBarcodePValue(barbieQ = testBB)
 
   expect_s3_class(p, "ggplot")
@@ -29,7 +29,7 @@ test_that("plot Barcode test results - MA plot - works", {
   rownames(count) <- paste0("Barcode", seq_len(nbarcodes))
   barbieQ <- createBarbieQ(count, data.frame(Treat = Treat, Time = Time))
   
-  testBB <- testBarcodeBias(barbieQ, sampleGroup = "Treat")
+  testBB <- testBarcodeSignif(barbieQ, sampleGroup = "Treat")
   p <- plotBarcodeMA(barbieQ = testBB)
   
   expect_s3_class(p, "ggplot")
@@ -39,7 +39,7 @@ test_that("plot Barcode test results - MA plot - works", {
   expect_equal(plotPoint$y, p$data$meanDiff)
   expect_equal(plotPoint$x, p$data$Amean)
   
-  testBB <- testBarcodeBias(barbieQ, sampleGroup = "Treat", method = "diffOcc")
+  testBB <- testBarcodeSignif(barbieQ, sampleGroup = "Treat", method = "diffOcc")
   p <- plotBarcodeMA(barbieQ = testBB)
   
   expect_s3_class(p, "ggplot")
@@ -60,7 +60,7 @@ test_that("plot Barcode test results - heatmap works", {
   rownames(count) <- paste0("Barcode", seq_len(nbarcodes))
   barbieQ <- createBarbieQ(count, data.frame(Treat = Treat, Time = Time))
 
-  testBB <- testBarcodeBias(barbieQ, sampleGroup = "Treat")
+  testBB <- testBarcodeSignif(barbieQ, sampleGroup = "Treat")
 
   hp <- plotSignifBarcodeHeatmap(testBB)
   expect_s4_class(hp, "Heatmap")

@@ -11,7 +11,6 @@ testBarcodeSignif(
   sampleMetadata = NULL,
   sampleGroup = NULL,
   contrastFormula = NULL,
-  contrastLevels = NULL,
   designFormula = NULL,
   designMatrix = NULL,
   block = NULL,
@@ -70,8 +69,8 @@ used in the test.
 \code{testBarcodeSignif()} tests differential proportion (diffProp) or
 occurrence (diffOcc) for each Barcode between sample groups,
 with the option account for multiple factors using regression models.
-The results can be visualized by \link{plotBarcodeBiasScatterPlot} and
-\link{plotBarcodeBiasHeatmap}.
+The results can be visualized by \link{plotBarcodePValue},
+\link{plotSignifBarcodeHeatmap}, \link{plotBarcodeMA}, and \link{plotSignifBarcodeProportion}.
 }
 \examples{
 Block <- c(1, 1, 2, 3, 3, 4, 1, 1, 2, 3, 3, 4)

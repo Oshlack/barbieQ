@@ -8,7 +8,7 @@ plotBarcodeMA(barbieQ)
 }
 \arguments{
 \item{barbieQ}{A \code{barbieQ} object created by the \link{createBarbieQ} function,
-updated with Barcode test results by calling the \link{testBarcodeBias} function.}
+updated with Barcode test results by calling the \link{testBarcodeSignif} function.}
 }
 \value{
 A \code{ggplot} S3 class object displaying the significance level
@@ -17,7 +17,7 @@ against other properties of Barcodes in a dot plot.
 \description{
 \code{plotBarcodeMA()} use a dot plot to visualize the variation and mean of
 each Barcode in differential proportion or occurrence,
-as determined by the \link{testBarcodeBias} function.
+as determined by the \link{testBarcodeSignif} function.
 }
 \examples{
 Block <- c(1, 1, 2, 3, 3, 4, 1, 1, 2, 3, 3, 4)
@@ -28,6 +28,6 @@ nsamples <- 12
 count <- abs(matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples))
 rownames(count) <- paste0('Barcode', seq_len(nbarcodes))
 barbieQ <- createBarbieQ(count, data.frame(Treat = Treat, Time = Time))
-testBB <- testBarcodeBias(barbieQ, sampleGroups = 'Treat')
+testBB <- testBarcodeSignif(barbieQ, sampleGroup = 'Treat')
 plotBarcodeMA(barbieQ = testBB)
 }

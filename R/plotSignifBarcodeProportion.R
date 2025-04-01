@@ -1,10 +1,10 @@
 #' Plot Barcode contributions as mean Barcode proportion across samples
 #'
 #' `plotBarcodeProportion()` visualizes the overall proportion of Barcodes
-#'  within groups of significance, as determined by [testBarcodeBias], for each sample.
+#'  within groups of significance, as determined by [testBarcodeSignif], for each sample.
 #'
 #' @param barbieQ A `SummarizedExperiment` object created by the [createBarbieQ] function,
-#'  updated with Barcode test results by calling the [testBarcodeBias] function.
+#'  updated with Barcode test results by calling the [testBarcodeSignif] function.
 #'
 #' @return A `ggplot` S3 class object displaying Barcode contributions in a
 #'  bar plot.
@@ -25,24 +25,16 @@
 #' @importFrom S4Vectors  metadata
 #'
 #' @examples
-#' ## sample conditions and color palettes
-#' sampleConditions <- data.frame(
-#'   Treat = factor(rep(c('ctrl', 'drug'), each = 6)),
-#'   Time = rep(rep(seq_len(2), each = 3), 2)
-#' )
-#' conditionColor <- list(
-#'   Treat = c(ctrl = '#999999', drug = '#112233'),
-#'   Time = c('1' = '#778899', '2' = '#998877')
-#' )
-#' ## Barcode count data
+#' Block <- c(1, 1, 2, 3, 3, 4, 1, 1, 2, 3, 3, 4)
+#' Treat <- factor(rep(c('ctrl', 'drug'), each = 6))
+#' Time <- rep(rep(seq_len(2), each = 3), 2)
 #' nbarcodes <- 50
 #' nsamples <- 12
-#' barcodeCount <- abs(matrix(10, nbarcodes, nsamples))
-#' barcodeCount[seq(21, 50), ] <- 0.0001
-#' rownames(barcodeCount) <- paste0('Barcode', seq_len(nbarcodes))
-#' ## create a `barbieQ` object
-#' myBarbieQ <- createBarbieQ(barcodeCount, sampleConditions, conditionColor)
-#' plotSignifBarcodeProportion(myBarbieQ)
+#' count <- abs(matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples))
+#' rownames(count) <- paste0('Barcode', seq_len(nbarcodes))
+#' barbieQ <- createBarbieQ(count, data.frame(Treat = Treat, Time = Time))
+#' testBB <- testBarcodeSignif(barbieQ, sampleGroup = 'Treat')
+#' plotSignifBarcodeProportion(testBB)
 plotSignifBarcodeProportion <- function(barbieQ) {
   ## extract testing results and information
   statsDf <- SummarizedExperiment::rowData(barbieQ)$testingBarcode

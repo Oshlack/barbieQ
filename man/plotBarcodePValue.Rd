@@ -4,16 +4,11 @@
 \alias{plotBarcodePValue}
 \title{Plot Barcodes categorized by significant change using a dot plot}
 \usage{
-plotBarcodePValue(
-  barbieQ,
-  reorderRank = FALSE,
-  pValuesAdjusted = TRUE,
-  xAxis = "avgRank"
-)
+plotBarcodePValue(barbieQ, xAxis = "avgRank")
 }
 \arguments{
 \item{barbieQ}{A \code{barbieQ} object created by the \link{createBarbieQ} function,
-updated with Barcode test results by calling the \link{testBarcodeBias} function.}
+updated with Barcode test results by calling the \link{testBarcodeSignif} function.}
 
 \item{xAxis}{A string indicating what to visualise on the x scale of the
 dot plot. Options include: 'avgRank', 'totalOcc', 'avgLogCPM',
@@ -27,7 +22,7 @@ against other properties of Barcodes in a dot plot.
 \description{
 \code{plotBarcodePValue()} use a dot plot to visualize the significance
 level of each Barcode in differential proportion or occurrence,
-as determined by the \link{testBarcodeBias} function.
+as determined by the \link{testBarcodeSignif} function.
 P.values are plotted against other properties of Barcodes
 specified by \code{xAxis}.
 }
@@ -40,6 +35,6 @@ nsamples <- 12
 count <- abs(matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples))
 rownames(count) <- paste0('Barcode', seq_len(nbarcodes))
 barbieQ <- createBarbieQ(count, data.frame(Treat = Treat, Time = Time))
-testBB <- testBarcodeBias(barbieQ, sampleGroups = 'Treat')
+testBB <- testBarcodeSignif(barbieQ, sampleGroup = 'Treat')
 plotBarcodePValue(barbieQ = testBB)
 }

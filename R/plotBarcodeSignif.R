@@ -2,12 +2,12 @@
 #'
 #' `plotBarcodePValue()` use a dot plot to visualize the significance
 #'  level of each Barcode in differential proportion or occurrence,
-#'  as determined by the [testBarcodeBias] function.
+#'  as determined by the [testBarcodeSignif] function.
 #'  P.values are plotted against other properties of Barcodes
 #'  specified by `xAxis`.
 #'
 #' @param barbieQ A `barbieQ` object created by the [createBarbieQ] function,
-#'  updated with Barcode test results by calling the [testBarcodeBias] function.
+#'  updated with Barcode test results by calling the [testBarcodeSignif] function.
 #' @param xAxis A string indicating what to visualise on the x scale of the
 #'  dot plot. Options include: 'avgRank', 'totalOcc', 'avgLogCPM',
 #'  and 'avgProportion'. Defaults to 'avgRank', representing the average
@@ -37,9 +37,9 @@
 #' count <- abs(matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples))
 #' rownames(count) <- paste0('Barcode', seq_len(nbarcodes))
 #' barbieQ <- createBarbieQ(count, data.frame(Treat = Treat, Time = Time))
-#' testBB <- testBarcodeBias(barbieQ, sampleGroups = 'Treat')
+#' testBB <- testBarcodeSignif(barbieQ, sampleGroup = 'Treat')
 #' plotBarcodePValue(barbieQ = testBB)
-plotBarcodePValue <- function(barbieQ, reorderRank = FALSE, pValuesAdjusted = TRUE, xAxis = "avgRank") {
+plotBarcodePValue <- function(barbieQ, xAxis = "avgRank") {
     ## extract testing results and information
     statsDf <- SummarizedExperiment::rowData(barbieQ)$testingBarcode
     design <- S4Vectors::metadata(statsDf)$design
@@ -87,10 +87,10 @@ plotBarcodePValue <- function(barbieQ, reorderRank = FALSE, pValuesAdjusted = TR
 #'
 #' `plotBarcodeMA()` use a dot plot to visualize the variation and mean of
 #'  each Barcode in differential proportion or occurrence,
-#'  as determined by the [testBarcodeBias] function.
+#'  as determined by the [testBarcodeSignif] function.
 #'
 #' @param barbieQ A `barbieQ` object created by the [createBarbieQ] function,
-#'  updated with Barcode test results by calling the [testBarcodeBias] function.
+#'  updated with Barcode test results by calling the [testBarcodeSignif] function.
 #'
 #' @return A `ggplot` S3 class object displaying the significance level
 #'  against other properties of Barcodes in a dot plot.
@@ -116,7 +116,7 @@ plotBarcodePValue <- function(barbieQ, reorderRank = FALSE, pValuesAdjusted = TR
 #' count <- abs(matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples))
 #' rownames(count) <- paste0('Barcode', seq_len(nbarcodes))
 #' barbieQ <- createBarbieQ(count, data.frame(Treat = Treat, Time = Time))
-#' testBB <- testBarcodeBias(barbieQ, sampleGroups = 'Treat')
+#' testBB <- testBarcodeSignif(barbieQ, sampleGroup = 'Treat')
 #' plotBarcodeMA(barbieQ = testBB)
 plotBarcodeMA <- function(barbieQ) {
     ## extract testing results and information
@@ -159,15 +159,12 @@ plotBarcodeMA <- function(barbieQ) {
 #'
 #' `plotSignifBarcodeHeatmap()` uses the Heatmap annotations to visualize the
 #'  significance level of each Barcode in differential proportion or occurrence,
-#'  as determined by the [testBarcodeBias] function.
+#'  as determined by the [testBarcodeSignif] function.
 #'
 #' @param barbieQ A `barbieQ` object created by the [createBarbieQ] function,
-#'  updated with Barcode test results by calling the [testBarcodeBias] function.
-#' @param value A string indicating what to visualize.
-#'  Defaults to 'CPM'. Options include: 'CPM' and 'occurrence'.
-#' @param elementName A string indicating name of the test
-#'  conducted and stored in `barbieQ$testBarcode`. Default to the last
-#'  test conducted and stored.
+#'  updated with Barcode test results by calling the [testBarcodeSignif] function.
+#' @param barcodeMetric A string indicating what to visualize.
+#'  Defaults to `CPM`. Options include: 'CPM' and 'occurrence'.
 #' @param sampleAnnotation A column Annotation object created by the
 #'  [ComplexHeatmap::HeatmapAnnotation] function. Defaults to samples annotated
 #'  by the groups to be compared.
@@ -197,7 +194,7 @@ plotBarcodeMA <- function(barbieQ) {
 #' count <- abs(matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples))
 #' rownames(count) <- paste0('Barcode', seq_len(nbarcodes))
 #' barbieQ <- createBarbieQ(count, data.frame(Treat = Treat, Time = Time))
-#' testBB <- testBarcodeBias(barbieQ, sampleGroups = 'Treat')
+#' testBB <- testBarcodeSignif(barbieQ, sampleGroup = 'Treat')
 #' plotSignifBarcodeHeatmap(barbieQ = testBB)
 plotSignifBarcodeHeatmap <- function(barbieQ, barcodeMetric = "CPM", sampleAnnotation = NULL) {
 

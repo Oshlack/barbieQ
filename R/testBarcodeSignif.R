@@ -4,8 +4,8 @@
 #' `testBarcodeSignif()` tests differential proportion (diffProp) or
 #'  occurrence (diffOcc) for each Barcode between sample groups,
 #'  with the option account for multiple factors using regression models.
-#'  The results can be visualized by [plotBarcodeBiasScatterPlot] and
-#'  [plotBarcodeBiasHeatmap].
+#'  The results can be visualized by [plotBarcodePValue],
+#'  [plotSignifBarcodeHeatmap], [plotBarcodeMA], and [plotSignifBarcodeProportion].
 #'
 #' @param barbieQ A `barbieQ` object created by the [createBarbieQ] function.
 #' @param method A string specifying what is to be tested.
@@ -68,7 +68,7 @@
 #' barbieQ <- createBarbieQ(count, data.frame(Treat = Treat, Time = Time))
 #' testBarcodeSignif(barbieQ, sampleGroup = 'Treat')
 testBarcodeSignif <- function(barbieQ, method = "diffProp", sampleMetadata = NULL, sampleGroup = NULL,
-    contrastFormula = NULL, contrastLevels = NULL, designFormula = NULL, designMatrix = NULL,
+    contrastFormula = NULL, designFormula = NULL, designMatrix = NULL,
     block = NULL, transformation = "asin-sqrt", regularization = "firth") {
 
     ## check method: confirm method is chosen from 'diffProp' and 'diffOcc'
