@@ -49,14 +49,14 @@ The main functions include:
 # Intallation
 
 ```{r install, eval=FALSE}
-# You can install the development version of barbieQ like so:
-# if (!require("BiocManager", quietly = TRUE))
-#     install.packages("BiocManager")
-# 
-# BiocManager::install("barbieQ")
+# You can install the stable version of barbieQ like so:
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("barbieQ")
 
 ## Alternatively, you can install the development version of barbieQ from GitHub
-devtools::install_github("Oshlack/barbieQ")
+# devtools::install_github("Oshlack/barbieQ")
 ```
 
 # Load Dependecy
@@ -189,6 +189,8 @@ Based on the understanding of sample conditions that likely to be the source of 
  
  - By specifying the parameter `method` by `diffProp` (defaulted), you are testing individual barcodes' **differential proportion** between conditions.
 
+ - By specifying the parameter `method` by `diffOcc`, you are testing individual barcodes' **differential occurrence** between conditions.
+
 ```{r test diffProp, fig.width=6, fig.height=5}
 ## test Barcode differential proportion between sample groups
 exampleBBQ <- testBarcodeSignif(
@@ -196,27 +198,15 @@ exampleBBQ <- testBarcodeSignif(
   contrastFormula = "(CelltypeNK_CD56n_CD16p) - (CelltypeB+CelltypeGr+CelltypeT+CelltypeNK_CD56p_CD16n)/4",
   method = "diffProp"
 )
-plotSignifBarcodeHeatmap(exampleBBQ) |> plot()
-plotSignifBarcodeProportion(exampleBBQ) |> plot()
-plotBarcodeMA(exampleBBQ) |> plot()
 ```
 
- - By specifying the parameter `method` by `diffOcc`, you are testing individual barcodes' **differential occurrence** between conditions.
 
-```{r test diffOcc, fig.width=5, fig.height=4}
-## test Barcode differential occurrence between sample groups
-exampleBBQ <- testBarcodeSignif(
-  barbieQ = exampleBBQ,
-  sampleGroup = "Treat",
-  method = "diffOcc"
-)
+```{r vis MA plot, fig.width=8, fig.height=4}
 plotBarcodeMA(exampleBBQ) |> plot()
-
 ```
 
 ```{r vis testing HP, fig.width=14, fig.height=6}
 plotSignifBarcodeHeatmap(exampleBBQ) |> plot()
-
 ```
 
 ```{r vis testing prop, fig.width=8, fig.height=5}
