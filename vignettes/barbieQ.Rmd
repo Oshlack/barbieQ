@@ -50,13 +50,13 @@ The main functions include:
 
 ```{r install, eval=FALSE}
 # You can install the development version of barbieQ like so:
-if (!require("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-
-BiocManager::install("barbieQ")
+# if (!require("BiocManager", quietly = TRUE))
+#     install.packages("BiocManager")
+# 
+# BiocManager::install("barbieQ")
 
 ## Alternatively, you can install the development version of barbieQ from GitHub
-# devtools::install_github("Oshlack/barbieQ")
+devtools::install_github("Oshlack/barbieQ")
 ```
 
 # Load Dependecy
@@ -95,34 +95,65 @@ data(monkeyHSPC, package = "barbieQ")
 
 # Example
 
-## Create barbieQ Object
+## Create `barbieQ` Object
 
 Please start with creating a `barbieQ` structure by taking the barcode count matrix as input, using function `createBarbieQ()`.
 
 By creating a `barbieQ` object, you've automatically processed a series of data transformation and saved transformed data in the `barbieQ` object, for the convenience of the following analyses.
 
 ```{r example, fig.width=8, fig.height=6}
-## Passing `object`, `target` and `factorColors`
+## Passing `object`, `sampleMetadata` and `factorColors` for optional
 exampleBBQ <- createBarbieQ(
   object = SummarizedExperiment::assay(monkeyHSPC), 
   sampleMetadata = SummarizedExperiment::colData(monkeyHSPC)$sampleMetadata
 )
 ```
 
-## Tag Top Contributing Barcodes
+## Subset Dataset
 
-A filtering step is recommended at the beginning of analysis to filter out barcodes that consistently show low counts across the dataset. The retained barcodes are considered with essential contribution, called *"top barcodes"*. 
+Here we subset the object by selecting samples of certain stage of collection time.
 
- - By applying the function `tagTopBarcodes()` to the `barbieQ` object, you're deciding which barcodes are *"top barcodes"* while tagging them in the object.
+Define "early", "mid", and "late" stages based on `Months`, and clean up `Celltype`.
 
-```{r tag top}
-## Tag top Barcodes
-exampleBBQ <- tagTopBarcodes(barbieQ = exampleBBQ)
+```{r update metadata}
+updateSampleMetadata <- exampleBBQ$sampleMetadata %>% 
+  as.data.frame() %>% 
+  select(Celltype, Months) %>% 
+  mutate(Phase = ifelse(Months < 6, "early", ifelse(Months >=55, "late", "mid"))) %>% 
+  mutate(Celltype = gsub("(Gr).*", "\\1", Celltype))
+
+SummarizedExperiment::colData(exampleBBQ)$sampleMetadata <- S4Vectors::DataFrame(updateSampleMetadata)
+
+exampleBBQ$sampleMetadata
 ```
 
- - Once *"top barcodes"* are decided and tagged, it's good to check their contributions before actually cutting off the *"bottom barcodes"* (that show consistent low count). 
+Subset dataset and keep samples of "mid" stage only.
+
+```{r subset samples}
+flag_sample <- exampleBBQ$sampleMetadata$Phase == "mid"
+exampleBBQ <- exampleBBQ[, flag_sample]
+exampleBBQ$sampleMetadata
+```
+
+
+## Tag Top Contributing Barcodes
+
+A filtering step is recommended to filter out barcodes that consistently show low counts across the dataset. The retained barcodes are considered with essential contribution, called *"top barcodes"*. 
+
+ - By applying the function `tagTopBarcodes()` to the `barbieQ` object, you're determining which barcodes are *"top barcodes"* while tagging them in the object.
  
-     - By applying the function `plotBarcodePareto()` to the `barbieQ` object, you are visualizing the contribution of each barcode colour coded by *"top"* or *"bottom"*. (Here, the contribution refers to the average abundance of individual barcodes across samples in the dataset.)
+ - In this example dataset, we are interested in the differences on barcode outcomes between cell types, so we will group samples by cell types. We set up the `nSampleThreshold` as the minimum group size, which is `6`.
+
+```{r tag top}
+## Check out minimum group size.
+table(exampleBBQ$sampleMetadata$Celltype)
+## Tag top Barcodes.
+exampleBBQ <- tagTopBarcodes(barbieQ = exampleBBQ, nSampleThreshold = 6)
+```
+
+ - Once *"top barcodes"* are determined and tagged, it's good to check their contributions before cutting off the *"bottom barcodes"* that are considered as non-essential contributors. 
+ 
+     - By applying the function `plotBarcodePareto()` to the `barbieQ` object, you are visualizing the contribution of each barcode colour coded by *"top"* or *"bottom"*. (Here, the contribution refers to the average proportion of individual barcodes across samples in the dataset.)
      
      - By applying the function `plotBarcodeSankey()` to the `barbieQ` object, you are visualizing the collective contribution of the *"top"* or *"bottom"* barcode groups. 
 
@@ -131,7 +162,7 @@ exampleBBQ <- tagTopBarcodes(barbieQ = exampleBBQ)
 plotBarcodePareto(barbieQ = exampleBBQ) |> plot()
 ```
 
-```{r tag top v2, fig.width=4, fig.height=3}
+```{r tag top v2, fig.width=5, fig.height=3}
 ## visualize collective contribution of top vs. bottom barcodes
 plotBarcodeSankey(barbieQ = exampleBBQ) |> plot()
 ```
@@ -139,29 +170,30 @@ plotBarcodeSankey(barbieQ = exampleBBQ) |> plot()
  - Once you are happy with the classification of *"top"* and *"bottom"* barcodes, you can filter out the *"bottom"* barcodes by subsetting the `SE` object based on the tagged array.
  
 ```{r subset top barcodes}
-exampleBBQ <- exampleBBQ[SummarizedExperiment::rowData(exampleBBQ)$isTopBarcode$isTop,]
+flag_barcode <- SummarizedExperiment::rowData(exampleBBQ)$isTopBarcode$isTop
+exampleBBQ <- exampleBBQ[flag_barcode,]
 ```
 
 ## Visualize Sample Correlation
 
-To generally understand the sources of barcode variability, you can visualize sample pair-wise correlations in a check board style by applying the function `plotSamplePairCorrelation()` to the `barbieQ()` object.
+To generally understand the sample similarity, you can visualize sample pair-wise correlations in a check board style by applying the function `plotSamplePairCorrelation()` to the `barbieQ()` object.
 
-```{r sample pair cor, fig.width=5, fig.height=4}
+```{r sample pair cor, fig.width=6, fig.height=4}
 ## visualize sample pair wise correlation
 plotSamplePairCorrelation(barbieQ = exampleBBQ) |> plot()
 ```
 
 ## Test Barcodes and Identify Significant Changes
 
-Based on the understanding of sample conditions that likely result in the differences in barcode abundance, you can robustly test the significance of the barcode changes under a specific comparison between the sample conditions, by applying the function `testBarcodeSignif()` to the `barbieQ` object. The testing results will be saved in the object, and be further visualized using functions: `plotSignifBarcodeHeatmap()`, `plotSignifBarcodeProportion()`, `plotBarcodeMA()`, and etc.
+Based on the understanding of sample conditions that likely to be the source of variability in barcode outcomes, you can robustly test the significance of the barcode changes between the sample conditions, by applying the function `testBarcodeSignif()` to the `barbieQ` object. The testing results will be saved in the object, and can be further visualized using functions: `plotBarcodeMA()`, `plotSignifBarcodeHeatmap()`, `plotSignifBarcodeProportion()`, and etc.
  
  - By specifying the parameter `method` by `diffProp` (defaulted), you are testing individual barcodes' **differential proportion** between conditions.
 
-```{r test diffProp, fig.width=5, fig.height=4}
+```{r test diffProp, fig.width=6, fig.height=5}
 ## test Barcode differential proportion between sample groups
 exampleBBQ <- testBarcodeSignif(
   barbieQ = exampleBBQ,
-  sampleGroup = "Treat",
+  contrastFormula = "(CelltypeNK_CD56n_CD16p) - (CelltypeB+CelltypeGr+CelltypeT+CelltypeNK_CD56p_CD16n)/4",
   method = "diffProp"
 )
 plotSignifBarcodeHeatmap(exampleBBQ) |> plot()
@@ -178,10 +210,19 @@ exampleBBQ <- testBarcodeSignif(
   sampleGroup = "Treat",
   method = "diffOcc"
 )
-plotSignifBarcodeHeatmap(exampleBBQ) |> plot()
-plotSignifBarcodeProportion(exampleBBQ) |> plot()
 plotBarcodeMA(exampleBBQ) |> plot()
+
 ```
+
+```{r vis testing HP, fig.width=14, fig.height=6}
+plotSignifBarcodeHeatmap(exampleBBQ) |> plot()
+
+```
+
+```{r vis testing prop, fig.width=8, fig.height=5}
+plotSignifBarcodeProportion(exampleBBQ) |> plot()
+```
+
 
 # References
 

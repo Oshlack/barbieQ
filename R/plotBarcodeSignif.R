@@ -213,20 +213,29 @@ plotSignifBarcodeHeatmap <- function(barbieQ, barcodeMetric = "CPM", sampleAnnot
     barcodeAnnotation <- rowAnnotation(TendencyTo = statsDf$tendencyTo, annotation_name_side = "top",
         annotation_name_gp = grid::gpar(fontsize = 10), col = list(TendencyTo = colorCode),
         show_legend = TRUE, show_annotation_name = TRUE)
-
-    ## adjust the order of slices based on contrast levels in the test
-    if (all(contrastGroups %in% colnames(design))) {
-        Group <- design[, contrastGroups]
-        GroupVec <- Group[, contrastGroups["levelHigh"]] - Group[, contrastGroups["levelLow"]]
-        GroupVec[GroupVec == -1] <- contrastGroups["levelLow"]
-        GroupVec[GroupVec == 1] <- contrastGroups["levelHigh"]
-        splitSamples <- TRUE
-        sampleAnnotation <- HeatmapAnnotation(testingBarcode = GroupVec, annotation_name_side = "left",
-            annotation_name_gp = grid::gpar(fontsize = 10), col = list(testingBarcode = colorCode))
+    
+    ## extract relavent conditions
+    if(all(names(contrastGroups) %in% c("levelLow", "levelHigh"))) {
+      splitGroupHigh <- strsplit(contrastGroups["levelHigh"], " \\+ ")[[1]]
+      splitGroupLow <- strsplit(contrastGroups["levelLow"], " \\+ ")[[1]]
+    }
+    ## extract sample groups
+    if(all(splitGroupHigh %in% colnames(design)) ||
+       all(splitGroupLow %in% colnames(design))) {
+      ## when contrast is factor: two levels
+      GroupHigh <- design[, splitGroupHigh, drop = FALSE] |> rowSums()
+      GroupLow <- design[, splitGroupLow, drop = FALSE] |> rowSums()
+      GroupVec <- rep(0, ncol(barbieQ))
+      GroupVec[GroupHigh == 1] <- contrastGroups["levelHigh"]
+      GroupVec[GroupLow == 1] <- contrastGroups["levelLow"]
+      splitSamples <- TRUE
+      sampleAnnotation <- HeatmapAnnotation(testingBarcode = GroupVec, annotation_name_side = "left",
+                                            annotation_name_gp = grid::gpar(fontsize = 10), col = list(testingBarcode = colorCode))
     } else {
-        GroupVec <- NULL
-        splitSamples <- FALSE
-        sampleAnnotation <- NULL
+      ## when contrast is numeric
+      GroupVec <- NULL
+      splitSamples <- FALSE
+      sampleAnnotation <- NULL
     }
 
     hp <- plotBarcodeHeatmap(barbieQ = barbieQ, barcodeMetric = barcodeMetric, splitSamples = splitSamples,

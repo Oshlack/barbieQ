@@ -50,17 +50,23 @@ plotSignifBarcodeProportion <- function(barbieQ) {
   contrastGroups <- S4Vectors::metadata(statsDf)$contrastGroups
   method <- S4Vectors::metadata(statsDf)$method
   
-  
   ## extract color code
   colorCode <- S4Vectors::metadata(barbieQ)$factorColors$testingBarcode
   
+  ## extract relavent conditions
+  if(all(names(contrastGroups) %in% c("levelLow", "levelHigh"))) {
+    splitGroupHigh <- strsplit(contrastGroups["levelHigh"], " \\+ ")[[1]]
+    splitGroupLow <- strsplit(contrastGroups["levelLow"], " \\+ ")[[1]]
+  }
   ## extract sample groups
-  if(all(contrastGroups %in% colnames(design))) {
+  if(all(splitGroupHigh %in% colnames(design)) ||
+     all(splitGroupLow %in% colnames(design))) {
     ## when contrast is factor: two levels
-    Group <- design[, contrastGroups]
-    GroupVec <- Group[,contrastGroups["levelHigh"]] - Group[,contrastGroups["levelLow"]]
-    GroupVec[GroupVec == -1] <- contrastGroups["levelLow"]
-    GroupVec[GroupVec == 1] <- contrastGroups["levelHigh"]
+    GroupHigh <- design[, splitGroupHigh, drop = FALSE] |> rowSums()
+    GroupLow <- design[, splitGroupLow, drop = FALSE] |> rowSums()
+    GroupVec <- rep(0, ncol(barbieQ))
+    GroupVec[GroupHigh == 1] <- contrastGroups["levelHigh"]
+    GroupVec[GroupLow == 1] <- contrastGroups["levelLow"]
   } else {
     ## when contrast is numeric
     if(method == "diffOcc") {
