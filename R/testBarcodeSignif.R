@@ -198,6 +198,7 @@ testBarcodeSignif <- function(barbieQ, method = "diffProp", sampleMetadata = NUL
     ## 'diffProp'
     if (method == "diffProp") {
         statsDf <- testDiffProp(proportion = SummarizedExperiment::assays(barbieQ)$proportion,
+            count = SummarizedExperiment::assay(barbieQ),
             transformation = transformation, mycontrasts = mycontrasts[, 1], designMatrix = designMatrix,
             block = block)
 

@@ -1,6 +1,7 @@
 #' Differential proportion test on Barcodes across sample groups
 #'
 #' @param proportion The `proportion` assay in `SummarizedExperiment::assays(barbieQ)`.
+#' @param count The main assay of `barbieQ`, indicating raw counts of barcodes.
 #' @param transformation A string specifying the transformation method.
 #'  Options include: 'asin-sqrt', 'logit', and 'none'.
 #'  Defaults to 'asin-sqrt'.
@@ -39,7 +40,7 @@
 #'   designMatrix = model.matrix(~ 0 + Treat + Time)
 #' )
 #' }
-testDiffProp <- function(proportion, transformation = "asin-sqrt", mycontrasts = NULL, designMatrix = NULL,
+testDiffProp <- function(proportion, count, transformation = "asin-sqrt", mycontrasts = NULL, designMatrix = NULL,
     block = NULL) {
     ## checking transformation
     transformation <- match.arg(transformation, c("asin-sqrt", "logit", "none"))
@@ -49,7 +50,9 @@ testDiffProp <- function(proportion, transformation = "asin-sqrt", mycontrasts =
     if (transformation == "asin-sqrt") {
         mydata <- asin(sqrt(proportion))
     } else if (transformation == "logit") {
-        mydata <- log((proportion + 1e-10)/(1 - proportion - 1e-10))
+        countPlus <- count + 0.5
+        proportionPlus <- countPlus / colSums(countPlus)
+        mydata <- log((proportionPlus)/(1 - proportionPlus))
     } else {
         mydata <- proportion
     }

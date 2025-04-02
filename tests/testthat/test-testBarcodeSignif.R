@@ -44,6 +44,14 @@ test_that("testing differential proportions works", {
   
   expect_equal(resultStat2$direction, rep(0, 50), ignore_attr = TRUE)
   
+  resultStat2 <- testDiffProp(
+    proportion = SummarizedExperiment::assays(barbieQ)$proportion,
+    count = SummarizedExperiment::assay(barbieQ),
+    mycontrasts = c(0, 0, 1),
+    designMatrix = model.matrix(~ 0 + Treat + Time),
+    transformation = "logit",
+    block = Block
+  )
 })
 
 test_that("testing differential occurrence works", {
@@ -143,6 +151,7 @@ test_that("barcode test extracting correct arguments, dispatching right function
   barbieQ <- createBarbieQ(count, data.frame(Treat = Treat, Time = Time))
 
   testBB1 <- testBarcodeSignif(barbieQ, sampleGroup = "Treat")
+  testBB1 <- testBarcodeSignif(barbieQ, sampleGroup = "Treat", transformation = "logit")
   testBB1 <- testBarcodeSignif(barbieQ, sampleMetadata = data.frame(Treat = Treat) ,sampleGroup = "Treat")
   testBB11 <- testBarcodeSignif(
     barbieQ,
