@@ -190,6 +190,8 @@ Based on the understanding of sample conditions that likely to be the source of 
  - By specifying the parameter `method` by `diffProp` (defaulted), you are testing individual barcodes' **differential proportion** between conditions.
 
  - By specifying the parameter `method` by `diffOcc`, you are testing individual barcodes' **differential occurrence** between conditions.
+ 
+### Differential Proportion
 
 ```{r test diffProp, fig.width=6, fig.height=5}
 ## test Barcode differential proportion between sample groups
@@ -198,20 +200,64 @@ exampleBBQ <- testBarcodeSignif(
   contrastFormula = "(CelltypeNK_CD56n_CD16p) - (CelltypeB+CelltypeGr+CelltypeT+CelltypeNK_CD56p_CD16n)/4",
   method = "diffProp"
 )
+
+## Alternatively: using logit transformation
+logitTrans <- testBarcodeSignif(
+  barbieQ = exampleBBQ,
+  contrastFormula = "(CelltypeNK_CD56n_CD16p) - (CelltypeB+CelltypeGr+CelltypeT+CelltypeNK_CD56p_CD16n)/4",
+  method = "diffProp", transformation = "logit"
+)
 ```
 
 
 ```{r vis MA plot, fig.width=8, fig.height=4}
 plotBarcodeMA(exampleBBQ) |> plot()
+plotBarcodeMA(logitTrans) |> plot()
 ```
 
-```{r vis testing HP, fig.width=14, fig.height=6}
+
+```{r vis testing HP, fig.width=13, fig.height=5}
+plotSignifBarcodeHeatmap(exampleBBQ) |> plot()
+plotSignifBarcodeHeatmap(logitTrans) |> plot()
+```
+
+```{r vis testing prop, fig.width=12, fig.height=10}
+plotSignifBarcodeProportion(exampleBBQ) |> plot()
+plotSignifBarcodeProportion(logitTrans) |> plot()
+
+```
+
+### Differential Occurrence
+
+```{r test diffOcc, fig.width=6, fig.height=5}
+## test Barcode differential occurrence between sample groups
+targets <- exampleBBQ$sampleMetadata %>% 
+  as.data.frame() %>% 
+  mutate(Group = ifelse(
+    Celltype == "NK_CD56n_CD16p",
+    "NK_CD56n_CD16p",
+    "B.Gr.T.NK_CD56p_CD16n"))
+
+exampleBBQ <- testBarcodeSignif(
+  barbieQ = exampleBBQ, 
+  sampleMetadata = targets[,"Group", drop=FALSE], 
+  method = "diffOcc"
+)
+```
+
+
+```{r vis MA plot occ, fig.width=8, fig.height=4}
+plotBarcodeMA(exampleBBQ) |> plot()
+```
+
+```{r vis testing HP occ, fig.width=13, fig.height=5}
 plotSignifBarcodeHeatmap(exampleBBQ) |> plot()
 ```
 
-```{r vis testing prop, fig.width=8, fig.height=5}
+```{r vis testing prop occ, fig.width=12, fig.height=10}
 plotSignifBarcodeProportion(exampleBBQ) |> plot()
 ```
+
 
 
 # References

@@ -220,7 +220,9 @@ testBarcodeSignif <- function(barbieQ, method = "diffProp", sampleMetadata = NUL
         ## save as a DFrame
         statsDf <- S4Vectors::DataFrame(statsDf)
         S4Vectors::metadata(statsDf)$method <- method
+        S4Vectors::metadata(statsDf)$pseudo.design <- designMatrix
         S4Vectors::metadata(statsDf)$design <- statsList$design
+        S4Vectors::metadata(statsDf)$pseudo.contrasts <- mycontrasts
         S4Vectors::metadata(statsDf)$contrastVariables <- statsList$variables
         S4Vectors::metadata(statsDf)$contrastGroups <- contrastLevels[1, ]
         S4Vectors::metadata(statsDf)$regularization <- paste0(regularization, " regularization on likelihood")

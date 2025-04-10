@@ -26,7 +26,18 @@ test_that("multiplication works", {
   rownames(count) <- paste0("Barcode", seq_len(nbarcodes))
   barbieQ <- createBarbieQ(count, data.frame(Treat = Treat, Time = Time))
   
+  ## plotting diffProp testing works
   testBB <- testBarcodeSignif(barbieQ, sampleGroup = "Treat")
+  p <- plotSignifBarcodeProportion(barbieQ = testBB)
+  
+  expect_s3_class(p, "ggplot")
+  expect_equal(length(p$layers), 3L)
+  expect_equal(nrow(p$data), 3*ncol(testBB))
+  plotPoint <- ggplot_build(p)$data[[1]]
+  expect_true(all((unique(plotPoint$fill) %in% c("#33AAFF","#FF5959","#FFC000"))))
+  
+  ## plotting diffOcc testing works
+  testBB <- testBarcodeSignif(barbieQ, sampleGroup = "Treat", method = "diffOcc")
   p <- plotSignifBarcodeProportion(barbieQ = testBB)
   
   expect_s3_class(p, "ggplot")

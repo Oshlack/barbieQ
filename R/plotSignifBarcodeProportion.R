@@ -38,14 +38,21 @@
 plotSignifBarcodeProportion <- function(barbieQ) {
   ## extract testing results and information
   statsDf <- SummarizedExperiment::rowData(barbieQ)$testingBarcode
-  design <- S4Vectors::metadata(statsDf)$design
   contrastGroups <- S4Vectors::metadata(statsDf)$contrastGroups
   method <- S4Vectors::metadata(statsDf)$method
+  ## extract design based on tests
+  if(method == "diffProp") {
+    design <- S4Vectors::metadata(statsDf)$design
+  } else if (method == "diffOcc") {
+    design <- S4Vectors::metadata(statsDf)$pseudo.design
+  }
   
   ## extract color code
   colorCode <- S4Vectors::metadata(barbieQ)$factorColors$testingBarcode
   
-  ## extract relavent conditions
+  splitGroupHigh <- ""
+  splitGroupLow <- ""
+  ## extract relevant conditions
   if(all(names(contrastGroups) %in% c("levelLow", "levelHigh"))) {
     splitGroupHigh <- strsplit(contrastGroups["levelHigh"], " \\+ ")[[1]]
     splitGroupLow <- strsplit(contrastGroups["levelLow"], " \\+ ")[[1]]
@@ -56,7 +63,8 @@ plotSignifBarcodeProportion <- function(barbieQ) {
     ## when contrast is factor: two levels
     GroupHigh <- design[, splitGroupHigh, drop = FALSE] |> rowSums()
     GroupLow <- design[, splitGroupLow, drop = FALSE] |> rowSums()
-    GroupVec <- rep(0, ncol(barbieQ))
+    GroupVec <- rep("others", ncol(barbieQ))
+    names(GroupVec) <- rownames(design)
     GroupVec[GroupHigh == 1] <- contrastGroups["levelHigh"]
     GroupVec[GroupLow == 1] <- contrastGroups["levelLow"]
   } else {
@@ -91,10 +99,12 @@ plotSignifBarcodeProportion <- function(barbieQ) {
   longData <- longData %>% 
     dplyr::mutate(sampleGroup =  GroupVec[match(sample, names(GroupVec))])
   ## convert sample and sampleGroup into factors
-  if(all(contrastGroups %in% colnames(design))) {
+  if(all(splitGroupHigh %in% colnames(design)) ||
+     all(splitGroupLow %in% colnames(design))) {
     ## when contrast is factor: two levels
-    longData$sampleGroup <- factor(longData$sampleGroup, levels = contrastGroups)
+    longData$sampleGroup <- factor(longData$sampleGroup, levels = c(contrastGroups, "others"))
   }
+  
   longData$sample <- factor(longData$sample, levels = unique(longData$sample[order(longData$sampleGroup)]))
   
   p <- ggplot(longData, 
@@ -108,7 +118,8 @@ plotSignifBarcodeProportion <- function(barbieQ) {
     scale_fill_manual(values = colorCode) 
   
   ## add sample annotation when group is factor
-  if(all(contrastGroups %in% colnames(design))) {
+  if(all(splitGroupHigh %in% colnames(design)) ||
+     all(splitGroupLow %in% colnames(design))) {
     p <- p +
       geom_tile(
         data = longData,

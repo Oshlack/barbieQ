@@ -65,7 +65,7 @@ plotBarcodePValue <- function(barbieQ, xAxis = "avgRank") {
             1))), avgProp = rowMeans(SummarizedExperiment::assays(barbieQ)$proportion))
     ## visualize by ggplot
     p <- ggplot(mydata, aes(x = mydata[, xAxis], y = -log10(adj.P.Val))) + geom_point(aes(color = tendencyTo,
-        shape = tendencyTo, fill = tendencyTo), size = 4, stroke = 1) + theme_classic() +
+        shape = tendencyTo, fill = tendencyTo), size = 2, stroke = 1) + theme_classic() +
         theme(aspect.ratio = 1) + labs(title = paste0(S4Vectors::metadata(statsDf)$method),
         y = "-log10(adj.P.Value)", x = xTitle[xAxis]) + geom_hline(yintercept = -log10(0.05),
         linetype = "dashed", color = "grey") + scale_color_manual(values = colorCode) +
@@ -124,6 +124,9 @@ plotBarcodeMA <- function(barbieQ) {
     design <- S4Vectors::metadata(statsDf)$design
     contrastGroups <- S4Vectors::metadata(statsDf)$contrastGroups
     method <- S4Vectors::metadata(statsDf)$method
+    if(method == "diffProp") {
+      transformation <- S4Vectors::metadata(statsDf)$transformation
+    }
 
     ## extract color code
     colorCode <- S4Vectors::metadata(barbieQ)$factorColors$testingBarcode
@@ -137,9 +140,10 @@ plotBarcodeMA <- function(barbieQ) {
     ## visualize by ggplot
     if (method == "diffProp") {
         p <- ggplot(mydata, aes(x = Amean, y = meanDiff)) + geom_point(aes(color = tendencyTo,
-            shape = tendencyTo, fill = tendencyTo), size = 4, stroke = 1) + theme_classic() +
+            shape = tendencyTo, fill = tendencyTo), size = 2, stroke = 1) + theme_classic() +
             theme(aspect.ratio = 1) + labs(title = paste0(S4Vectors::metadata(statsDf)$method,
-            " MA plot"), y = "(Transformed) Prop. Diff.", x = "Mean (Transformed) Prop.") +
+            " MA plot"), y = paste0("Prop. Diff. (", transformation, " trans.)"), 
+            x = paste0("Mean Prop. (", transformation, " trans.)")) +
             scale_color_manual(values = colorCode) + scale_shape_manual(values = customShape) +
             scale_fill_manual(values = alpha(colorCode, 0.2))
     } else if (method == "diffOcc") {
@@ -200,8 +204,14 @@ plotSignifBarcodeHeatmap <- function(barbieQ, barcodeMetric = "CPM", sampleAnnot
 
     ## extract testing results and information
     statsDf <- SummarizedExperiment::rowData(barbieQ)$testingBarcode
-    design <- S4Vectors::metadata(statsDf)$design
     contrastGroups <- S4Vectors::metadata(statsDf)$contrastGroups
+    method <- S4Vectors::metadata(statsDf)$method
+    ## extract design based on tests
+    if(method == "diffProp") {
+      design <- S4Vectors::metadata(statsDf)$design
+    } else if (method == "diffOcc") {
+      design <- S4Vectors::metadata(statsDf)$pseudo.design
+    }
 
     ## extract color code
     colorCode <- S4Vectors::metadata(barbieQ)$factorColors$testingBarcode
@@ -222,12 +232,13 @@ plotSignifBarcodeHeatmap <- function(barbieQ, barcodeMetric = "CPM", sampleAnnot
       ## when contrast is factor: two levels
       GroupHigh <- design[, splitGroupHigh, drop = FALSE] |> rowSums()
       GroupLow <- design[, splitGroupLow, drop = FALSE] |> rowSums()
-      GroupVec <- rep(0, ncol(barbieQ))
+      GroupVec <- rep("others", ncol(barbieQ))
+      names(GroupVec) <- rownames(design)
       GroupVec[GroupHigh == 1] <- contrastGroups["levelHigh"]
       GroupVec[GroupLow == 1] <- contrastGroups["levelLow"]
       splitSamples <- TRUE
-      sampleAnnotation <- HeatmapAnnotation(testingBarcode = GroupVec, annotation_name_side = "left",
-                                            annotation_name_gp = grid::gpar(fontsize = 10), col = list(testingBarcode = colorCode))
+      sampleAnnotation <- HeatmapAnnotation(testingGroups = GroupVec, annotation_name_side = "left",
+        annotation_name_gp = grid::gpar(fontsize = 10), col = list(testingGroups = c(colorCode, "others" = "grey")))
     } else {
       ## when contrast is numeric
       GroupVec <- NULL
@@ -236,7 +247,7 @@ plotSignifBarcodeHeatmap <- function(barbieQ, barcodeMetric = "CPM", sampleAnnot
     }
 
     hp <- plotBarcodeHeatmap(barbieQ = barbieQ, barcodeMetric = barcodeMetric, splitSamples = splitSamples,
-        sampleMetadata = data.frame(testingBarcode = GroupVec), sampleGroup = "testingBarcode",
+        sampleMetadata = data.frame(testingGroups = GroupVec), sampleGroup = "testingGroups",
         barcodeAnnotation = barcodeAnnotation, sampleAnnotation = sampleAnnotation)
 
     return(hp)

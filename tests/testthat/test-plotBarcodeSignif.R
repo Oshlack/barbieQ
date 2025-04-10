@@ -65,8 +65,38 @@ test_that("plot Barcode test results - heatmap works", {
   hp <- plotSignifBarcodeHeatmap(testBB)
   expect_s4_class(hp, "Heatmap")
   expect_equal(
-    levels(as.factor(hp@matrix_param$column_split$testingBarcode)),
+    levels(as.factor(hp@matrix_param$column_split$testingGroups)),
     c("Treatctrl", "Treatdrug")
   )
-
+  
+  ## multiple groups
+  Block <- c(1, 1, 2, 3, 3, 4, 1, 1, 2, 3, 3, 4, 1, 1, 2, 3, 3, 4)
+  Treat <- factor(rep(c("ctrl", "drug", "foo"), each = 6))
+  Time <- rep(rep(seq_len(2), each = 3), 3)
+  nbarcodes <- 50
+  nsamples <- 18
+  count <- matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples) |> abs()
+  rownames(count) <- paste0("Barcode", seq_len(nbarcodes))
+  barbieQ <- createBarbieQ(count, data.frame(Treat = Treat, Time = Time))
+  
+  testBB <- testBarcodeSignif(barbieQ, sampleGroup = "Treat", contrastFormula = "Treatdrug - Treatctrl")
+  
+  hp <- plotSignifBarcodeHeatmap(testBB)
+  expect_s4_class(hp, "Heatmap")
+  expect_equal(
+    levels(as.factor(hp@matrix_param$column_split$testingGroups)),
+    c("Treatctrl", "Treatdrug", "others")
+  )
+  
+  ## plot diffOcc
+  testBB <- testBarcodeSignif(
+    barbieQ, sampleGroup = "Treat", 
+    contrastFormula = "Treatdrug - Treatctrl", method = "diffOcc")
+  
+  hp <- plotSignifBarcodeHeatmap(testBB)
+  expect_s4_class(hp, "Heatmap")
+  expect_equal(
+    levels(as.factor(hp@matrix_param$column_split$testingGroups)),
+    c("Treatctrl", "Treatdrug", "others")
+  )
 })

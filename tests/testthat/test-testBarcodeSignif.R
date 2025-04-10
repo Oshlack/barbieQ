@@ -242,4 +242,5 @@ test_that("barcode test extracting correct arguments, dispatching right function
     sampleGroup = "Treat", 
     designFormula = formula("~ 0 + Treat")
   )
+
 })
