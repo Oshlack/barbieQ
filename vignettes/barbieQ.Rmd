@@ -76,6 +76,7 @@ suppressPackageStartupMessages({
   library(limma)
   library(SummarizedExperiment)
   library(S4Vectors)
+  library(bartools)
 })
 set.seed(2025)
 ```
@@ -183,6 +184,17 @@ To generally understand the sample similarity, you can visualize sample pair-wis
 plotSamplePairCorrelation(barbieQ = exampleBBQ) |> plot()
 ```
 
+## Interaction with other tools
+
+```{r bartools, fig.width=20, fig.height=10}
+dge <- DGEList(
+  counts = assay(exampleBBQ), 
+  group = exampleBBQ$sampleMetadata$Celltype)
+
+bartools::plotBarcodeHistogram(dge)
+```
+
+
 ## Test Barcodes and Identify Significant Changes
 
 Based on the understanding of sample conditions that likely to be the source of variability in barcode outcomes, you can robustly test the significance of the barcode changes between the sample conditions, by applying the function `testBarcodeSignif()` to the `barbieQ` object. The testing results will be saved in the object, and can be further visualized using functions: `plotBarcodeMA()`, `plotSignifBarcodeHeatmap()`, `plotSignifBarcodeProportion()`, and etc.
@@ -207,12 +219,24 @@ logitTrans <- testBarcodeSignif(
   contrastFormula = "(CelltypeNK_CD56n_CD16p) - (CelltypeB+CelltypeGr+CelltypeT+CelltypeNK_CD56p_CD16n)/4",
   method = "diffProp", transformation = "logit"
 )
+
+## Alternatively: no transformation
+noTrans <- testBarcodeSignif(
+  barbieQ = exampleBBQ,
+  contrastFormula = "(CelltypeNK_CD56n_CD16p) - (CelltypeB+CelltypeGr+CelltypeT+CelltypeNK_CD56p_CD16n)/4",
+  method = "diffProp", transformation = "none"
+)
 ```
 
 
 ```{r vis MA plot, fig.width=8, fig.height=4}
 plotBarcodeMA(exampleBBQ) |> plot()
 plotBarcodeMA(logitTrans) |> plot()
+plotBarcodeMA(noTrans) |> plot()
+
+## to inspect variance
+speckle::plotCellTypeMeanVar(assay(exampleBBQ))
+speckle::plotCellTypePropsMeanVar(assay(exampleBBQ))
 ```
 
 

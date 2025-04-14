@@ -10,7 +10,8 @@ plotBarcodePairCorrelation(
   yScaleMetric = "mean",
   corThresh = 0.95,
   cpmThresh = 2^10,
-  preDefinedCluster = NULL
+  preDefinedCluster = NULL,
+  plotMA = FALSE
 )
 }
 \arguments{
@@ -33,7 +34,9 @@ highly correlated co-existing Barcodes. Defaults to 2^10}
 \item{preDefinedCluster}{preDefinedCluster A \code{list} of known groups containing different Barcodes,
 or a \code{vector}/\code{array} indicating Barcode groups;
 or an equivalent \code{matrix}, \code{data.frame}, or \code{DataFrame} with a single column.
-Defaults to NULL.}
+Defaults to NULL.
+@param plotMA A logical value, indicating whether to simply plot LFC and Mean between each Barcode pair.
+Defaults to FALSE.}
 }
 \value{
 A \code{ggplot} S3 object displaying a dot plot of the correlation in CPM
