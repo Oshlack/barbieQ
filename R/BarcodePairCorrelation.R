@@ -24,8 +24,6 @@
 #'  or a `vector`/`array` indicating Barcode groups;
 #'  or an equivalent `matrix`, `data.frame`, or `DataFrame` with a single column.
 #'  Defaults to NULL.
-#'  @param plotMA A logical value, indicating whether to simply plot LFC and Mean between each Barcode pair. 
-#'  Defaults to FALSE.
 #'
 #' @return A `ggplot` S3 object displaying a dot plot of the correlation in CPM
 #'  between each pair of Barcodes, plotted against the mean or max of their CPM.
@@ -52,7 +50,7 @@
 #' plotBarcodePairCorrelation(barbieQ, preDefinedCluster = list(
 #'  group1 = c('Barcode1', 'Barcode2', 'Barcode3'), group2 = c('Barcode4', 'Barcode5')))
 plotBarcodePairCorrelation <- function(barbieQ, method = "pearson", yScaleMetric = "mean",
-    corThresh = 0.95, cpmThresh = 2^10, preDefinedCluster = NULL, plotMA = FALSE) {
+    corThresh = 0.95, cpmThresh = 2^10, preDefinedCluster = NULL) {
     ## check yScaleMetric
     yScaleMetric <- match.arg(yScaleMetric, c("mean", "max"))
 
@@ -64,7 +62,6 @@ plotBarcodePairCorrelation <- function(barbieQ, method = "pearson", yScaleMetric
     corDF <- SummarizedExperiment::rowData(barbieQ)$barcodeCorrelation
     preDefinedDf <- S4Vectors::metadata(corDF)$preDefinedBarcodePair
     meanMatCPM <- S4Vectors::metadata(corDF)$meanMatCPM
-    LFCMatCPM <- S4Vectors::metadata(corDF)$LFCMatCPM
     corMat <- as.matrix(corDF)
 
     ## compute mean CPM for each barcode
@@ -85,7 +82,7 @@ plotBarcodePairCorrelation <- function(barbieQ, method = "pearson", yScaleMetric
 
     ## create a data.frame for identified pairs
     corResults <- data.frame(name1 = rownames(corMat)[upperIdx[, 1]], name2 = colnames(corMat)[upperIdx[,
-        2]], mean = meanMatCPM[upperIdx], max = maxMatCPM[upperIdx], LFC = LFCMatCPM[upperIdx], coefficient = corMat[upperIdx],
+        2]], mean = meanMatCPM[upperIdx], max = maxMatCPM[upperIdx], coefficient = corMat[upperIdx],
         correlationGroup)
 
     ## process preDefined pairs
@@ -105,7 +102,6 @@ plotBarcodePairCorrelation <- function(barbieQ, method = "pearson", yScaleMetric
     yTitle <- paste0("log2 (", yScaleMetric, " CPM+1) between each Barcode pair")
 
     ## plotting correlations
-    if(!plotMA) {
       p <- ggplot(corResults, aes(x = coefficient)) + geom_histogram(aes(y = (after_stat(count))/max(after_stat(count)) *
         max(yAxis)), binwidth = 0.05, alpha = 0.3, fill = "grey") + geom_point(aes(y = yAxis,
         color = correlationGroup)) + stat_ecdf(geom = "step", aes(y = ..y.. * max(yAxis),
@@ -119,14 +115,7 @@ plotBarcodePairCorrelation <- function(barbieQ, method = "pearson", yScaleMetric
         alpha = 1, size = 3, label = paste0("Cor=", corThresh)) + annotate("text", x = corThresh -
         0.4, y = log2(cpmThresh + 1) - max(yAxis) * 0.02, color = "#7CAE00", alpha = 1,
         size = 3, label = paste0("log2(", yScaleMetric, "+1)=", cpmThresh))
-    } else {
-      ## simply plot MA of Barcode pairs
-      p <- ggplot(corResults, aes(x = LFC)) + 
-        geom_point(aes(y = yAxis, color = correlationGroup)) + 
-        theme_classic() + theme(aspect.ratio = 1) +
-        labs(x = paste0("LFC on barcode CPM"), y = yTitle) 
-    }
-    
+
 
     return(p)
 }
@@ -364,11 +353,11 @@ extractBarcodePairs <- function(barbieQ, method = "pearson", preDefinedCluster =
     ## N x N symmetric matrix with average between each pair on their row means
     meanMat <- outer(meanCPM, meanCPM, FUN = function(x, y) (x + y)/2)
     ## N x N symmetric matrix with LFC between each pair on their CPM
-    logMat <- log2(mat + 0.5)
-    LFCMat <- outer(logMat, logMat, FUN = function(x, y) (x - y))
+    # logMat <- log2(mat + 0.5)
+    # LFCMat <- outer(logMat, logMat, FUN = function(x, y) (x - y))
     ## save meanMat to DFrame as a metadata
     S4Vectors::metadata(corDF)$meanMatCPM <- meanMat
-    S4Vectors::metadata(corDF)$LFCMatCPM <- LFCMat
+    # S4Vectors::metadata(corDF)$LFCMatCPM <- LFCMat
 
     ## save preDefinedDf to corDF metadata
     S4Vectors::metadata(corDF)$preDefinedBarcodePair <- preDefinedDf
