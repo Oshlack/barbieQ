@@ -12,7 +12,7 @@
 
 * Fixed bugs in "plotBarcodeSignif.R".
 
-# barbieQ 0.99.3
+# barbieQ 1.1.1
 
 * Fixed issues in the vignette.
 
