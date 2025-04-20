@@ -47,7 +47,7 @@ test_that("plot Barcode test results - MA plot - works", {
   expect_equal(nrow(p$data), nrow(testBB))
   plotPoint <- ggplot_build(p)$data[[1]]
   expect_equal(plotPoint$y, p$data$logOR)
-  expect_equal(plotPoint$x, p$data$totalOcc)
+  expect_equal(plotPoint$x, p$data$meanOcc)
 })
 
 test_that("plot Barcode test results - heatmap works", {

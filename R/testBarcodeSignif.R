@@ -156,7 +156,7 @@ testBarcodeSignif <- function(barbieQ, method = "diffProp", sampleMetadata = NUL
 
     ## check block groups if it's specified
     if (!(is.null(block))) {
-        if (length(block) != ncol(barbieQ$assay)) {
+        if (length(block) != ncol(barbieQ)) {
             stop("the length of `block` doesn't match the sample size in `sampleMetadata`.")
         }
     }

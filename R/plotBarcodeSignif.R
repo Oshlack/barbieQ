@@ -136,6 +136,7 @@ plotBarcodeMA <- function(barbieQ) {
 
     ## data.frame for ggplot
     mydata <- data.frame(statsDf, totalOcc = rowSums(SummarizedExperiment::assays(barbieQ)$occurrence))
+    mydata$meanOcc <- mydata$totalOcc / ncol(barbieQ)
 
     ## visualize by ggplot
     if (method == "diffProp") {
@@ -147,10 +148,10 @@ plotBarcodeMA <- function(barbieQ) {
             scale_color_manual(values = colorCode) + scale_shape_manual(values = customShape) +
             scale_fill_manual(values = alpha(colorCode, 0.2))
     } else if (method == "diffOcc") {
-        p <- ggplot(mydata, aes(x = totalOcc, y = logOR)) + geom_point(aes(color = tendencyTo,
-            shape = tendencyTo, fill = tendencyTo), size = 4, stroke = 1) + theme_classic() +
+        p <- ggplot(mydata, aes(x = meanOcc, y = logOR)) + geom_point(aes(color = tendencyTo,
+            shape = tendencyTo, fill = tendencyTo), size = 2, stroke = 1) + theme_classic() +
             theme(aspect.ratio = 1) + labs(title = paste0(S4Vectors::metadata(statsDf)$method,
-            " 'MA' plot"), y = "LogOR", x = "Total Occurrence Freq.") + scale_color_manual(values = colorCode) +
+            " 'MA' plot"), y = "LogOR", x = "Mean Occurrence Freq.") + scale_color_manual(values = colorCode) +
             scale_shape_manual(values = customShape) + scale_fill_manual(values = alpha(colorCode,
             0.2))
     } 

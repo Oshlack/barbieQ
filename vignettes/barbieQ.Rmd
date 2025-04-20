@@ -24,7 +24,7 @@ The barbieQ package provides a series of robust statistical tools for analysing 
 
 In these experiments, an initial cell and its offspring collectively form a *clone* (or *lineage*). A unique DNA barcode, incorporated into the genome of an initial cell, is inherited by all its progeny within the clone. This one-to-one mapping of barcodes to clones enables  tracking of clonal behaviours. By quantifying barcode counts, researchers can measure the abundance of individual clones under various experimental conditions or perturbations. 
 
-While existing tools for barcode count data analysis primarily rely on qualitative interpretation through visualizations, they often lack robust methods to model the sources of barcode variability. ^[[barcodetrackR](https://bioconductor.org/packages/barcodetrackR/), [CellDestiny](https://github.com/TeamPerie/CellDestiny), [genBaRcode](https://CRAN.R-project.org/package=genBaRcode)]^
+While existing tools for barcode count data analysis primarily rely on qualitative interpretation through visualizations, they often lack robust methods to model the sources of barcode variability.^[[barcodetrackR](https://bioconductor.org/packages/barcodetrackR/), [CellDestiny](https://github.com/TeamPerie/CellDestiny), [genBaRcode](https://CRAN.R-project.org/package=genBaRcode)]^
 
 To address this gap, this R software package, **barbieQ**, provides advanced statistical methods to model barcode variability. The package supports preprocessing, visualization, and statistical testing to identify barcodes with significant differences in proportions or occurrences across experimental conditions. Key functionalities include initializing data structures, filtering barcodes, and applying regression models to test for significant clonal changes.
 
@@ -45,18 +45,20 @@ The main functions include:
  * `testBarcodeSignif()`
  
  * `plotSignifBarcodeProportion()`
+ 
+ * `plotBarcodeMA()`
 
 # Intallation
 
 ```{r install, eval=FALSE}
-# You can install the stable version of barbieQ like so:
-if (!require("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-
-BiocManager::install("barbieQ")
+## You can install the released version of barbieQ like so:
+# if (!require("BiocManager", quietly = TRUE))
+#     install.packages("BiocManager")
+# 
+# BiocManager::install("barbieQ")
 
 ## Alternatively, you can install the development version of barbieQ from GitHub
-# devtools::install_github("Oshlack/barbieQ")
+devtools::install_github("Oshlack/barbieQ")
 ```
 
 # Load Dependecy
@@ -76,17 +78,16 @@ suppressPackageStartupMessages({
   library(limma)
   library(SummarizedExperiment)
   library(S4Vectors)
-  library(bartools)
 })
 set.seed(2025)
 ```
 
 # Load Package Data
  
-- Monkey HSPC Cell Barcoding Data (monkeyHSPC)
+- Monkey HSPC Cell Barcoding Data (`monkeyHSPC`)
 
-A subset of data from a study on monkey HSPC cell expansion using barcoding technique.^[NK clonal expansion](http://dx.doi.org/10.1126/sciimmunol.aat9781)),  [barcodetrackRData](https://github.com/dunbarlabNIH/barcodetrackRData)^
-Barcode counts within different samples were used to interpret the patterns of HSPC differentiation.
+A subset of data from a study on monkey HSPC cell expansion using barcoding technique.^[[NK clonal expansion](http://dx.doi.org/10.1126/sciimmunol.aat9781)), [barcodetrackRData](https://github.com/dunbarlabNIH/barcodetrackRData)]^ 
+Barcode counts within different samples of various cell types were used to interpret the patterns of HSPC differentiation.
 
 It is a `SummarizedExperiment` object created using function `barbieQ::createBarbie`, containing a barcode count matrix with 16,603 rows and 62 columns, and a data frame of sample metadata.
 
@@ -98,9 +99,9 @@ data(monkeyHSPC, package = "barbieQ")
 
 ## Create `barbieQ` Object
 
-Please start with creating a `barbieQ` structure by taking the barcode count matrix as input, using function `createBarbieQ()`.
+Please start with creating a `barbieQ` structure by passing the barcode count matrix as input to `createBarbieQ()` function .
 
-By creating a `barbieQ` object, you've automatically processed a series of data transformation and saved transformed data in the `barbieQ` object, for the convenience of the following analyses.
+By creating a `barbieQ` object, a series of data transformations will be automatically applied, and the transformed data will be saved within the `barbieQ` object, for easy use in subsequent analyses.
 
 ```{r example, fig.width=8, fig.height=6}
 ## Passing `object`, `sampleMetadata` and `factorColors` for optional
@@ -112,9 +113,9 @@ exampleBBQ <- createBarbieQ(
 
 ## Subset Dataset
 
-Here we subset the object by selecting samples of certain stage of collection time.
+Here we subset the object by selecting samples from specific stages of collection time.
 
-Define "early", "mid", and "late" stages based on `Months`, and clean up `Celltype`.
+In `sampleMetadata`, Define "early", "mid", and "late" stages based on *"Months"*, and clean up *"Celltype"*.
 
 ```{r update metadata}
 updateSampleMetadata <- exampleBBQ$sampleMetadata %>% 
@@ -128,7 +129,7 @@ SummarizedExperiment::colData(exampleBBQ)$sampleMetadata <- S4Vectors::DataFrame
 exampleBBQ$sampleMetadata
 ```
 
-Subset dataset and keep samples of "mid" stage only.
+Subset the object to retain only the samples from the "mid" stage.
 
 ```{r subset samples}
 flag_sample <- exampleBBQ$sampleMetadata$Phase == "mid"
@@ -139,11 +140,11 @@ exampleBBQ$sampleMetadata
 
 ## Tag Top Contributing Barcodes
 
-A filtering step is recommended to filter out barcodes that consistently show low counts across the dataset. The retained barcodes are considered with essential contribution, called *"top barcodes"*. 
+A filtering step is recommended to remove barcodes that consistently show low counts across the dataset. The retained barcodes, which are considered to make an essential contribution, are referred to as *"top barcodes"*. 
 
- - By applying the function `tagTopBarcodes()` to the `barbieQ` object, you're determining which barcodes are *"top barcodes"* while tagging them in the object.
+ - By applying the `tagTopBarcodes()` function to the `barbieQ` object, you identify and tag the *"top barcodes"* within the object.
  
- - In this example dataset, we are interested in the differences on barcode outcomes between cell types, so we will group samples by cell types. We set up the `nSampleThreshold` as the minimum group size, which is `6`.
+ - In this example dataset, we are interested in the differences in barcode outcomes between cell types, so we will group samples by cell types. We set up the `nSampleThreshold` to `6` as the minimum group size.
 
 ```{r tag top}
 ## Check out minimum group size.
@@ -152,11 +153,11 @@ table(exampleBBQ$sampleMetadata$Celltype)
 exampleBBQ <- tagTopBarcodes(barbieQ = exampleBBQ, nSampleThreshold = 6)
 ```
 
- - Once *"top barcodes"* are determined and tagged, it's good to check their contributions before cutting off the *"bottom barcodes"* that are considered as non-essential contributors. 
+ - Once *"top barcodes"* are determined and tagged, it's useful to assess their contributions before actually removing the *"bottom barcodes"*, which are considered as non-essential contributors. 
  
-     - By applying the function `plotBarcodePareto()` to the `barbieQ` object, you are visualizing the contribution of each barcode colour coded by *"top"* or *"bottom"*. (Here, the contribution refers to the average proportion of individual barcodes across samples in the dataset.)
+     - By applying the `plotBarcodePareto()` function to the `barbieQ` object, you can visualize the contribution of each barcode, colour-coded as *"top"* or *"bottom"*. (Here,  "contribution" refers to the average proportion of individual barcodes across samples in the dataset.)
      
-     - By applying the function `plotBarcodeSankey()` to the `barbieQ` object, you are visualizing the collective contribution of the *"top"* or *"bottom"* barcode groups. 
+     - By applying the `plotBarcodeSankey()` function to the `barbieQ` object, you can visualize the collective contribution of the *"top"* and *"bottom"* barcode groups. 
 
 ```{r tag top v1, fig.width=8, fig.height=6}
 ## visualize contribution of top vs. bottom barcodes
@@ -168,7 +169,7 @@ plotBarcodePareto(barbieQ = exampleBBQ) |> plot()
 plotBarcodeSankey(barbieQ = exampleBBQ) |> plot()
 ```
 
- - Once you are happy with the classification of *"top"* and *"bottom"* barcodes, you can filter out the *"bottom"* barcodes by subsetting the `SE` object based on the tagged array.
+ - Once you are happy with the classification of *"top"* and *"bottom"* barcodes, you can filter out the *"bottom"* barcodes by subsetting the `barbieQ` object based on the tagged array.
  
 ```{r subset top barcodes}
 flag_barcode <- SummarizedExperiment::rowData(exampleBBQ)$isTopBarcode$isTop
@@ -177,7 +178,7 @@ exampleBBQ <- exampleBBQ[flag_barcode,]
 
 ## Visualize Sample Correlation
 
-To generally understand the sample similarity, you can visualize sample pair-wise correlations in a check board style by applying the function `plotSamplePairCorrelation()` to the `barbieQ()` object.
+To gain a general understanding of sample similarity, you can visualize sample pairwise correlations in a checkboard style by applying the `plotSamplePairCorrelation()` function to the `barbieQ` object.
 
 ```{r sample pair cor, fig.width=6, fig.height=4}
 ## visualize sample pair wise correlation
@@ -186,7 +187,11 @@ plotSamplePairCorrelation(barbieQ = exampleBBQ) |> plot()
 
 ## Interaction with other tools
 
-```{r bartools, fig.width=20, fig.height=10}
+The `barbieQ` object is interoperable with other packages, such as `bartools`. Below is an example of how to import a `barbieQ` object into the bartools pipeline for visualization. This code chunk is not executed in the vignette, but you can run it in your local environment.
+
+```{r bartools, fig.width=20, fig.height=10, eval=FALSE}
+devtools::install_github("DaneVass/bartools", dependencies = TRUE, force = TRUE)
+
 dge <- DGEList(
   counts = assay(exampleBBQ), 
   group = exampleBBQ$sampleMetadata$Celltype)
@@ -194,23 +199,33 @@ dge <- DGEList(
 bartools::plotBarcodeHistogram(dge)
 ```
 
+Below is an example of inspecting barcode data variance using `speckle` package. This code chunk is not executed in the vignette, but you can run it in your local environment.
+
+```{r speckle, eval=FALSE}
+## to inspect variance
+speckle::plotCellTypeMeanVar(assay(exampleBBQ))
+speckle::plotCellTypePropsMeanVar(assay(exampleBBQ))
+```
 
 ## Test Barcodes and Identify Significant Changes
 
 Based on the understanding of sample conditions that likely to be the source of variability in barcode outcomes, you can robustly test the significance of the barcode changes between the sample conditions, by applying the function `testBarcodeSignif()` to the `barbieQ` object. The testing results will be saved in the object, and can be further visualized using functions: `plotBarcodeMA()`, `plotSignifBarcodeHeatmap()`, `plotSignifBarcodeProportion()`, and etc.
  
- - By specifying the parameter `method` by `diffProp` (defaulted), you are testing individual barcodes' **differential proportion** between conditions.
+ - By setting the `method` parameter to *"diffProp"* (default), you test each barcode's *differential proportion* between conditions.
 
- - By specifying the parameter `method` by `diffOcc`, you are testing individual barcodes' **differential occurrence** between conditions.
+ - By setting the `method` parameter by *"diffOcc"*, you test each barcode's *differential occurrence* between conditions.
  
 ### Differential Proportion
 
+We recommend setting the `transformation` parameter to *"asin-sqrt"* (default), although alternatives such as *"logit"* and *"none"* are also available. Statistical tests are performed on the data following the specified proportion transformation.
+
 ```{r test diffProp, fig.width=6, fig.height=5}
 ## test Barcode differential proportion between sample groups
-exampleBBQ <- testBarcodeSignif(
+## Defult transformation: asin-sqrt
+asinTrans <- testBarcodeSignif(
   barbieQ = exampleBBQ,
   contrastFormula = "(CelltypeNK_CD56n_CD16p) - (CelltypeB+CelltypeGr+CelltypeT+CelltypeNK_CD56p_CD16n)/4",
-  method = "diffProp"
+  method = "diffProp", transformation = "asin-sqrt"
 )
 
 ## Alternatively: using logit transformation
@@ -228,33 +243,36 @@ noTrans <- testBarcodeSignif(
 )
 ```
 
+Draw MA plot for differential proportion tests following different transformations.
 
 ```{r vis MA plot, fig.width=8, fig.height=4}
-plotBarcodeMA(exampleBBQ) |> plot()
-plotBarcodeMA(logitTrans) |> plot()
-plotBarcodeMA(noTrans) |> plot()
+(plotBarcodeMA(asinTrans) + coord_trans(x = "log10"))|> plot()
+plotBarcodeMA(logitTrans)|> plot()
+(plotBarcodeMA(noTrans) + coord_trans(x = "log10"))|> plot()
 
-## to inspect variance
-speckle::plotCellTypeMeanVar(assay(exampleBBQ))
-speckle::plotCellTypePropsMeanVar(assay(exampleBBQ))
 ```
 
+Annotate barcodes in the heatmap based on significance derived from differential proportion tests following different transformations.
 
-```{r vis testing HP, fig.width=13, fig.height=5}
-plotSignifBarcodeHeatmap(exampleBBQ) |> plot()
+```{r vis testing HP, fig.width=13, fig.height=5, eval=FALSE}
+plotSignifBarcodeHeatmap(asinTrans) |> plot()
 plotSignifBarcodeHeatmap(logitTrans) |> plot()
 ```
 
-```{r vis testing prop, fig.width=12, fig.height=10}
-plotSignifBarcodeProportion(exampleBBQ) |> plot()
-plotSignifBarcodeProportion(logitTrans) |> plot()
+Visualize the aggregated barcode proportion in each sample, grouped by significance.
 
+```{r vis testing prop, fig.width=12, fig.height=10}
+plotSignifBarcodeProportion(asinTrans) |> plot()
+plotSignifBarcodeProportion(logitTrans) |> plot()
 ```
 
 ### Differential Occurrence
 
+In differential occurrence test, the `regularization` parameter is set to *"firth"* by default, and is strongly recommended, especially with small sample sizes.
+
 ```{r test diffOcc, fig.width=6, fig.height=5}
 ## test Barcode differential occurrence between sample groups
+## set up the targets (sample conditions)
 targets <- exampleBBQ$sampleMetadata %>% 
   as.data.frame() %>% 
   mutate(Group = ifelse(
@@ -269,20 +287,19 @@ exampleBBQ <- testBarcodeSignif(
 )
 ```
 
+Draw an "MA plot" for the differential occurrence test by plotting the Log Odds Ratio (LOR) against the Mean Occurrence Frequency (number of total occurrences across samples / number of total samples) for each barcode.
 
 ```{r vis MA plot occ, fig.width=8, fig.height=4}
 plotBarcodeMA(exampleBBQ) |> plot()
 ```
 
-```{r vis testing HP occ, fig.width=13, fig.height=5}
+```{r vis testing HP occ, fig.width=13, fig.height=5, eval=FALSE}
 plotSignifBarcodeHeatmap(exampleBBQ) |> plot()
 ```
 
 ```{r vis testing prop occ, fig.width=12, fig.height=10}
 plotSignifBarcodeProportion(exampleBBQ) |> plot()
 ```
-
-
 
 # References
 
