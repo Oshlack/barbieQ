@@ -19,3 +19,7 @@
 * Fixed bug in the "testBarcodeSignif.R".
 
 * Added more examples to "testBarcodeSignif.R".
+
+# barbieQ 1.1.2
+
+* Comment out code that runs `bartools` functions in vignette.

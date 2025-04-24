@@ -190,21 +190,21 @@ plotSamplePairCorrelation(barbieQ = exampleBBQ) |> plot()
 The `barbieQ` object is interoperable with other packages, such as `bartools`. Below is an example of how to import a `barbieQ` object into the bartools pipeline for visualization. This code chunk is not executed in the vignette, but you can run it in your local environment.
 
 ```{r bartools, fig.width=20, fig.height=10, eval=FALSE}
-devtools::install_github("DaneVass/bartools", dependencies = TRUE, force = TRUE)
-
-dge <- DGEList(
-  counts = assay(exampleBBQ), 
-  group = exampleBBQ$sampleMetadata$Celltype)
-
-bartools::plotBarcodeHistogram(dge)
+# devtools::install_github("DaneVass/bartools", dependencies = TRUE, force = TRUE)
+# 
+# dge <- DGEList(
+#   counts = assay(exampleBBQ), 
+#   group = exampleBBQ$sampleMetadata$Celltype)
+# 
+# bartools::plotBarcodeHistogram(dge)
 ```
 
 Below is an example of inspecting barcode data variance using `speckle` package. This code chunk is not executed in the vignette, but you can run it in your local environment.
 
 ```{r speckle, eval=FALSE}
 ## to inspect variance
-speckle::plotCellTypeMeanVar(assay(exampleBBQ))
-speckle::plotCellTypePropsMeanVar(assay(exampleBBQ))
+# speckle::plotCellTypeMeanVar(assay(exampleBBQ))
+# speckle::plotCellTypePropsMeanVar(assay(exampleBBQ))
 ```
 
 ## Test Barcodes and Identify Significant Changes
