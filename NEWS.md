@@ -12,7 +12,7 @@
 
 * Fixed bugs in "plotBarcodeSignif.R".
 
-# barbieQ 1.1.1
+# barbieQ 1.1.1 devel
 
 * Fixed issues in the vignette.
 
@@ -20,6 +20,10 @@
 
 * Added more examples to "testBarcodeSignif.R".
 
-# barbieQ 1.1.2
+# barbieQ 1.1.2 devel
 
 * Comment out code that runs `bartools` functions in vignette.
+
+# barbieQ 1.0.1 release
+
+* Merge all changes after version 0.99.2
