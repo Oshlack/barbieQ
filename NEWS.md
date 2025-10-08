@@ -23,3 +23,7 @@
 # barbieQ 1.1.2
 
 * Comment out code that runs `bartools` functions in vignette.
+
+# barbieQ 1.1.3
+
+* Improved efficiency of `tagTopBarcodes` by running cummulative sums only once.

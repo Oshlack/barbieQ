@@ -120,35 +120,23 @@ tagTopEachColumn <- function(tempCol, proportionThreshold = 0.99) {
     ## sort Barcodes in the column by decreasing order.  setting 'na.last=TRUE' will
     ## place NAs last in the order.
     sortedValue <- sort(tempCol, decreasing = TRUE, na.last = TRUE)  # sort the column by decreasing order
-
-    ## find the position where the cumulative sum is > threshold and the previous
-    ## value not exceeds it step1: calculate cumulative values from the first to the
-    ## current value in the sorted values, ordered in decreasing order.  NAs will be
-    ## retained as NA in the cumulative values-cumSum.
-    cumSum <- vapply(rankCol, function(x) sum(sortedValue[seq_len(x)]), numeric(1))
-    ## step2: calculate cumulative values from the first to the (current ranking + 1)
-    ## value in the sorted values.
-    cumSumMinus1 <- vapply(rankCol, function(x) {
-        if (x > 1) {
-            sum(sortedValue[seq_len(x - 1)])
-        } else if (x == 1)
-            sum(sortedValue[1])
-    }, numeric(1))
-    ## step3: calculate sum of all values from the first to the last, omitting NAs
-    sums <- sum(stats::na.omit(tempCol))
-    ## avoid dividing by zero
-    if (sums == 0)
-        sums <- Inf
-    ## step4: find the position where the cumulative sum is >= proportionThreshold and
-    ## the previous value not exceeds it
-    position <- which(replace(cumSum >= proportionThreshold * sums, is.na(cumSum), FALSE) &
-        replace(cumSumMinus1 < proportionThreshold * sums, is.na(cumSumMinus1), FALSE))
-    ## step5: determine all values ranking higher than the position is 'top'.
-    if (length(position) == 0L) {
-        isTopInColumn <- rep(FALSE, length(rankCol))
+    ## compute cumulative sum once (omit NAs in cumsum)
+    cumSumSorted <- cumsum(replace(sortedValue, is.na(sortedValue), 0))
+    ## get total sum of non-NA values
+    sums <- sum(sortedValue, na.rm = TRUE)
+    if (sums == 0) 
+      sums <- Inf
+    ## find position where cumulative sum first crosses the threshold
+    position <- which(cumSumSorted >= proportionThreshold * sums)[1]
+    ## determine “top” values
+    if (is.na(position)) {
+      isTopInColumn <- rep(FALSE, length(tempCol))
     } else {
-        isTopInColumn <- rankCol <= rankCol[position]
+      ## map sorted indices back to original order
+      ## values ranked <= position are top
+      isTopInColumn <- rankCol <= position
     }
+
 
     return(isTopInColumn)
 }
