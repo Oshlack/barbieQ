@@ -64,3 +64,17 @@ test_that("clustering Barcodes based on correlation works", {
     "identified 1 clusters, including 10 Barcodes."
     )
 })
+
+test_that("plotting barcode cluster structure works", {
+  nbarcodes <- 50
+  nsamples <- 12
+  count <- matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples) %>% abs()
+  rownames(count) <- paste0("Barcode", seq_len(nbarcodes))
+  myBarbieQ <- createBarbieQ(count)
+  ## add known Barcode groups
+  barcodeArray <- c(seq_len(40), rep(41, 10))
+  myBarbieQ <- clusterCorrelatingBarcodes(myBarbieQ, preDefinedCluster = barcodeArray)
+  ## expect all elements to be ggplot objects
+  p_list <- inspectCorrelatingClusters(myBarbieQ)
+  sapply(p_list, function(p) expect_s3_class(p, "ggplot"))
+})
