@@ -201,7 +201,6 @@ clusterCorrelatingBarcodes <- function(barbieQ, method = "pearson", corThresh = 
     ## plotting highly correlating Barcode pairs
     graphObject <- igraph::graph_from_edgelist(totalPairs %>%
         as.matrix(), directed = FALSE)
-    clustersPlot <- plot(graphObject, vertex.label.cex = 0.4)
     ## cluster Barcode groups based on correlating pairs
     groups <- igraph::components(graphObject)$membership
     identifiedList <- list()
@@ -216,9 +215,10 @@ clusterCorrelatingBarcodes <- function(barbieQ, method = "pearson", corThresh = 
 
     ## save identified Barcode clusters to barbieQ object as a rowData
     barcodeCorrelatedCluster <- S4Vectors::DataFrame(cluster = BarcodeGroupArray)
-    SummarizedExperiment::rowData(barbieQ)$barcodeCorrelatedCluster <- barcodeCorrelatedCluster
     ## save the graph to the metadata of `barcodeCorrelatedCluster`
-    S4Vectors::metadata(barcodeCorrelatedCluster)$clustersPlot <- clustersPlot
+    S4Vectors::metadata(barcodeCorrelatedCluster)$graphObject <- graphObject
+    ## save object
+    SummarizedExperiment::rowData(barbieQ)$barcodeCorrelatedCluster <- barcodeCorrelatedCluster
 
     ## message discovered clusters
     message("identified ", length(identifiedList), " clusters, including ", length(groups),
