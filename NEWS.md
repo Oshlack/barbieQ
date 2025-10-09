@@ -27,3 +27,5 @@
 # barbieQ 1.1.3
 
 * Improved efficiency of `tagTopBarcodes` by running cummulative sums only once.
+
+* Added the "inspectCorrelatingClusters" function.
