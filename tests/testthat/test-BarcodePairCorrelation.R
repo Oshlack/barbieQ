@@ -75,6 +75,44 @@ test_that("plotting barcode cluster structure works", {
   barcodeArray <- c(seq_len(40), rep(41, 10))
   myBarbieQ <- clusterCorrelatingBarcodes(myBarbieQ, preDefinedCluster = barcodeArray)
   ## expect all elements to be ggplot objects
-  p_list <- inspectCorrelatingClusters(myBarbieQ)
+  p_list <- inspectCorrelatingBarcodes(myBarbieQ)
   sapply(p_list, function(p) expect_s3_class(p, "ggplot"))
+})
+
+test_that("merging correlating barcodes works", {
+  nbarcodes <- 50
+  nsamples <- 12
+  count <- matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples) %>% abs()
+  rownames(count) <- paste0("Barcode", seq_len(nbarcodes))
+  myBarbieQ <- createBarbieQ(count)
+  ## add known Barcode groups
+  barcodeArray <- c(seq_len(40), rep(41, 5), rep(42,5))
+  myBarbieQ <- clusterCorrelatingBarcodes(myBarbieQ, preDefinedCluster = barcodeArray)
+  ## merge correlating barcodes
+  myBarbieQ_merged <- mergeCorrelatingBarcodes(myBarbieQ)
+  ## expect the unchaned barcodes
+  expect_equal(rownames(myBarbieQ_merged)[seq_len(40)], paste0("Barcode", seq_len(40)))
+  ## expect the representative barcode with max mean CPM
+  expect_equal(
+    rownames(myBarbieQ_merged)[41], 
+    rowMeans(myBarbieQ@assays@data$CPM)[seq(41,45)] %>% which.max() %>% names())
+  expect_equal(
+    rownames(myBarbieQ_merged)[42], 
+    rowMeans(myBarbieQ@assays@data$CPM)[seq(46,50)] %>% which.max() %>% names())
+  ## test merge a different barbieQ object
+  count2 <- matrix(rnorm(2 * nsamples), 2, nsamples) %>% abs()
+  rownames(count2) <- paste0("Barcode", seq(51,52))
+  myBarbieQ2 <- createBarbieQ(rbind(count, count2))
+  myBarbieQ2_merged <- mergeCorrelatingBarcodes(
+    barbieQ_clustered = myBarbieQ, barbieQ_toMerge = myBarbieQ2)
+  ## expect the unchaned barcodes
+  expect_equal(rownames(myBarbieQ2_merged)[seq_len(40)], paste0("Barcode", seq_len(40)))
+  expect_equal(rownames(myBarbieQ2_merged)[seq(43,44)], paste0("Barcode", seq(51,52)))
+  ## expect the representative barcode with max mean CPM
+  expect_equal(
+    rownames(myBarbieQ2_merged)[41], 
+    rowMeans(myBarbieQ@assays@data$CPM)[seq(41,45)] %>% which.max() %>% names())
+  expect_equal(
+    rownames(myBarbieQ2_merged)[42], 
+    rowMeans(myBarbieQ@assays@data$CPM)[seq(46,50)] %>% which.max() %>% names())
 })
