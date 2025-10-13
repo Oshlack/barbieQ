@@ -6,9 +6,14 @@
 #'   * occurrence: 0 or 1
 #'
 #' @param barbieQ A `barbieQ` object created by the [createBarbieQ] function.
-#' @param barcodeMetric A string indicating what to visualize.
-#'  Defaults to 'CPM'. Options include: 'CPM' and 'occurrence'.
-#' @param splitSamples A logical barcodeMetric deciding whether to split samples
+#' @param colorMapTo A string indicating mapping matrix color to barcode
+#'  proportion or occurrence, with or without transformation.
+#'  Defaults to 'asin-sqrt proportion'. Options include: "asin-sqrt proportion", 
+#'  "logit proportion", "proportion", and "occurrence".
+#' @param showRawProportion A logical value, deciding whether to label matrix color
+#'  legend by raw proportion when color is mapped to transformed data specified by
+#'  `colorMapTo`. Default to TRUE.
+#' @param splitSamples A logical value, deciding whether to split samples
 #'  into slices. Defaults to FALSE.
 #' @param sampleMetadata A `matrix`, `data.frame` or `DataFrame` of sample conditions,
 #'  where each factor is represented in a separate column. Defaults to NULL,
@@ -33,11 +38,13 @@
 #' @import ComplexHeatmap
 #' @importFrom circlize colorRamp2
 #' @importFrom grid gpar
+#' @importFrom stats setNames
 #' @importClassesFrom S4Vectors DataFrame
 #' @importClassesFrom SummarizedExperiment SummarizedExperiment
 #' @importFrom SummarizedExperiment SummarizedExperiment
 #' @importFrom SummarizedExperiment colData
 #' @importFrom SummarizedExperiment assays
+#' @importFrom SummarizedExperiment assay
 #' @importFrom S4Vectors metadata
 #'
 #' @examples
@@ -59,12 +66,13 @@
 #' ## create a `barbieQ` object
 #' myBarbieQ <- createBarbieQ(barcodeCount, sampleConditions, conditionColor)
 #' plotBarcodeHeatmap(myBarbieQ)
-plotBarcodeHeatmap <- function(barbieQ, barcodeMetric = "CPM", splitSamples = FALSE, sampleMetadata = NULL,
-    sampleGroup = NULL, barcodeAnnotation = NULL, sampleAnnotation = NULL) {
+plotBarcodeHeatmap <- function(barbieQ, colorMapTo = "asin-sqrt proportion", showRawProportion = TRUE,
+    splitSamples = FALSE, sampleMetadata = NULL, sampleGroup = NULL, barcodeAnnotation = NULL, sampleAnnotation = NULL) {
 
-    ## check which barcodeMetric to visualize
-    barcodeMetric <- match.arg(barcodeMetric, c("CPM", "occurrence"))
-
+    ## check which colorMapTo to visualize
+    colorMapTo <- match.arg(colorMapTo, c("asin-sqrt proportion", "logit proportion", "proportion", "occurrence"))
+    
+    ## ---- Part1: Annotate columns (samples) by conditions ----
     ## extract sampleMetadata and primary effector based on arguments
     sampleMetadata <- extractSampleMetadataAndPrimaryFactor(barbieQ = barbieQ, sampleMetadata = sampleMetadata,
         sampleGroup = sampleGroup)
@@ -84,32 +92,76 @@ plotBarcodeHeatmap <- function(barbieQ, barcodeMetric = "CPM", splitSamples = FA
             annotation_name_gp = grid::gpar(fontsize = 10), col = S4Vectors::metadata(barbieQ)$factorColors)
     }
 
-
     if (splitSamples) {
         splitBy <- topFactor
     } else {
         splitBy <- NULL
     }
+    
+    ## ---- Part2: map the main matrix color to the input data ----
+    ## get colorMapTo alias
+    aliasMetric <- stats::setNames(c("asin(sqrt(prop.))", "logit(prop.)", "proportion", "occurrence"),
+      c("asin-sqrt proportion", "logit proportion", "proportion", "occurrence"))
+    ## set mat name
+    matName <- aliasMetric[colorMapTo]
 
-    ## choose barcodeMetric to be visualised
-    if (barcodeMetric == "CPM") {
-        mat <- log2(SummarizedExperiment::assays(barbieQ)$CPM + 1) %>%
-            as.matrix()
-        matTitle <- "log2 CPM+1"
-        colorFun <- circlize::colorRamp2(c(min(mat), mean(mat), max(mat)), c("blue", "white",
-            "red"))
-    } else {
-        mat <- (SummarizedExperiment::assays(barbieQ)$occurrence + 1 - 1) %>%
-            as.matrix()
-        matTitle <- "occurrence"
-        colorFun <- structure(c(2, 4), names = c("1", "0"))
+    ## visualize binary values when colorMapTo == `occurrence`
+    if (colorMapTo == "occurrence") {
+      mat <- (SummarizedExperiment::assays(barbieQ)$occurrence + 1 - 1) %>% as.matrix()
+      colorFun <- structure(c(2, 4), names = c("1", "0"))
+    } else if(colorMapTo == "proportion"){
+      ## alternatively visualize raw `proportion`, ...
+      mat <- SummarizedExperiment::assays(barbieQ)$proportion %>% as.matrix()
+    } else if(colorMapTo == "asin-sqrt proportion") {
+      mat <- SummarizedExperiment::assays(barbieQ)$proportion %>% as.matrix()
+      mat <- asin(sqrt(mat))
+    } else if(colorMapTo == "logit proportion") {
+      countPlus <- SummarizedExperiment::assay(barbieQ) + 0.5
+      proportionPlus <- countPlus / colSums(countPlus)
+      mat <- log((proportionPlus)/(1 - proportionPlus)) %>% as.matrix()
     }
-
-    hp <- Heatmap(mat, name = matTitle, width = unit(6, "cm"), height = unit(6, "cm"), cluster_rows = TRUE,
+    
+    ## choose color mapping function for the continuous proportion, ...
+    if (colorMapTo != "occurrence") {
+      colorFun <- circlize::colorRamp2(c(min(mat), mean(mat), max(mat)), c("blue", "white","red"))
+    } 
+    
+    ## draw the heatmap to get the legend breaks
+    ht <- ComplexHeatmap::Heatmap(mat, name = matName, width = unit(6, "cm"), height = unit(6, "cm"), cluster_rows = TRUE,
         cluster_columns = TRUE, show_row_names = FALSE, show_column_names = FALSE, column_title = paste0(ncol(mat),
             " Samples"), row_title = paste0(nrow(mat), " Barcodes"), col = colorFun, right_annotation = barcodeAnnotation,
         top_annotation = groupAnnotation, bottom_annotation = sampleAnnotation, column_split = splitBy,
         cluster_column_slices = FALSE)
+    
+    ## ---- Part 3: Reverse the legend breaks back to the original proportion ----
+    ## ---- when colorMapto == the transformed, and showRawProp is true ----
+    if((colorMapTo == "asin-sqrt proportion" || colorMapTo == "logit proportion") && showRawProportion) {
+      # Build the heatmap object to access breaks
+      ht_built <- draw(ht)
+      # Get the auto-generated breaks from the legend
+      lgd <- ht_built@ht_list[[matName]]@matrix_color_mapping
+      breaks_trans <- lgd@levels  # transformed break positions
+      
+      # Convert breaks back to original scale using inverse: sin^2(x)
+      if(colorMapTo == "asin-sqrt proportion") {
+        breaks_orig <- sin(breaks_trans)^2
+      } else {
+        ## inverse: e^x/(1+e^x) ---- but this is reversed to the proportion based on countPlus
+        breaks_orig <- exp(breaks_trans)/(1+ exp(breaks_trans))
+      }
+      
+      # re-draw heatmap with custom legend labels but same break positions
+      ht <- ComplexHeatmap::Heatmap(
+        mat, name = "proportion", width = unit(6, "cm"), height = unit(6, "cm"), col = colorFun, 
+        cluster_rows = TRUE, cluster_columns = TRUE, show_row_names = FALSE, show_column_names = FALSE, 
+        column_title = paste0(ncol(mat), " Samples"), row_title = paste0(nrow(mat), " Barcodes"), 
+        right_annotation = barcodeAnnotation, top_annotation = groupAnnotation, 
+        bottom_annotation = sampleAnnotation, column_split = splitBy, cluster_column_slices = FALSE,
+        ##same transformed positions, but with original scale labels
+        heatmap_legend_param = list(at = breaks_trans, labels = format(round(breaks_orig, 4), scientific = FALSE))
+        )
+      message(paste0("matrix color is mapped to `", colorMapTo, "` but labeled by raw proportion."))
+    }
 
-    return(hp)
+    return(ht)
 }

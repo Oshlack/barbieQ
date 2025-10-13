@@ -21,7 +21,23 @@ test_that("plotting barcode Heatmap works", {
 
   hp <- plotBarcodeHeatmap(barbieQ = object1)
   expect_s4_class(hp, "Heatmap")
-  expect_equal(hp@name, "log2 CPM+1")
+  ## check default name when colorMapTo defaults to asin-sqrt proportion
+  expect_equal(hp@name, "proportion")
+  expect_message(
+    plotBarcodeHeatmap(barbieQ = object1),
+    "matrix color is mapped to `asin-sqrt proportion` but labeled by raw proportion.")
+  ## check reversed name when showRawProportion == FALSE
+  hp <- plotBarcodeHeatmap(barbieQ = object1, showRawProportion = FALSE)
+  expect_equal(hp@name[["asin-sqrt proportion"]], "asin(sqrt(prop.))")
+  ## check when colorMapTo set as proportion
+  hp <- plotBarcodeHeatmap(barbieQ = object1, colorMapTo = "proportion")
+  expect_equal(hp@name[["proportion"]], "proportion")
+  ## check when colorMapTo set to logit proportion
+  hp <- plotBarcodeHeatmap(barbieQ = object1, colorMapTo = "logit proportion")
+  expect_equal(hp@name, "proportion")
+  hp <- plotBarcodeHeatmap(barbieQ = object1, colorMapTo = "logit proportion", showRawProportion = FALSE)
+  expect_equal(hp@name[["logit proportion"]], "logit(prop.)")
+  
   hp <- plotBarcodeHeatmap(barbieQ = object1, splitSamples = TRUE)
   expect_equal(
     hp@top_annotation@anno_list %>% names(),
@@ -44,6 +60,6 @@ test_that("plotting barcode Heatmap works", {
     c("drug", "ctrl")
   )
 
-  hp <- plotBarcodeHeatmap(barbieQ = object1, barcodeMetric = "occurrence")
-  expect_equal(hp@name, "occurrence")
+  hp <- plotBarcodeHeatmap(barbieQ = object1, colorMapTo = "occurrence")
+  expect_equal(hp@name[["occurrence"]], "occurrence")
 })

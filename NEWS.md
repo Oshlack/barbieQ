@@ -26,8 +26,10 @@
 
 # barbieQ 1.1.3
 
-* Improved efficiency of `tagTopBarcodes` by computing cumulative sums only once.
+* Improved efficiency of "tagTopBarcodes" by computing cumulative sums only once.
 
 * Added the "inspectCorrelatingBarcodes" function.
 
 * Added the "mergeCorrelatingBarcodes" function.
+
+* Updated color mapping for "plotBarcodeHeamtmap" with alternative data transformations.

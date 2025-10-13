@@ -6,7 +6,8 @@
 \usage{
 plotBarcodeHeatmap(
   barbieQ,
-  barcodeMetric = "CPM",
+  colorMapTo = "asin-sqrt proportion",
+  showRawProportion = TRUE,
   splitSamples = FALSE,
   sampleMetadata = NULL,
   sampleGroup = NULL,
@@ -17,10 +18,16 @@ plotBarcodeHeatmap(
 \arguments{
 \item{barbieQ}{A \code{barbieQ} object created by the \link{createBarbieQ} function.}
 
-\item{barcodeMetric}{A string indicating what to visualize.
-Defaults to 'CPM'. Options include: 'CPM' and 'occurrence'.}
+\item{colorMapTo}{A string indicating mapping matrix color to barcode
+proportion or occurrence, with or without transformation.
+Defaults to 'asin-sqrt proportion'. Options include: "asin-sqrt proportion",
+"logit proportion", "proportion", and "occurrence".}
 
-\item{splitSamples}{A logical barcodeMetric deciding whether to split samples
+\item{showRawProportion}{A logical value, deciding whether to label matrix color
+legend by raw proportion when color is mapped to transformed data specified by
+\code{colorMapTo}. Default to TRUE.}
+
+\item{splitSamples}{A logical value, deciding whether to split samples
 into slices. Defaults to FALSE.}
 
 \item{sampleMetadata}{A \code{matrix}, \code{data.frame} or \code{DataFrame} of sample conditions,
