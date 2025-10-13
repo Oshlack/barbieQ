@@ -121,9 +121,10 @@ plotBarcodeHeatmap <- function(barbieQ, colorMapTo = "asin-sqrt proportion", sho
       mat <- log((proportionPlus)/(1 - proportionPlus)) %>% as.matrix()
     }
     
-    ## choose color mapping function for the continuous proportion, ...
+    ## sete color mapping function as NULL for the continuous proportion, ...
+    ## NULL will be replaced by default function in complexheatmap
     if (colorMapTo != "occurrence") {
-      colorFun <- circlize::colorRamp2(c(min(mat), mean(mat), max(mat)), c("blue", "white","red"))
+      colorFun <- NULL
     } 
     
     ## draw the heatmap to get the legend breaks
