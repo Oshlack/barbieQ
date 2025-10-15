@@ -17,6 +17,10 @@
 #'  sample conditions, indicating the primary factor to split sample slices.
 #' @param method A string specifying the correlation method to use.
 #'  Defaults to 'pearson'. Options include: 'pearson', 'spearman'.
+#' @param transformation A string specifying the transformation method for proportion 
+#'  to be used for computing sample pair-wise correlation.
+#'  Options include: 'asin-sqrt', 'logit', and 'none'.
+#'  Defaults to 'asin-sqrt'.
 #'
 #' @return A 'Heatmap' S4 object displaying the pairwise correlation between
 #'  samples in a Heatmap.
@@ -62,7 +66,7 @@
 #' myBarbieQ <- createBarbieQ(barcodeCount, sampleConditions, conditionColor)
 #' plotSamplePairCorrelation(myBarbieQ)
 plotSamplePairCorrelation <- function(barbieQ, sampleOrder = NULL, sampleMetadata = NULL,
-    sampleGroup = NULL, method = "pearson") {
+    sampleGroup = NULL, method = "pearson", transformation = "asin-sqrt") {
     ## extract sampleMetadata and primary effector based on arguments
     sampleMetadata <- extractSampleMetadataAndPrimaryFactor(barbieQ = barbieQ, sampleMetadata = sampleMetadata,
         sampleGroup = sampleGroup)
@@ -79,6 +83,8 @@ plotSamplePairCorrelation <- function(barbieQ, sampleOrder = NULL, sampleMetadat
     }
     ## check method
     method <- match.arg(method, c("pearson", "spearman"))
+    ## check transformation
+    transformation <- match.arg(transformation, c("asin-sqrt", "logit", "none"))
 
     ## reorder the columns of the data.frame based on the specified order
     sampleMetadata <- sampleMetadata[, sampleOrder, drop = FALSE]
@@ -95,8 +101,19 @@ plotSamplePairCorrelation <- function(barbieQ, sampleOrder = NULL, sampleMetadat
         annotation_name_gp = grid::gpar(fontsize = 10), col = S4Vectors::metadata(barbieQ)$factorColors,
         show_legend = FALSE)
     ## calculate correlation
-    corMat <- stats::cor(log2(SummarizedExperiment::assays(barbieQ)$CPM + 1), method = method)
-    message("displaying ", method, " correlation coefficient between samples on Barcode log2 CPM+1.")
+    ## extract data
+    if(transformation == "none"){
+      mat <- SummarizedExperiment::assays(barbieQ)$proportion %>% as.matrix()
+    } else if(transformation == "asin-sqrt") {
+      mat <- SummarizedExperiment::assays(barbieQ)$proportion %>% as.matrix()
+      mat <- asin(sqrt(mat))
+    } else if(transformation == "logit") {
+      countPlus <- SummarizedExperiment::assay(barbieQ) + 0.5
+      proportionPlus <- countPlus / colSums(countPlus)
+      mat <- log((proportionPlus)/(1 - proportionPlus)) %>% as.matrix()
+    }
+    corMat <- stats::cor(mat, method = method)
+    message("sample ", method, " correlation on ", ifelse(transformation=="none", "", transformation), " proportion.")
 
     hp <- Heatmap(corMat, name = "corCoef", width = unit(6, "cm"), height = unit(6, "cm"),
         col = circlize::colorRamp2(c(-1, 0, 1), c("blue", "white", "red")), heatmap_legend_param = list(at = c(-1,

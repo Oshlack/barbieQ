@@ -9,7 +9,8 @@ plotSamplePairCorrelation(
   sampleOrder = NULL,
   sampleMetadata = NULL,
   sampleGroup = NULL,
-  method = "pearson"
+  method = "pearson",
+  transformation = "asin-sqrt"
 )
 }
 \arguments{
@@ -30,6 +31,11 @@ sample conditions, indicating the primary factor to split sample slices.}
 
 \item{method}{A string specifying the correlation method to use.
 Defaults to 'pearson'. Options include: 'pearson', 'spearman'.}
+
+\item{transformation}{A string specifying the transformation method for proportion
+to be used for computing sample pair-wise correlation.
+Options include: 'asin-sqrt', 'logit', and 'none'.
+Defaults to 'asin-sqrt'.}
 }
 \value{
 A 'Heatmap' S4 object displaying the pairwise correlation between
