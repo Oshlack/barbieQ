@@ -473,7 +473,7 @@ inspectCorrelatingBarcodes <- function(barbieQ) {
   ## extract the clusterStructure from barbieQ
   clusterStructure <- barbieQ@elementMetadata$barcodeCorrelatedCluster@metadata$clusterStructure
   transformation <- barbieQ@elementMetadata$barcodeCorrelatedCluster@metadata$transformation
-  
+  transformation <- "none"
   ## check if the clusterStructure exist
   if(is.null(clusterStructure)) {
     stop("clusterStructure does not exist. Please run `clusterCorrelatingBarcodes` first.")
@@ -586,7 +586,7 @@ inspectCorrelatingBarcodes <- function(barbieQ) {
       axis.text.x = element_text(angle = 45, hjust =1, vjust = 1), 
       axis.title.x = element_blank()) + 
     labs(y = paste0(
-      "mean ", ifelse(transformation=="none", "", transformation), " proportion"))
+      "Mean ", ifelse(transformation=="none", "", transformation), " proportion"))
   
   if((transformation == "asin-sqrt" || transformation == "logit")){
     pb <- ggplot_build(p_cluster_prop)
@@ -606,7 +606,7 @@ inspectCorrelatingBarcodes <- function(barbieQ) {
         labels = format(round(breaks_orig, 4), scientific = FALSE)
       ) +
       labs(y = paste0(
-        "mean ", ifelse(transformation=="none", "", transformation), " proportion",
+        "Mean ", ifelse(transformation=="none", "", transformation), " proportion",
         "\n(inverse-labelled in raw scale)"))
     message(paste0("showing raw proportion in y, but plotted by transfromation"))
   }
