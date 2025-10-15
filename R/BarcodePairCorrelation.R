@@ -158,7 +158,7 @@ plotBarcodePairCorrelation <- function(barbieQ, method = "pearson", transformati
           labels = format(round(breaks_orig, 4), scientific = FALSE),
           sec.axis = sec_axis(~./max(yAxis), name = "cumulative freq.")
         )
-      message(paste0("showing raw proportion in y, but scaled to transfromation"))
+      message(paste0("showing raw proportion in y, but plotted by transfromation"))
     }
       
 
@@ -270,6 +270,7 @@ clusterCorrelatingBarcodes <- function(barbieQ, method = "pearson", transformati
     barcodeCorrelatedCluster <- S4Vectors::DataFrame(cluster = BarcodeGroupArray)
     ## save the graph to the metadata of `barcodeCorrelatedCluster`
     S4Vectors::metadata(barcodeCorrelatedCluster)$clusterStructure <- clusterStructure
+    S4Vectors::metadata(barcodeCorrelatedCluster)$transformation <- transformation
     ## save object
     SummarizedExperiment::rowData(barbieQ)$barcodeCorrelatedCluster <- barcodeCorrelatedCluster
 
@@ -471,6 +472,8 @@ extractBarcodePairs <- function(barbieQ, method = "pearson", transformation = "a
 inspectCorrelatingBarcodes <- function(barbieQ) {
   ## extract the clusterStructure from barbieQ
   clusterStructure <- barbieQ@elementMetadata$barcodeCorrelatedCluster@metadata$clusterStructure
+  transformation <- barbieQ@elementMetadata$barcodeCorrelatedCluster@metadata$transformation
+  
   ## check if the clusterStructure exist
   if(is.null(clusterStructure)) {
     stop("clusterStructure does not exist. Please run `clusterCorrelatingBarcodes` first.")
@@ -514,11 +517,23 @@ inspectCorrelatingBarcodes <- function(barbieQ) {
     geom_node_text(aes(label = name), repel = TRUE, size = 2) +
     theme_void()
   
+  ## extract proportion based on transformation
+  if(transformation == "none"){
+    mat <- SummarizedExperiment::assays(barbieQ)$proportion %>% as.matrix()
+  } else if(transformation == "asin-sqrt") {
+    mat <- SummarizedExperiment::assays(barbieQ)$proportion %>% as.matrix()
+    mat <- asin(sqrt(mat))
+  } else if(transformation == "logit") {
+    countPlus <- SummarizedExperiment::assay(barbieQ) + 0.5
+    proportionPlus <- countPlus / colSums(countPlus)
+    mat <- log((proportionPlus)/(1 - proportionPlus)) %>% as.matrix()
+  }
+  
   ## compute barcode feature
   BC_feature <- data.frame(
     Barcode = rownames(barbieQ),
     Cluster = barbieQ@elementMetadata$barcodeCorrelatedCluster$cluster,
-    logMeanCPM = log2(rowMeans(barbieQ@assays@data$CPM +1))
+    proportion = rowMeans(mat)
   )
   
   ## rename the clusters and unclustered groups
@@ -558,24 +573,50 @@ inspectCorrelatingBarcodes <- function(barbieQ) {
       scales = 0.1, 
       ticklabels = c(round((max_count)*0.95)+1, max_count))
   
-  p_cluster_cpm <- ggplot2::ggplot(data = BC_feature) +
-    geom_point(aes(x = Group, y = logMeanCPM), color = "grey", shape = 1, size = 4) +
+  p_cluster_prop <- ggplot2::ggplot(data = BC_feature) +
+    geom_point(aes(x = Group, y = proportion), color = "grey", shape = 1, size = 4) +
     geom_point(
       data = filter(BC_feature, Cluster > 0), 
-      aes(x = Group, y = logMeanCPM, color = Group), shape = 1, size = 4, stroke = 1) +
+      aes(x = Group, y = proportion, color = Group), shape = 1, size = 4, stroke = 1) +
     scale_color_manual(values = color_map_group) +
     theme_classic() +
     theme(
       # aspect.ratio = 1, 
       legend.position = "none", 
       axis.text.x = element_text(angle = 45, hjust =1, vjust = 1), 
-      axis.title.x = element_blank())
+      axis.title.x = element_blank()) + 
+    labs(y = paste0(
+      "mean ", ifelse(transformation=="none", "", transformation), " proportion"))
+  
+  if((transformation == "asin-sqrt" || transformation == "logit")){
+    pb <- ggplot_build(p_cluster_prop)
+    # Extract y scale information
+    breaks_trans <- pb$layout$panel_params[[1]]$y$breaks
+    # Convert breaks back to original scale using inverse: sin^2(x)
+    if(transformation == "asin-sqrt") {
+      breaks_orig <- sin(breaks_trans)^2
+    } else {
+      ## inverse: e^x/(1+e^x) ---- but this is reversed to the proportion based on countPlus
+      breaks_orig <- exp(breaks_trans)/(1+ exp(breaks_trans))
+    }
+    ## re-apply reversed y-axis labels
+    p_cluster_prop <- p_cluster_prop +
+      scale_y_continuous(
+        breaks = breaks_trans,
+        labels = format(round(breaks_orig, 4), scientific = FALSE)
+      ) +
+      labs(y = paste0(
+        "mean ", ifelse(transformation=="none", "", transformation), " proportion",
+        "\n(inverse-labelled in raw scale)"))
+    message(paste0("showing raw proportion in y, but plotted by transfromation"))
+  }
+  
   
   ## return a list of three plots
   p_list <- list(
     p_cluster = p_cluster, 
     p_cluster_size = p_cluster_size, 
-    p_cluster_cpm = p_cluster_cpm)
+    p_cluster_prop = p_cluster_prop)
   
   return(p_list)
 }

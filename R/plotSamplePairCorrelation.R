@@ -1,7 +1,7 @@
 #' Plot sample pairwise correlation in a Heatmap
 #'
 #' `plotSamplePairCorrelation()` visualizes the pairwise correlation of
-#'  CPM values across samples in a `barbieQ` object,
+#'  proportion across samples in a `barbieQ` object,
 #'  using a heatmap with a checkerboard-like pattern.
 #'
 #' @param barbieQ A `barbieQ` object created by the [createBarbieQ] function.
@@ -97,9 +97,11 @@ plotSamplePairCorrelation <- function(barbieQ, sampleOrder = NULL, sampleMetadat
     ## compute annotation obejct
     sampleAnnotationColumn <- HeatmapAnnotation(df = sampleMetadata, annotation_name_side = "right",
         annotation_name_gp = grid::gpar(fontsize = 10), col = S4Vectors::metadata(barbieQ)$factorColors)
-    sampleAnnotationRow <- rowAnnotation(df = sampleMetadata, annotation_name_side = "bottom",
-        annotation_name_gp = grid::gpar(fontsize = 10), col = S4Vectors::metadata(barbieQ)$factorColors,
-        show_legend = FALSE)
+    
+    # sampleAnnotationRow <- rowAnnotation(df = sampleMetadata, annotation_name_side = "bottom",
+    #     annotation_name_gp = grid::gpar(fontsize = 10), col = S4Vectors::metadata(barbieQ)$factorColors,
+    #     show_legend = FALSE)
+    
     ## calculate correlation
     ## extract data
     if(transformation == "none"){
@@ -115,10 +117,12 @@ plotSamplePairCorrelation <- function(barbieQ, sampleOrder = NULL, sampleMetadat
     corMat <- stats::cor(mat, method = method)
     message("sample ", method, " correlation on ", ifelse(transformation=="none", "", transformation), " proportion.")
 
-    hp <- Heatmap(corMat, name = "corCoef", width = unit(6, "cm"), height = unit(6, "cm"),
-        col = circlize::colorRamp2(c(-1, 0, 1), c("blue", "white", "red")), heatmap_legend_param = list(at = c(-1,
-            0, 1)), cluster_rows = FALSE, cluster_columns = FALSE, show_row_names = FALSE,
-        show_column_names = FALSE, top_annotation = sampleAnnotationColumn, left_annotation = sampleAnnotationRow,
+    hp <- Heatmap(corMat, name = "Corr", width = unit(6, "cm"), height = unit(6, "cm"),
+        # col = circlize::colorRamp2(c(-1, 0, 1), c("blue", "white", "red")),
+        # heatmap_legend_param = list(at = c(-1,0, 1)), 
+        cluster_rows = FALSE, cluster_columns = FALSE, show_row_names = FALSE,
+        show_column_names = FALSE, top_annotation = sampleAnnotationColumn, 
+        # left_annotation = sampleAnnotationRow,
         column_order = rowOrder, row_order = rowOrder)
 
     return(hp)
