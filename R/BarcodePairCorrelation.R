@@ -385,6 +385,8 @@ extractBarcodePairs <- function(barbieQ, method = "pearson", preDefinedCluster =
 #' 
 #' @import igraph
 #' @import scales 
+#' @import ggplot2 
+#' @import ggbreak
 #' @import ggraph
 #' @importFrom stats setNames
 #'
@@ -464,17 +466,30 @@ inspectCorrelatingBarcodes <- function(barbieQ) {
     c("grey", color_map_cluster), 
     c("Unclustered \n barcodes", paste0("Cluster ", names(color_map_cluster))))
   
-  p_cluster_size <- ggplot(data = filter(BC_feature, Cluster > 0)) +
+  # Step 1: compute counts per Group
+  group_counts <- BC_feature %>%
+    count(Group, name = "count")
+  # Step 2: find second largest
+  second_largest <- sort(unique(group_counts$count), decreasing = TRUE)[2]
+  # Step 3: total max
+  max_count <- max(group_counts$count)
+  
+  p_cluster_size <- ggplot2::ggplot(data = BC_feature) +
     geom_bar(aes(x = Group, fill = Group), color = "white") +
     scale_fill_manual(values = color_map_group) +
     theme_classic() +
     labs(y = "Num. of barcodes") +
     theme(
-      aspect.ratio = 1, legend.position = "none", 
+      # aspect.ratio = 1, 
+      legend.position = "none", 
       axis.text.x = element_text(angle = 45, hjust =1, vjust = 1), 
-      axis.title.x = element_blank())
+      axis.title.x = element_blank()) + 
+    ggbreak::scale_y_break(
+      c(second_largest+1, round((max_count)*0.95)), 
+      scales = 0.1, 
+      ticklabels = c(round((max_count)*0.95)+1, max_count))
   
-  p_cluster_cpm <- ggplot(data = BC_feature) +
+  p_cluster_cpm <- ggplot2::ggplot(data = BC_feature) +
     geom_point(aes(x = Group, y = logMeanCPM), color = "grey", shape = 1, size = 4) +
     geom_point(
       data = filter(BC_feature, Cluster > 0), 
@@ -482,7 +497,8 @@ inspectCorrelatingBarcodes <- function(barbieQ) {
     scale_color_manual(values = color_map_group) +
     theme_classic() +
     theme(
-      aspect.ratio = 1, legend.position = "none", 
+      # aspect.ratio = 1, 
+      legend.position = "none", 
       axis.text.x = element_text(angle = 45, hjust =1, vjust = 1), 
       axis.title.x = element_blank())
   
