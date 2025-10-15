@@ -4,7 +4,7 @@
 \alias{mergeCorrelatingBarcodes}
 \title{Merging correlating barcodes, by keeping a representative barcode
 and removing the rest for each cluster. The representative barcode is
-the one with the highest mean CPM across samples.}
+the one with the highest mean proportion across samples.}
 \usage{
 mergeCorrelatingBarcodes(barbieQ_clustered, barbieQ_toMerge = NULL)
 }
@@ -27,7 +27,7 @@ The processing information saved in \code{metadata$predicted_barcode_clusters} a
 \description{
 Merging correlating barcodes, by keeping a representative barcode
 and removing the rest for each cluster. The representative barcode is
-the one with the highest mean CPM across samples.
+the one with the highest mean proportion across samples.
 }
 \examples{
 nbarcodes <- 50

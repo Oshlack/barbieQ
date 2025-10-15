@@ -7,9 +7,11 @@
 plotBarcodePairCorrelation(
   barbieQ,
   method = "pearson",
+  transformation = "asin-sqrt",
+  showRawProportion = FALSE,
   yScaleMetric = "mean",
   corThresh = 0.95,
-  cpmThresh = 2^10,
+  propThresh = 0.001,
   preDefinedCluster = NULL
 )
 }
@@ -19,16 +21,25 @@ plotBarcodePairCorrelation(
 \item{method}{A string specifying the correlation method to use.
 Defaults to 'pearson'. Options include: 'pearson', 'kendall', 'spearman'.}
 
+\item{transformation}{A string specifying the transformation method for proportion
+to be used for computing barcode pair-wise correlation, and mean proportion.
+Options include: 'asin-sqrt', 'logit', and 'none'.
+Defaults to 'asin-sqrt'.}
+
+\item{showRawProportion}{A logical value, deciding whether to label y axis
+by raw proportion when correlation is calculated based on transformed data specified by
+\code{transformation}. Default to FALSE.}
+
 \item{yScaleMetric}{A string indicating what to present against
-correlation in the dot plot. Defaults to \code{mean}, representing the mean CPM
+correlation in the dot plot. Defaults to \code{mean}, representing the mean proportion
 for each pair. The alternative option is 'max'.}
 
 \item{corThresh}{A numeric value that sets the threshold for high correlation
 Defaults to 0.95}
 
-\item{cpmThresh}{A numeric value that sets the minimum level of
-Barcode pair's mean CPM for a Barcode pair to be considered as
-highly correlated co-existing Barcodes. Defaults to 2^10}
+\item{propThresh}{A numeric value that sets the minimum level of
+Barcode pair's mean proportion (raw) for a Barcode pair to be considered as
+highly correlated co-existing Barcodes. Defaults to 0.001.}
 
 \item{preDefinedCluster}{preDefinedCluster A \code{list} of known groups containing different Barcodes,
 or a \code{vector}/\code{array} indicating Barcode groups;
@@ -36,8 +47,8 @@ or an equivalent \code{matrix}, \code{data.frame}, or \code{DataFrame} with a si
 Defaults to NULL.}
 }
 \value{
-A \code{ggplot} S3 object displaying a dot plot of the correlation in CPM
-between each pair of Barcodes, plotted against the mean or max of their CPM.
+A \code{ggplot} S3 object displaying a dot plot of the correlation in proportion
+between each pair of Barcodes, plotted against the mean or max of their proportion.
 }
 \description{
 \code{plotBarcodePairCorrelation()} visualizes the correlation of each pair of

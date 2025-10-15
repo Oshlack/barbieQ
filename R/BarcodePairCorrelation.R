@@ -12,21 +12,28 @@
 #' @param barbieQ A `barbieQ` object created by the [createBarbieQ] function.
 #' @param method A string specifying the correlation method to use.
 #'  Defaults to 'pearson'. Options include: 'pearson', 'kendall', 'spearman'.
+#' @param transformation A string specifying the transformation method for proportion 
+#'  to be used for computing barcode pair-wise correlation, and mean proportion.
+#'  Options include: 'asin-sqrt', 'logit', and 'none'.
+#'  Defaults to 'asin-sqrt'.
+#' @param showRawProportion A logical value, deciding whether to label y axis 
+#'  by raw proportion when correlation is calculated based on transformed data specified by
+#'  `transformation`. Default to FALSE.
 #' @param yScaleMetric A string indicating what to present against
-#'  correlation in the dot plot. Defaults to `mean`, representing the mean CPM
+#'  correlation in the dot plot. Defaults to `mean`, representing the mean proportion
 #'  for each pair. The alternative option is 'max'.
 #' @param corThresh A numeric value that sets the threshold for high correlation
 #'  Defaults to 0.95
-#' @param cpmThresh A numeric value that sets the minimum level of
-#'  Barcode pair's mean CPM for a Barcode pair to be considered as
-#'  highly correlated co-existing Barcodes. Defaults to 2^10
+#' @param propThresh A numeric value that sets the minimum level of
+#'  Barcode pair's mean proportion (raw) for a Barcode pair to be considered as
+#'  highly correlated co-existing Barcodes. Defaults to 0.001.
 #' @param preDefinedCluster preDefinedCluster A `list` of known groups containing different Barcodes,
 #'  or a `vector`/`array` indicating Barcode groups;
 #'  or an equivalent `matrix`, `data.frame`, or `DataFrame` with a single column.
 #'  Defaults to NULL.
 #'
-#' @return A `ggplot` S3 object displaying a dot plot of the correlation in CPM
-#'  between each pair of Barcodes, plotted against the mean or max of their CPM.
+#' @return A `ggplot` S3 object displaying a dot plot of the correlation in proportion
+#'  between each pair of Barcodes, plotted against the mean or max of their proportion.
 #'
 #' @export
 #'
@@ -49,31 +56,37 @@
 #' plotBarcodePairCorrelation(barbieQ, preDefinedCluster = c(rep(seq_len(10), 5)))
 #' plotBarcodePairCorrelation(barbieQ, preDefinedCluster = list(
 #'  group1 = c('Barcode1', 'Barcode2', 'Barcode3'), group2 = c('Barcode4', 'Barcode5')))
-plotBarcodePairCorrelation <- function(barbieQ, method = "pearson", yScaleMetric = "mean",
-    corThresh = 0.95, cpmThresh = 2^10, preDefinedCluster = NULL) {
+plotBarcodePairCorrelation <- function(barbieQ, method = "pearson", transformation = "asin-sqrt", showRawProportion = FALSE,
+    yScaleMetric = "mean", corThresh = 0.95, propThresh = 0.001, preDefinedCluster = NULL) {
     ## check yScaleMetric
     yScaleMetric <- match.arg(yScaleMetric, c("mean", "max"))
 
     ## dispatch preprocessing function extract barcode pairwise correlation and
     ## pre-defined pairs
-    barbieQ <- extractBarcodePairs(barbieQ, method = method, preDefinedCluster = preDefinedCluster)
+    barbieQ <- extractBarcodePairs(barbieQ, method = method, transformation = transformation, preDefinedCluster = preDefinedCluster)
 
     ## processed info is saved in this DFrame
     corDF <- SummarizedExperiment::rowData(barbieQ)$barcodeCorrelation
     preDefinedDf <- S4Vectors::metadata(corDF)$preDefinedBarcodePair
-    meanMatCPM <- S4Vectors::metadata(corDF)$meanMatCPM
+    meanMatProp <- S4Vectors::metadata(corDF)$meanMatProp
     corMat <- as.matrix(corDF)
+    S4Vectors::metadata(corDF)$transformation
 
-    ## compute mean CPM for each barcode
-    meanCPM <- rowMeans(SummarizedExperiment::assays(barbieQ)$CPM)
+    ## compute mean proportion for each barcode
+    meanProp <- rowMeans(SummarizedExperiment::assays(barbieQ)$proportion)
     ## N x N symmetric matrix taking the max between each pair on their row means
-    maxMatCPM <- outer(meanCPM, meanCPM, FUN = function(x, y) pmax(x, y))
+    maxMatProp <- outer(meanProp, meanProp, FUN = function(x, y) pmax(x, y))
 
     ## get row and column indices of upper triangle of the square
     upperIdx <- which(upper.tri(corMat), arr.ind = TRUE)
-    ## determine correlated pairs by passing correlation coefficient and CPM
+
+    ## determine correlated pairs by passing correlation coefficient and proportion
     ## thresholds.
-    highCorMat <- meanMatCPM >= cpmThresh & corMat >= corThresh
+    ## scale the propThresh 
+    scaled_propThresh <- ifelse(
+      transformation == "none", propThresh,
+      ifelse(transformation == "asin-sqrt", asin(sqrt(propThresh)), log(propThresh/(1-propThresh))))
+    highCorMat <- meanMatProp >= scaled_propThresh & corMat >= corThresh
     ## convert the it into a long data
     identifiedPair <- highCorMat[upperIdx]
     ## create a vector indicating correlation groups
@@ -82,7 +95,7 @@ plotBarcodePairCorrelation <- function(barbieQ, method = "pearson", yScaleMetric
 
     ## create a data.frame for identified pairs
     corResults <- data.frame(name1 = rownames(corMat)[upperIdx[, 1]], name2 = colnames(corMat)[upperIdx[,
-        2]], mean = meanMatCPM[upperIdx], max = maxMatCPM[upperIdx], coefficient = corMat[upperIdx],
+        2]], mean = meanMatProp[upperIdx], max = maxMatProp[upperIdx], coefficient = corMat[upperIdx],
         correlationGroup)
 
     ## process preDefined pairs
@@ -98,24 +111,56 @@ plotBarcodePairCorrelation <- function(barbieQ, method = "pearson", yScaleMetric
             correlationGroup == "Identified" ~ "Identified", TRUE ~ "non-Corr"))
 
     ## choose what to present on y axis
-    yAxis <- log2(corResults[, yScaleMetric] + 1)
-    yTitle <- paste0("log2 (", yScaleMetric, " CPM+1) between each Barcode pair")
+    yAxis <- corResults[, yScaleMetric]
+    yTitle <- paste0("Barcode pair ", yScaleMetric, " proportion")
+    if(!showRawProportion && transformation != "none") {
+      yTitle <- paste0(yScaleMetric, " ", transformation, " proportion")
+    } else if(showRawProportion && transformation != "none") {
+      yTitle <- paste0(yScaleMetric, " ", transformation, " proportion\n(inverse-labelled in raw scale)")
+    }
+    
+    ## scale the propThresh for visualisation
+    scaled_propThresh <- ifelse(
+      transformation == "none", propThresh,
+      ifelse(transformation == "asin-sqrt", asin(sqrt(propThresh)), log(propThresh/(1-propThresh))))
 
     ## plotting correlations
       p <- ggplot(corResults, aes(x = coefficient)) + geom_histogram(aes(y = (after_stat(count))/max(after_stat(count)) *
         max(yAxis)), binwidth = 0.05, alpha = 0.3, fill = "grey") + geom_point(aes(y = yAxis,
         color = correlationGroup)) + stat_ecdf(geom = "step", aes(y = ..y.. * max(yAxis),
         color = correlationGroup), alpha = 0.5) + scale_color_manual(values = c(`pre-Defined` = "#00BFC4",
-        Identified = "#F8766D", `non-Corr` = "grey")) + theme_classic() + theme(aspect.ratio = 1) +
-        labs(x = paste0(method, " correlation coefficient"), y = yTitle) + scale_x_continuous(expand = c(0.05,
+        Identified = "#F8766D", `non-Corr` = "grey")) + theme_classic() +
+        labs(x = paste0(method, " correlation coefficient"), y = yTitle, color = "barcode pair") + scale_x_continuous(expand = c(0.05,
         0), limits = c(-1, 1)) + scale_y_continuous(sec.axis = sec_axis(~./max(yAxis), name = "cummulative freq.")) +
-        geom_hline(yintercept = log2(cpmThresh + 1), linetype = "dashed", color = "#7CAE00",
+        geom_hline(yintercept = scaled_propThresh, linetype = "dashed", color = "#7CAE00",
             alpha = 0.8) + geom_vline(xintercept = corThresh, linetype = "dashed", color = "#C77CFF",
         alpha = 0.8) + annotate("text", x = corThresh - 0.1, y = max(yAxis) * 1.03, color = "#C77CFF",
         alpha = 1, size = 3, label = paste0("Cor=", corThresh)) + annotate("text", x = corThresh -
-        0.4, y = log2(cpmThresh + 1) - max(yAxis) * 0.02, color = "#7CAE00", alpha = 1,
-        size = 3, label = paste0("log2(", yScaleMetric, "+1)=", cpmThresh))
-
+        0.4, y = scaled_propThresh - max(yAxis) * 0.02, color = "#7CAE00", alpha = 1,
+        size = 3, label = paste0("Raw prop=", propThresh))
+      
+    ## ---- when transformation == the transformed, and showRawProp is true ----
+    if((transformation == "asin-sqrt" || transformation == "logit") && showRawProportion){
+      pb <- ggplot_build(p)
+      # Extract y scale information
+      breaks_trans <- pb$layout$panel_params[[1]]$y$breaks
+      # Convert breaks back to original scale using inverse: sin^2(x)
+      if(transformation == "asin-sqrt") {
+        breaks_orig <- sin(breaks_trans)^2
+      } else {
+        ## inverse: e^x/(1+e^x) ---- but this is reversed to the proportion based on countPlus
+        breaks_orig <- exp(breaks_trans)/(1+ exp(breaks_trans))
+      }
+      ## re-apply reversed y-axis labels
+      p <- p +
+        scale_y_continuous(
+          breaks = breaks_trans,
+          labels = format(round(breaks_orig, 4), scientific = FALSE),
+          sec.axis = sec_axis(~./max(yAxis), name = "cumulative freq.")
+        )
+      message(paste0("showing raw proportion in y, but scaled to transfromation"))
+    }
+      
 
     return(p)
 }
@@ -127,19 +172,23 @@ plotBarcodePairCorrelation <- function(barbieQ, method = "pearson", yScaleMetric
 #'  identifying correlated Barcode pairs based on two criteria:
 #'   * The proportions of Barcodes across samples exhibit high correlation,
 #'    exceeding the threshold specified by `corThresh`.
-#'   * The mean CPM of the Barcode pair exceeds the threshold specified
-#'    by `cpmThresh`.
+#'   * The mean proportion of the Barcode pair exceeds the threshold specified
+#'    by `propThresh`.
 #'  These two parameters can be optimized up to the users using the visualization
 #'  function [plotBarcodePairCorrelation].
 #'
 #' @param barbieQ A `barbieQ` object created by the [createBarbieQ] function.
 #' @param method A string specifying the correlation method to use.
 #'  Defaults to 'pearson'. Options include: 'pearson', 'kendall', 'spearman'.
+#' @param transformation A string specifying the transformation method for proportion 
+#'  to be used for computing barcode pair-wise correlation, and mean proportion.
+#'  Options include: 'asin-sqrt', 'logit', and 'none'.
+#'  Defaults to 'asin-sqrt'.
 #' @param corThresh A numeric value that sets the threshold for high correlation
 #'  Defaults to 0.95
-#' @param cpmThresh A numeric value that sets the minimum level of
-#'  Barcode pair's mean CPM for a Barcode pair to be considered as
-#'  highly correlated co-existing Barcodes. Defaults to 2^10.
+#' @param propThresh A numeric value that sets the minimum level of
+#'  Barcode pair's mean proportion for a Barcode pair to be considered as
+#'  highly correlated co-existing Barcodes. Defaults to 0.001
 #' @param preDefinedCluster A `list` of known groups containing different Barcodes,
 #'  or a `vector`/`array` indicating Barcode groups;
 #'  or an equivalent `matrix`, `data.frame`, or `DataFrame` with a single column.
@@ -171,21 +220,25 @@ plotBarcodePairCorrelation <- function(barbieQ, method = "pearson", yScaleMetric
 #' clusterCorrelatingBarcodes(barbieQ, preDefinedCluster = c(rep(seq_len(10), 5)))
 #' clusterCorrelatingBarcodes(barbieQ, preDefinedCluster = list(
 #'  group1 = c('Barcode1', 'Barcode2', 'Barcode3'), group2 = c('Barcode4', 'Barcode5')))
-clusterCorrelatingBarcodes <- function(barbieQ, method = "pearson", corThresh = 0.95, cpmThresh = 2^10,
-    preDefinedCluster = NULL) {
+clusterCorrelatingBarcodes <- function(barbieQ, method = "pearson", transformation = "asin-sqrt", 
+    corThresh = 0.95, propThresh = 0.001, preDefinedCluster = NULL) {
     ## dispatch preprocessing function extract barcode pairwise correlation and
     ## pre-defined pairs
-    barbieQ <- extractBarcodePairs(barbieQ, method = method, preDefinedCluster = preDefinedCluster)
+    barbieQ <- extractBarcodePairs(barbieQ, method = method, transformation = transformation, preDefinedCluster = preDefinedCluster)
 
     ## processed info is saved in this DFrame
     corDF <- SummarizedExperiment::rowData(barbieQ)$barcodeCorrelation
     preDefinedDf <- S4Vectors::metadata(corDF)$preDefinedBarcodePair
-    meanMatCPM <- S4Vectors::metadata(corDF)$meanMatCPM
+    meanMatProp <- S4Vectors::metadata(corDF)$meanMatProp
     corMat <- as.matrix(corDF)
 
-    ## determine correlated pairs by passing correlation coefficient and CPM
+    ## determine correlated pairs by passing correlation coefficient and proportion
     ## thresholds.
-    highCorMat <- meanMatCPM >= cpmThresh & corMat >= corThresh
+    ## scale the propThresh 
+    scaled_propThresh <- ifelse(
+      transformation == "none", propThresh,
+      ifelse(transformation == "asin-sqrt", asin(sqrt(propThresh)), log(propThresh/(1-propThresh))))
+    highCorMat <- meanMatProp >= scaled_propThresh & corMat >= corThresh
     ## arrow to extract the upper triangle, while also defined as 'correlated pairs'
     identifiedMat <- upper.tri(corMat) & highCorMat
     ## get row and column indices of identified pairs
@@ -193,7 +246,7 @@ clusterCorrelatingBarcodes <- function(barbieQ, method = "pearson", corThresh = 
 
     ## create a data.frame for identified pairs
     highCorDf <- data.frame(name1 = rownames(corMat)[upperIdx[, 1]], name2 = colnames(corMat)[upperIdx[,
-        2]], meanCPM = meanMatCPM[identifiedMat], coefficient = corMat[identifiedMat])
+        2]], meanProp = meanMatProp[identifiedMat], coefficient = corMat[identifiedMat])
 
     ## combine pre-defined pairs and identified pairs
     totalPairs <- rbind(preDefinedDf, highCorDf[, c("name1", "name2")])
@@ -233,6 +286,10 @@ clusterCorrelatingBarcodes <- function(barbieQ, method = "pearson", corThresh = 
 #' @param barbieQ A `barbieQ` object created by the [createBarbieQ] function.
 #' @param method A string specifying the correlation method to use.
 #'  Defaults to 'pearson'. Options include: 'pearson', 'kendall', 'spearman'.
+#' @param transformation A string specifying the transformation method for proportion 
+#'  to be used for computing barcode pair-wise correlation, and mean proportion.
+#'  Options include: 'asin-sqrt', 'logit', and 'none'.
+#'  Defaults to 'asin-sqrt'.
 #' @param preDefinedCluster A `list` of known groups containing different Barcodes,
 #'  e.g. `list(group1 = c('Barcode1', 'Barcode2', 'Barcode3'), group2 = c('Barcode4', 'Barcode5'))`
 #'  or a `vector`/`array` indicating Barcode groups;
@@ -270,11 +327,22 @@ clusterCorrelatingBarcodes <- function(barbieQ, method = "pearson", corThresh = 
 #'   preDefinedCluster = c(rep(seq_len(10), 5))
 #' )
 #' }
-extractBarcodePairs <- function(barbieQ, method = "pearson", preDefinedCluster = NULL) {
+extractBarcodePairs <- function(barbieQ, method = "pearson", transformation = "asin-sqrt", preDefinedCluster = NULL) {
     ## check method
     method <- match.arg(method, c("pearson", "kendall", "spearman"))
+    ## check transformation
+    transformation <- match.arg(transformation, c("asin-sqrt", "logit", "none"))
     ## extract data
-    mat <- SummarizedExperiment::assays(barbieQ)$CPM
+    if(transformation == "none"){
+      mat <- SummarizedExperiment::assays(barbieQ)$proportion %>% as.matrix()
+    } else if(transformation == "asin-sqrt") {
+      mat <- SummarizedExperiment::assays(barbieQ)$proportion %>% as.matrix()
+      mat <- asin(sqrt(mat))
+    } else if(transformation == "logit") {
+      countPlus <- SummarizedExperiment::assay(barbieQ) + 0.5
+      proportionPlus <- countPlus / colSums(countPlus)
+      mat <- log((proportionPlus)/(1 - proportionPlus)) %>% as.matrix()
+    }
     ## confirm Barcode IDs
     if (is.null(rownames(mat)))
         rownames(mat) <- rownames(barbieQ)
@@ -346,18 +414,19 @@ extractBarcodePairs <- function(barbieQ, method = "pearson", preDefinedCluster =
     ## save the results of a nrow x nrow matrix into DFrame save the correlation
     ## method in the metadata of DFrame
     S4Vectors::metadata(corDF)$method <- method
-    message("processing Barcode pairwise ", method, " correlation.")
+    S4Vectors::metadata(corDF)$transformation <- transformation
+    message("processing Barcode pairwise ", method, " correlation on propotion (", transformation, " transformation).")
 
-    ## compute mean CPM for each barcode
-    meanCPM <- rowMeans(mat)
+    ## compute mean proportion for each barcode
+    meanProp <- rowMeans(mat)
     ## N x N symmetric matrix with average between each pair on their row means
-    meanMat <- outer(meanCPM, meanCPM, FUN = function(x, y) (x + y)/2)
-    ## N x N symmetric matrix with LFC between each pair on their CPM
+    meanMat <- outer(meanProp, meanProp, FUN = function(x, y) (x + y)/2)
+    ## N x N symmetric matrix with LFC between each pair on their proportion
     # logMat <- log2(mat + 0.5)
     # LFCMat <- outer(logMat, logMat, FUN = function(x, y) (x - y))
     ## save meanMat to DFrame as a metadata
-    S4Vectors::metadata(corDF)$meanMatCPM <- meanMat
-    # S4Vectors::metadata(corDF)$LFCMatCPM <- LFCMat
+    S4Vectors::metadata(corDF)$meanMatProp <- meanMat
+    # S4Vectors::metadata(corDF)$LFCMatProp <- LFCMat
 
     ## save preDefinedDf to corDF metadata
     S4Vectors::metadata(corDF)$preDefinedBarcodePair <- preDefinedDf
@@ -367,7 +436,7 @@ extractBarcodePairs <- function(barbieQ, method = "pearson", preDefinedCluster =
     return(barbieQ)
 }
 
-#' Visualising the barcode clusters, the cluster sizes, and barcode CPM 
+#' Visualising the barcode clusters, the cluster sizes, and barcode proportion 
 #'  within each cluster, after running the `clusterCorrelatingBarcodes` function.
 #'
 #' `inspectCorrelatingBarcodes()` visualize the cluster details generated by 
@@ -379,7 +448,7 @@ extractBarcodePairs <- function(barbieQ, method = "pearson", preDefinedCluster =
 #'  by the [createBarbieQ] function.
 #'
 #' @returns A list containing three ggplot objects, each for visualizing 
-#'  the cluster structures, number of barcodes per cluster, and barcode CPM per cluster.
+#'  the cluster structures, number of barcodes per cluster, and barcode proportion per cluster.
 #'  
 #' @export
 #' 
@@ -513,7 +582,7 @@ inspectCorrelatingBarcodes <- function(barbieQ) {
 
 #' Merging correlating barcodes, by keeping a representative barcode
 #'  and removing the rest for each cluster. The representative barcode is 
-#'  the one with the highest mean CPM across samples.
+#'  the one with the highest mean proportion across samples.
 #'
 #' @param barbieQ_clustered A `barbieQ` object with information of clusters 
 #'  of correlating barcodes, which should be predicted by the 
@@ -529,6 +598,8 @@ inspectCorrelatingBarcodes <- function(barbieQ) {
 #'  `metadata$removed_barcodes`.
 #' 
 #' @import dplyr
+#' @importFrom SummarizedExperiment assay
+#' @importFrom S4Vectors metadata
 #' 
 #' @export
 #'
@@ -585,8 +656,14 @@ mergeCorrelatingBarcodes <- function(barbieQ_clustered, barbieQ_toMerge=NULL) {
   common_rows <- intersect(BC_feature$Barcode, BC_pre_merge$Barcode)
   BC_pre_merge[common_rows, "toKeep"] <- BC_feature[common_rows,"selectMax"]
   
-  ## merging by selecting the representatives
-  barbieQ_merged <- barbieQ_toMerge[BC_pre_merge$toKeep,]
+  ## merging by selecting the representative barcodes
+  ## !!! re-calculating the proportion by calling `createBarbieQ`
+  barbieQ_merged <- createBarbieQ(
+    object = SummarizedExperiment::assay(barbieQ_toMerge)[BC_pre_merge$toKeep,], 
+    sampleMetadata = barbieQ_toMerge$sampleMetadata, 
+    factorColors =  S4Vectors::metadata(barbieQ_toMerge)$factorColors)
+  message("!! re-computing barcode proportion, CPM, rank... from the selected barcodes.")
+  
   ## saving clustering information
   barbieQ_merged@metadata$predicted_barcode_clusters <- predictedClusters@metadata$clusterStructure
   barbieQ_merged@metadata$removed_barcodes <- removed_barcodes

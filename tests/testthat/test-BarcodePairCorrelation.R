@@ -38,6 +38,7 @@ test_that("plotting Barcode pairs works", {
   barcodeArray <- c(seq_len(40), rep(41, 10))
   p <- plotBarcodePairCorrelation(myBarbieQ, preDefinedCluster = barcodeArray)
   expect_equal(sum(p$data$correlationGroup == "pre-Defined"), choose(10, 2))
+  p <-plotBarcodePairCorrelation(myBarbieQ, preDefinedCluster = barcodeArray, showRawProportion = T)
 })
 
 test_that("clustering Barcodes based on correlation works", {

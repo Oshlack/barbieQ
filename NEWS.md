@@ -33,3 +33,5 @@
 * Added the "mergeCorrelatingBarcodes" function.
 
 * Updated color mapping for "plotBarcodeHeamtmap" with alternative data transformations.
+
+* Updated "BarcodePairCorrelation.R" by computing barcode pair-wise correlation and mean proportion based on transformed data.

@@ -7,8 +7,9 @@
 clusterCorrelatingBarcodes(
   barbieQ,
   method = "pearson",
+  transformation = "asin-sqrt",
   corThresh = 0.95,
-  cpmThresh = 2^10,
+  propThresh = 0.001,
   preDefinedCluster = NULL
 )
 }
@@ -18,12 +19,17 @@ clusterCorrelatingBarcodes(
 \item{method}{A string specifying the correlation method to use.
 Defaults to 'pearson'. Options include: 'pearson', 'kendall', 'spearman'.}
 
+\item{transformation}{A string specifying the transformation method for proportion
+to be used for computing barcode pair-wise correlation, and mean proportion.
+Options include: 'asin-sqrt', 'logit', and 'none'.
+Defaults to 'asin-sqrt'.}
+
 \item{corThresh}{A numeric value that sets the threshold for high correlation
 Defaults to 0.95}
 
-\item{cpmThresh}{A numeric value that sets the minimum level of
-Barcode pair's mean CPM for a Barcode pair to be considered as
-highly correlated co-existing Barcodes. Defaults to 2^10.}
+\item{propThresh}{A numeric value that sets the minimum level of
+Barcode pair's mean proportion for a Barcode pair to be considered as
+highly correlated co-existing Barcodes. Defaults to 0.001}
 
 \item{preDefinedCluster}{A \code{list} of known groups containing different Barcodes,
 or a \code{vector}/\code{array} indicating Barcode groups;
@@ -42,8 +48,8 @@ identifying correlated Barcode pairs based on two criteria:
 \itemize{
 \item The proportions of Barcodes across samples exhibit high correlation,
 exceeding the threshold specified by \code{corThresh}.
-\item The mean CPM of the Barcode pair exceeds the threshold specified
-by \code{cpmThresh}.
+\item The mean proportion of the Barcode pair exceeds the threshold specified
+by \code{propThresh}.
 These two parameters can be optimized up to the users using the visualization
 function \link{plotBarcodePairCorrelation}.
 }

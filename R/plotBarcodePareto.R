@@ -70,10 +70,10 @@ plotBarcodePareto <- function(barbieQ, absoluteProportion = FALSE) {
   ## choose y axis to plot relative or absolute contribution
   if(absoluteProportion) {
     contributionToPlot <- contribution
-    yTitle <- "Barcode Mean Proportion"
+    yTitle <- "Mean Proportion"
   } else {
     contributionToPlot <- relativeContribution
-    yTitle <- "Relative Barcode Mean Proportion (%)"
+    yTitle <- "Relative Mean Proportion (%)"
   }
   
   data <- data.frame(
@@ -173,7 +173,7 @@ plotBarcodePareto <- function(barbieQ, absoluteProportion = FALSE) {
         hjust = c(1, 1), alpha = 0.8, size = 3, fontface = "bold",
         inherit.aes = FALSE, show.legend = FALSE
       ) +
-      labs(color = "Num of Barcodes") +
+      labs(color = "Barcodes") +
       scale_color_manual(
         values = c("TRUE" = "#FF3399", "FALSE" = "#0066FF"),
         labels = c("Top Barcodes", "Others")
