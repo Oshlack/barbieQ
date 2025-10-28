@@ -62,8 +62,9 @@ plotBarcodeSankey <- function(barbieQ) {
     dataLong$variable <- factor(dataLong$variable, levels = c("top", "bottom"))
 
     p <- ggplot(dataLong, aes(x = category, y = value, fill = variable)) + geom_bar(stat = "identity",
-        width = 0.5) + facet_grid(~category, scales = "free_x", space = "free_x") + geom_text(aes(label = paste0(round(value),
-        "%")), position = position_stack(vjust = 0.5)) + labs(x = " ", y = "Total Barcode proportion %") +
+        width = 0.5) + facet_grid(~category, scales = "free_x", space = "free_x") + 
+        geom_text(aes(label = paste0(format(round(value*10)/10),"%")), 
+        position = position_stack(vjust = 0.5)) + labs(x = " ", y = "Total Barcode proportion %") +
         labs(fill = "Barcodes") + scale_fill_manual(values = c(top = "#FF3399", bottom = "#0066FF"),
         labels = c(paste0("Top ", sum(flag)), "Others")) + theme(axis.ticks = element_blank(),
         panel.background = element_blank(), panel.grid = element_blank(), axis.title.y = element_blank(),

@@ -100,7 +100,7 @@ plotBarcodeHeatmap <- function(barbieQ, colorMapTo = "asin-sqrt proportion", sho
     
     ## ---- Part2: map the main matrix color to the input data ----
     ## get colorMapTo alias
-    aliasMetric <- stats::setNames(c("asin(sqrt(prop.))", "logit(prop.)", "proportion", "occurrence"),
+    aliasMetric <- stats::setNames(c("asin-sqrt prop.", "logit prop.", "proportion", "occurrence"),
       c("asin-sqrt proportion", "logit proportion", "proportion", "occurrence"))
     ## set mat name
     matName <- aliasMetric[colorMapTo]

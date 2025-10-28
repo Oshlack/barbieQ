@@ -258,7 +258,7 @@ createBarbieQ <- function(object, sampleMetadata = NULL, factorColors = NULL) {
   ## setting ties.method="first" will handle equal values by assigning the first the lowest rank.
   ## setting 'minus x' will rank 'x' by decreasing value.
   SummarizedExperiment::assays(barbieQ)$rank <- apply(SummarizedExperiment::assay(barbieQ), 2, function(x) {
-    rank(-x, ties.method = "first", na.last = "keep")
+    rank(-x, ties.method = "average", na.last = "keep")
   })
 
   ## initiating `isTopBarcode` by seting all barcodes as "top"

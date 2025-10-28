@@ -51,7 +51,7 @@ testDiffProp <- function(proportion, count, transformation = "asin-sqrt", mycont
         mydata <- asin(sqrt(proportion))
     } else if (transformation == "logit") {
         countPlus <- count + 0.5
-        proportionPlus <- countPlus / colSums(countPlus)
+        proportionPlus <- (t(countPlus) / colSums(countPlus)) |> t()
         mydata <- log((proportionPlus)/(1 - proportionPlus))
     } else {
         mydata <- proportion

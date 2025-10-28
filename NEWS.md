@@ -36,4 +36,6 @@
 
 * Updated "BarcodePairCorrelation.R" by computing barcode pair-wise correlation and mean proportion based on transformed data.
 
-* Updated ""plotSamplePairCorrelation.R" by computing sample pair-wise correlation based on transformed data.
+* Updated "plotSamplePairCorrelation.R" by computing sample pair-wise correlation based on transformed data.
+
+* Fixed "testDiff.R" correcting the proportion calculation with offset.

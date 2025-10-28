@@ -704,6 +704,8 @@ mergeCorrelatingBarcodes <- function(barbieQ_clustered, barbieQ_toMerge=NULL) {
     sampleMetadata = barbieQ_toMerge$sampleMetadata, 
     factorColors =  S4Vectors::metadata(barbieQ_toMerge)$factorColors)
   message("!! re-computing barcode proportion, CPM, rank... from the selected barcodes.")
+  S4Vectors::metadata(barbieQ_merged) <- S4Vectors::metadata(barbieQ_toMerge)
+  SummarizedExperiment::colData(barbieQ_merged) <- SummarizedExperiment::colData(barbieQ_toMerge) 
   
   ## saving clustering information
   barbieQ_merged@metadata$predicted_barcode_clusters <- predictedClusters@metadata$clusterStructure

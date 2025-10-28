@@ -89,7 +89,7 @@ testBarcodeSignif <- function(barbieQ, method = "diffProp", sampleMetadata = NUL
         is.factor(x) && length(unique(x)) == 1
     }, logical(1))
     if (any(oneLevelFactors)) {
-        sampleMetadata <- sampleMetadata[, !oneLevelFactors]
+        sampleMetadata <- sampleMetadata[, !oneLevelFactors, drop = FALSE]
         message("removing factors with only one level from sampleMetadata: ", paste0(colnames(sampleMetadata)[oneLevelFactors],
             collapse = ", "))
     }
