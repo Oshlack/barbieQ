@@ -54,8 +54,8 @@ plotBarcodeSankey <- function(barbieQ) {
     sumbottom <- totalSum[!flag] |>
         sum()
     ## define sample data
-    ppdata <- data.frame(category = c("N. Barcodes %", "Total Barcode proportion %") %>%
-        factor(levels = c("N. Barcodes %", "Total Barcode proportion %")), top = c(ntop,
+    ppdata <- data.frame(category = c("No. Barcodes", "Barcode contribution") %>%
+        factor(levels = c("No. Barcodes", "Barcode contribution")), top = c(ntop,
         sumtop), bottom = c(nbottom, sumbottom))
     ## reshape data for stacked bar plot
     dataLong <- tidyr::gather(ppdata, key = "variable", value = "value", -category)
@@ -65,8 +65,8 @@ plotBarcodeSankey <- function(barbieQ) {
         width = 0.5) + facet_grid(~category, scales = "free_x", space = "free_x") + 
         geom_text(aes(label = paste0(format(round(value*10)/10),"%")), 
         position = position_stack(vjust = 0.5)) + labs(x = " ", y = "Total Barcode proportion %") +
-        labs(fill = "Barcodes") + scale_fill_manual(values = c(top = "#FF3399", bottom = "#0066FF"),
-        labels = c(paste0("Top ", sum(flag)), "Others")) + theme(axis.ticks = element_blank(),
+        labs(fill = "Barcode set") + scale_fill_manual(values = c(top = "#FF3399", bottom = "#0066FF"),
+        labels = c("top", "bottom")) + theme(axis.ticks = element_blank(),
         panel.background = element_blank(), panel.grid = element_blank(), axis.title.y = element_blank(),
         axis.text.y = element_blank(), axis.ticks.y = element_blank())
 
