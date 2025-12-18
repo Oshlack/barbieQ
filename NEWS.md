@@ -38,4 +38,4 @@
 
 * Updated "plotSamplePairCorrelation.R" by computing sample pair-wise correlation based on transformed data.
 
-* Fixed "testDiff.R" correcting the proportion calculation with offset.
+* Fixed "testDiffProp.R" corrected the proportion calculation with offset; corrected the logit proportion calculation.
