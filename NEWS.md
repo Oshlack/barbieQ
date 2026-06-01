@@ -39,3 +39,11 @@
 * Updated "plotSamplePairCorrelation.R" by computing sample pair-wise correlation based on transformed data.
 
 * Fixed "testDiffProp.R" corrected the proportion calculation with offset; corrected the logit proportion calculation.
+
+# barbieQ 1.5.1
+
+* Version bumps.
+
+# barbieQ 1.5.2
+
+* Added the "inspectCorrelatingBarcodesDetailed"" function.
