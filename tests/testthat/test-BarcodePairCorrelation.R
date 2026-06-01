@@ -80,6 +80,45 @@ test_that("plotting barcode cluster structure works", {
   sapply(p_list, function(p) expect_s3_class(p, "ggplot"))
 })
 
+test_that("detailed plotting of barcode cluster proportions works", {
+  nbarcodes <- 50
+  nsamples <- 12
+  count <- matrix(rnorm(nbarcodes * nsamples), nbarcodes, nsamples) %>% abs()
+  rownames(count) <- paste0("Barcode", seq_len(nbarcodes))
+  myBarbieQ <- createBarbieQ(count)
+  ## add known barcode groups
+  barcodeArray <- c(seq_len(40), rep(41, 10))
+  myBarbieQ <- clusterCorrelatingBarcodes(myBarbieQ, preDefinedCluster = barcodeArray)
+  
+  ## expect a ggplot object with default arguments
+  p <- inspectCorrelatingBarcodesDetailed(myBarbieQ)
+  expect_s3_class(p, "ggplot")
+  
+  ## expect ggplot with each transformation
+  p_asin <- inspectCorrelatingBarcodesDetailed(myBarbieQ, transformation = "asin-sqrt")
+  expect_s3_class(p_asin, "ggplot")
+  
+  p_logit <- inspectCorrelatingBarcodesDetailed(myBarbieQ, transformation = "logit")
+  expect_s3_class(p_logit, "ggplot")
+  
+  ## expect ggplot with manual ncol
+  p_ncol <- inspectCorrelatingBarcodesDetailed(myBarbieQ, ncol = 1)
+  expect_s3_class(p_ncol, "ggplot")
+  
+  ## expect error when cluster info is missing
+  myBarbieQ_empty <- createBarbieQ(count)
+  expect_error(
+    inspectCorrelatingBarcodesDetailed(myBarbieQ_empty),
+    "Cluster information does not exist"
+  )
+  
+  ## expect error on invalid transformation
+  expect_error(
+    inspectCorrelatingBarcodesDetailed(myBarbieQ, transformation = "invalid"),
+    "transformation must be one of"
+  )
+})
+
 test_that("merging correlating barcodes works", {
   nbarcodes <- 50
   nsamples <- 12

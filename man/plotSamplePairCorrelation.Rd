@@ -43,7 +43,7 @@ samples in a Heatmap.
 }
 \description{
 \code{plotSamplePairCorrelation()} visualizes the pairwise correlation of
-CPM values across samples in a \code{barbieQ} object,
+proportion across samples in a \code{barbieQ} object,
 using a heatmap with a checkerboard-like pattern.
 }
 \examples{
