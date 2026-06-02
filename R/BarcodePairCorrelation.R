@@ -127,7 +127,7 @@ plotBarcodePairCorrelation <- function(barbieQ, method = "pearson", transformati
     ## plotting correlations
       p <- ggplot(corResults, aes(x = coefficient)) + geom_histogram(aes(y = (after_stat(count))/max(after_stat(count)) *
         max(yAxis)), binwidth = 0.05, alpha = 0.3, fill = "grey") + geom_point(aes(y = yAxis,
-        color = correlationGroup)) + stat_ecdf(geom = "step", aes(y = ..y.. * max(yAxis),
+        color = correlationGroup)) + stat_ecdf(geom = "step", aes(y = after_stat(y) * max(yAxis),
         color = correlationGroup), alpha = 0.5) + scale_color_manual(values = c(`pre-Defined` = "#00BFC4",
         Identified = "#F8766D", `non-Corr` = "grey")) + theme_classic() +
         labs(x = paste0(method, " correlation coefficient"), y = yTitle, color = "barcode pair") + scale_x_continuous(expand = c(0.05,
@@ -512,9 +512,9 @@ inspectCorrelatingBarcodes <- function(barbieQ) {
   V(clusterStructure)$cluster <- groups
   ## Fruchterman-Reingold layout
   p_cluster <- ggraph::ggraph(clusterStructure, layout = "fr") +
-    geom_edge_link(color = "grey80") +
-    geom_node_point(aes(color = cluster), size = 5) +
-    geom_node_text(aes(label = name), repel = TRUE, size = 2) +
+    ggraph::geom_edge_link(color = "grey80") +
+    ggraph::geom_node_point(aes(color = cluster), size = 5) +
+    ggraph::geom_node_text(aes(label = name), repel = TRUE, size = 2) +
     theme_void()
   
   ## extract proportion based on transformation

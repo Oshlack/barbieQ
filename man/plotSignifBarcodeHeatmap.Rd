@@ -4,18 +4,11 @@
 \alias{plotSignifBarcodeHeatmap}
 \title{Plot Barcodes categorized by significant change using a Heatmap}
 \usage{
-plotSignifBarcodeHeatmap(
-  barbieQ,
-  barcodeMetric = "CPM",
-  sampleAnnotation = NULL
-)
+plotSignifBarcodeHeatmap(barbieQ, sampleAnnotation = NULL)
 }
 \arguments{
 \item{barbieQ}{A \code{barbieQ} object created by the \link{createBarbieQ} function,
 updated with Barcode test results by calling the \link{testBarcodeSignif} function.}
-
-\item{barcodeMetric}{A string indicating what to visualize.
-Defaults to \code{CPM}. Options include: 'CPM' and 'occurrence'.}
 
 \item{sampleAnnotation}{A column Annotation object created by the
 \link[ComplexHeatmap:HeatmapAnnotation]{ComplexHeatmap::HeatmapAnnotation} function. Defaults to samples annotated

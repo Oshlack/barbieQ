@@ -168,8 +168,6 @@ plotBarcodeMA <- function(barbieQ) {
 #'
 #' @param barbieQ A `barbieQ` object created by the [createBarbieQ] function,
 #'  updated with Barcode test results by calling the [testBarcodeSignif] function.
-#' @param barcodeMetric A string indicating what to visualize.
-#'  Defaults to `CPM`. Options include: 'CPM' and 'occurrence'.
 #' @param sampleAnnotation A column Annotation object created by the
 #'  [ComplexHeatmap::HeatmapAnnotation] function. Defaults to samples annotated
 #'  by the groups to be compared.
@@ -201,17 +199,27 @@ plotBarcodeMA <- function(barbieQ) {
 #' barbieQ <- createBarbieQ(count, data.frame(Treat = Treat, Time = Time))
 #' testBB <- testBarcodeSignif(barbieQ, sampleGroup = 'Treat')
 #' plotSignifBarcodeHeatmap(barbieQ = testBB)
-plotSignifBarcodeHeatmap <- function(barbieQ, barcodeMetric = "CPM", sampleAnnotation = NULL) {
+plotSignifBarcodeHeatmap <- function(barbieQ, sampleAnnotation = NULL) {
 
     ## extract testing results and information
     statsDf <- SummarizedExperiment::rowData(barbieQ)$testingBarcode
     contrastGroups <- S4Vectors::metadata(statsDf)$contrastGroups
     method <- S4Vectors::metadata(statsDf)$method
+    transformation <- S4Vectors::metadata(statsDf)$transformation
     ## extract design based on tests
     if(method == "diffProp") {
       design <- S4Vectors::metadata(statsDf)$design
+      ## map color scale to transformation method extracted from the test
+      if(transformation == "asin-sqrt") {
+        colorMapTo <- "asin-sqrt proportion"
+      } else if (transformation == "logit") {
+        colorMapTo <- "logit proportion"
+      } else if (transformation == "none") {
+        colorMapTo <- "proportion"
+      }
     } else if (method == "diffOcc") {
       design <- S4Vectors::metadata(statsDf)$pseudo.design
+      colorMapTo <- "occurrence"
     }
 
     ## extract color code
@@ -247,7 +255,7 @@ plotSignifBarcodeHeatmap <- function(barbieQ, barcodeMetric = "CPM", sampleAnnot
       sampleAnnotation <- NULL
     }
 
-    hp <- plotBarcodeHeatmap(barbieQ = barbieQ, barcodeMetric = barcodeMetric, splitSamples = splitSamples,
+    hp <- plotBarcodeHeatmap(barbieQ = barbieQ, colorMapTo = colorMapTo, splitSamples = splitSamples,
         sampleMetadata = data.frame(testingGroups = GroupVec), sampleGroup = "testingGroups",
         barcodeAnnotation = barcodeAnnotation, sampleAnnotation = sampleAnnotation)
 

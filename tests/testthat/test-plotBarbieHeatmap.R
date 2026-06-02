@@ -28,7 +28,7 @@ test_that("plotting barcode Heatmap works", {
     "matrix color is mapped to `asin-sqrt proportion` but labeled by raw proportion.")
   ## check reversed name when showRawProportion == FALSE
   hp <- plotBarcodeHeatmap(barbieQ = object1, showRawProportion = FALSE)
-  expect_equal(hp@name[["asin-sqrt proportion"]], "asin(sqrt(prop.))")
+  expect_equal(hp@name[["asin-sqrt proportion"]], "asin-sqrt prop.")
   ## check when colorMapTo set as proportion
   hp <- plotBarcodeHeatmap(barbieQ = object1, colorMapTo = "proportion")
   expect_equal(hp@name[["proportion"]], "proportion")
@@ -36,7 +36,7 @@ test_that("plotting barcode Heatmap works", {
   hp <- plotBarcodeHeatmap(barbieQ = object1, colorMapTo = "logit proportion")
   expect_equal(hp@name, "proportion")
   hp <- plotBarcodeHeatmap(barbieQ = object1, colorMapTo = "logit proportion", showRawProportion = FALSE)
-  expect_equal(hp@name[["logit proportion"]], "logit(prop.)")
+  expect_equal(hp@name[["logit proportion"]], "logit prop.")
   
   hp <- plotBarcodeHeatmap(barbieQ = object1, splitSamples = TRUE)
   expect_equal(

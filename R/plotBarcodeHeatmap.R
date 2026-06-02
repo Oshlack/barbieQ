@@ -153,7 +153,7 @@ plotBarcodeHeatmap <- function(barbieQ, colorMapTo = "asin-sqrt proportion", sho
       
       # re-draw heatmap with custom legend labels but same break positions
       ht <- ComplexHeatmap::Heatmap(
-        mat, name = " proportion", width = unit(6, "cm"), height = unit(6, "cm"), col = colorFun, 
+        mat, name = "proportion", width = unit(6, "cm"), height = unit(6, "cm"), col = colorFun, 
         cluster_rows = TRUE, cluster_columns = TRUE, show_row_names = FALSE, show_column_names = FALSE, 
         column_title = paste0(ncol(mat), " Samples"), row_title = paste0(nrow(mat), " Barcodes"), 
         right_annotation = barcodeAnnotation, top_annotation = groupAnnotation, 
