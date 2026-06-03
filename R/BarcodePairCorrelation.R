@@ -651,7 +651,8 @@ inspectCorrelatingBarcodes <- function(barbieQ) {
 #' @import scales
 #' @importFrom tibble rownames_to_column
 #' @importFrom tidyr pivot_longer
-#' @importFrom dplyr group_by mutate ungroup distinct
+#' @importFrom dplyr group_by mutate ungroup distinct arrange pull filter
+#' @importFrom ggh4x facet_wrap2 facetted_pos_scales
 #' @importFrom stats setNames
 #' @importFrom SummarizedExperiment assays assay
 #'
@@ -709,20 +710,13 @@ inspectCorrelatingBarcodesDetailed <- function(barbieQ, transformation = "none",
   ## add cluster group label
   cluster_group_named <- stats::setNames(cluster_group, rownames(cluster_BC))
   df_long$cluster_group <- paste0("Cluster ", cluster_group_named[df_long$barcode])
-  
+
   ## reorder samples by mean proportion within each cluster
   df_long <- df_long %>%
     dplyr::group_by(cluster_group, sample) %>%
     dplyr::mutate(sample_mean = mean(prop)) %>%
-    dplyr::ungroup() %>%
-    dplyr::group_by(cluster_group) %>%
-    dplyr::mutate(x_pos = as.numeric(factor(sample, levels = unique(sample[order(sample_mean)])))) %>%
-    dplyr::ungroup()
-  
-  ## build a label mapping for x axis
-  sample_labels <- df_long %>%
-    dplyr::distinct(cluster_group, sample, x_pos)
-  
+    dplyr::ungroup() 
+    
   ## get consistent cluster colors (matching inspectCorrelatingBarcodes)
   n_groups <- length(unique(cluster_group))
   gg_colors <- scales::hue_pal()(n_groups)
@@ -740,19 +734,28 @@ inspectCorrelatingBarcodesDetailed <- function(barbieQ, transformation = "none",
     ncol <- ceiling(sqrt(n_clusters))
   }
   
+  ## build per-facet x scale list
+  scale_list <- lapply(unique(df_long$cluster_group), function(cg) {
+    samples_ordered <- df_long %>%
+      dplyr::filter(cluster_group == cg) %>%
+      dplyr::distinct(sample, sample_mean) %>%
+      dplyr::arrange(sample_mean) %>%
+      dplyr::pull(sample) %>%
+      as.character()
+    ggplot2::scale_x_discrete(limits = samples_ordered)
+  })
+  
+  
   ## plot
   p <- ggplot2::ggplot(df_long, aes(x = sample, y = prop, group = barcode)) +
     ggplot2::geom_line(alpha = 0.7, aes(colour = cluster_group)) +
     ggplot2::geom_point(size = 0.8, color = "grey30") +
-    ggplot2::facet_wrap(~ cluster_group, scales = "free", ncol = ncol) +
+    ggh4x::facet_wrap2(~ cluster_group, scales = "free", ncol = ncol) +
+    ggh4x::facetted_pos_scales(x = scale_list) +
     ggplot2::scale_color_manual(values = color_map) +
     ggplot2::labs(x = "Sample", y = y_label) +
-    ggplot2::scale_x_continuous(
-      breaks = sample_labels$x_pos,
-      labels = sample_labels$sample
-    ) +
-    theme_bw() +
-    theme(
+    ggplot2::theme_bw() +
+    ggplot2::theme(
       axis.text.x = element_text(angle = 45, hjust = 1),
       legend.position = "none"
     )

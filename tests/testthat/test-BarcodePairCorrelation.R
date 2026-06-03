@@ -87,7 +87,7 @@ test_that("detailed plotting of barcode cluster proportions works", {
   rownames(count) <- paste0("Barcode", seq_len(nbarcodes))
   myBarbieQ <- createBarbieQ(count)
   ## add known barcode groups
-  barcodeArray <- c(seq_len(40), rep(41, 10))
+  barcodeArray <- c(seq_len(46), rep(47, 2), rep(49, 2))
   myBarbieQ <- clusterCorrelatingBarcodes(myBarbieQ, preDefinedCluster = barcodeArray)
   
   ## expect a ggplot object with default arguments
