@@ -35,7 +35,6 @@ Imports:
     circlize,
     ComplexHeatmap,
     ggplot2,
-    forcats,
     ggbreak,
     ggraph,
     scales,

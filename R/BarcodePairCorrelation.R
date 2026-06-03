@@ -651,8 +651,7 @@ inspectCorrelatingBarcodes <- function(barbieQ) {
 #' @import scales
 #' @importFrom tibble rownames_to_column
 #' @importFrom tidyr pivot_longer
-#' @importFrom dplyr group_by mutate ungroup
-#' @importFrom forcats fct_reorder
+#' @importFrom dplyr group_by mutate ungroup distinct
 #' @importFrom stats setNames
 #' @importFrom SummarizedExperiment assays assay
 #'
@@ -713,9 +712,16 @@ inspectCorrelatingBarcodesDetailed <- function(barbieQ, transformation = "none",
   
   ## reorder samples by mean proportion within each cluster
   df_long <- df_long %>%
+    dplyr::group_by(cluster_group, sample) %>%
+    dplyr::mutate(sample_mean = mean(prop)) %>%
+    dplyr::ungroup() %>%
     dplyr::group_by(cluster_group) %>%
-    dplyr::mutate(sample = forcats::fct_reorder(sample, prop, .fun = mean)) %>%
+    dplyr::mutate(x_pos = as.numeric(factor(sample, levels = unique(sample[order(sample_mean)])))) %>%
     dplyr::ungroup()
+  
+  ## build a label mapping for x axis
+  sample_labels <- df_long %>%
+    dplyr::distinct(cluster_group, sample, x_pos)
   
   ## get consistent cluster colors (matching inspectCorrelatingBarcodes)
   n_groups <- length(unique(cluster_group))
@@ -741,6 +747,10 @@ inspectCorrelatingBarcodesDetailed <- function(barbieQ, transformation = "none",
     ggplot2::facet_wrap(~ cluster_group, scales = "free", ncol = ncol) +
     ggplot2::scale_color_manual(values = color_map) +
     ggplot2::labs(x = "Sample", y = y_label) +
+    ggplot2::scale_x_continuous(
+      breaks = sample_labels$x_pos,
+      labels = sample_labels$sample
+    ) +
     theme_bw() +
     theme(
       axis.text.x = element_text(angle = 45, hjust = 1),

@@ -48,6 +48,6 @@
 
 * Added the "inspectCorrelatingBarcodesDetailed" function.
 
-# barbieQ 1.5.2
+# barbieQ 1.5.3
 
-* "inspectCorrelatingBarcodesDetailed": set facet_wrap scales to both x and y free.
+* "inspectCorrelatingBarcodesDetailed": reorder samples in each cluster.
