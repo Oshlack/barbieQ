@@ -738,7 +738,7 @@ inspectCorrelatingBarcodesDetailed <- function(barbieQ, transformation = "none",
   p <- ggplot2::ggplot(df_long, aes(x = sample, y = prop, group = barcode)) +
     ggplot2::geom_line(alpha = 0.7, aes(colour = cluster_group)) +
     ggplot2::geom_point(size = 0.8, color = "grey30") +
-    ggplot2::facet_wrap(~ cluster_group, scales = "free_y", ncol = ncol) +
+    ggplot2::facet_wrap(~ cluster_group, scales = "free", ncol = ncol) +
     ggplot2::scale_color_manual(values = color_map) +
     ggplot2::labs(x = "Sample", y = y_label) +
     theme_bw() +

@@ -46,4 +46,8 @@
 
 # barbieQ 1.5.2
 
-* Added the "inspectCorrelatingBarcodesDetailed"" function.
+* Added the "inspectCorrelatingBarcodesDetailed" function.
+
+# barbieQ 1.5.2
+
+* "inspectCorrelatingBarcodesDetailed": set facet_wrap scales to both x and y free.
