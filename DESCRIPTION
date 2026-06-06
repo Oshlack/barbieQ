@@ -37,6 +37,7 @@ Imports:
     ggplot2,
     ggbreak,
     ggraph,
+    ggh4x,
     scales,
     logistf,
     limma,

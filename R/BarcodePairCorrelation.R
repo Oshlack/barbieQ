@@ -249,6 +249,9 @@ clusterCorrelatingBarcodes <- function(barbieQ, method = "pearson", transformati
         2]], meanProp = meanMatProp[identifiedMat], coefficient = corMat[identifiedMat])
 
     ## combine pre-defined pairs and identified pairs
+    if(ncol(preDefinedDf) == 2) {
+      colnames(preDefinedDf) <- c("name1", "name2")
+    }
     totalPairs <- rbind(preDefinedDf, highCorDf[, c("name1", "name2")])
 
     ## plotting highly correlating Barcode pairs
@@ -405,6 +408,7 @@ extractBarcodePairs <- function(barbieQ, method = "pearson", transformation = "a
                 t()
     })
     preDefinedDf <- do.call(rbind, preDefinedClusterList)
+    
     # if `preDefinedDf` is null, make it an empty dataframe of two columns
     if (is.null(preDefinedDf))
         preDefinedDf <- data.frame()

@@ -51,3 +51,7 @@
 # barbieQ 1.5.3
 
 * "inspectCorrelatingBarcodesDetailed": reorder samples in each cluster.
+
+# 1.5.4
+
+* fix colnames bug in "extractBarcodePair".
