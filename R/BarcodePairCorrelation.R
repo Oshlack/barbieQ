@@ -262,6 +262,9 @@ clusterCorrelatingBarcodes <- function(barbieQ, method = "pearson", transformati
     identifiedList <- list()
     if (length(groups) > 0L)
         identifiedList <- split(names(groups), groups)
+    ## remove barcodes not exoiting in barbieQ - they may be specified in preDefinedCluster
+    flag <- names(groups) %in% rownames(barbieQ)
+    groups <- groups[flag]
     ## create an array indicating which group Barcodes belong to
     BarcodeGroupArray <- setNames(numeric(nrow(barbieQ)), rownames(barbieQ))
     BarcodeGroupArray[names(groups)] <- groups
@@ -486,6 +489,9 @@ inspectCorrelatingBarcodes <- function(barbieQ) {
   ## get cluster membership as factor, preserving level order
   memberships <- igraph::components(clusterStructure)$membership
   groups <- factor(memberships)
+  ## remove barcodes not exoiting in barbieQ - they may be specified in preDefinedCluster
+  flag <- names(groups) %in% rownames(barbieQ)
+  groups <- groups[flag]
   ## get ggplot colors
   n_groups <- length(levels(groups))
   gg_colors <- scales::hue_pal()(n_groups)
