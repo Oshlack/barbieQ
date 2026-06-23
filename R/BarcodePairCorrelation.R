@@ -486,12 +486,17 @@ inspectCorrelatingBarcodes <- function(barbieQ) {
     stop("clusterStructure does not exist. Please run `clusterCorrelatingBarcodes` first.")
   }
   
+  ## some barcodes specified in the preDefinedList are not exsitign in barbieQ rownames
+  ## but are retained in the clusterStructure
+  ## remove these barcode vertices entirely from the graph
+  clusterStructure <- delete_vertices(
+    clusterStructure, 
+    V(clusterStructure)[!V(clusterStructure)$name %in% rownames(barbieQ)]
+    )
+  
   ## get cluster membership as factor, preserving level order
   memberships <- igraph::components(clusterStructure)$membership
   groups <- factor(memberships)
-  ## remove barcodes not exoiting in barbieQ - they may be specified in preDefinedCluster
-  flag <- names(groups) %in% rownames(barbieQ)
-  groups <- groups[flag]
   ## get ggplot colors
   n_groups <- length(levels(groups))
   gg_colors <- scales::hue_pal()(n_groups)

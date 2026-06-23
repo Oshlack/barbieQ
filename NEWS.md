@@ -56,6 +56,6 @@
 
 * fixed colnames bug in "extractBarcodePair".
 
-# 1.5.5
+# 1.5.5, 1.5.6
 
-* fixed missing barcodes (yet specified by preDefinedCluster) in "clusterCorrelatingBarcodes".
+* fixed missing barcodes (yet specified by preDefinedCluster) in "clusterCorrelatingBarcodes", and ...
