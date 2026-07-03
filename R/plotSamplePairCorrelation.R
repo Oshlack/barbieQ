@@ -111,7 +111,7 @@ plotSamplePairCorrelation <- function(barbieQ, sampleOrder = NULL, sampleMetadat
       mat <- asin(sqrt(mat))
     } else if(transformation == "logit") {
       countPlus <- SummarizedExperiment::assay(barbieQ) + 0.5
-      proportionPlus <- countPlus / colSums(countPlus)
+      proportionPlus <- t(t(countPlus) / colSums(countPlus))
       mat <- log((proportionPlus)/(1 - proportionPlus)) %>% as.matrix()
     }
     corMat <- stats::cor(mat, method = method)

@@ -11,3 +11,4 @@ testthat/*.pdf
 testthat/_snaps
 /doc/
 /Meta/
+.RDataTmp

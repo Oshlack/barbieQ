@@ -59,3 +59,7 @@
 # 1.5.5, 1.5.6
 
 * fixed missing barcodes (yet specified by preDefinedCluster) in "clusterCorrelatingBarcodes", and ...
+
+# 1.5.7
+
+* fixed logit transformation errors in visualizations.

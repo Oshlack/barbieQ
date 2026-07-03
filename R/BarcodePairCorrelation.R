@@ -347,7 +347,7 @@ extractBarcodePairs <- function(barbieQ, method = "pearson", transformation = "a
       mat <- asin(sqrt(mat))
     } else if(transformation == "logit") {
       countPlus <- SummarizedExperiment::assay(barbieQ) + 0.5
-      proportionPlus <- countPlus / colSums(countPlus)
+      proportionPlus <- t(t(countPlus) / colSums(countPlus))
       mat <- log((proportionPlus)/(1 - proportionPlus)) %>% as.matrix()
     }
     ## confirm Barcode IDs
@@ -540,7 +540,7 @@ inspectCorrelatingBarcodes <- function(barbieQ) {
     mat <- asin(sqrt(mat))
   } else if(transformation == "logit") {
     countPlus <- SummarizedExperiment::assay(barbieQ) + 0.5
-    proportionPlus <- countPlus / colSums(countPlus)
+    proportionPlus <- t(t(countPlus) / colSums(countPlus))
     mat <- log((proportionPlus)/(1 - proportionPlus)) %>% as.matrix()
   }
   
@@ -707,7 +707,7 @@ inspectCorrelatingBarcodesDetailed <- function(barbieQ, transformation = "none",
     mat <- asin(sqrt(mat))
   } else if (transformation == "logit") {
     countPlus <- SummarizedExperiment::assay(cluster_BC) + 0.5
-    proportionPlus <- countPlus / colSums(countPlus)
+    proportionPlus <- t(t(countPlus) / colSums(countPlus))
     mat <- log(proportionPlus / (1 - proportionPlus)) %>% as.matrix()
   } else {
     stop("transformation must be one of: 'none', 'asin-sqrt', 'logit'")

@@ -117,7 +117,7 @@ plotBarcodeHeatmap <- function(barbieQ, colorMapTo = "asin-sqrt proportion", sho
       mat <- asin(sqrt(mat))
     } else if(colorMapTo == "logit proportion") {
       countPlus <- SummarizedExperiment::assay(barbieQ) + 0.5
-      proportionPlus <- countPlus / colSums(countPlus)
+      proportionPlus <- t(t(countPlus) / colSums(countPlus))
       mat <- log((proportionPlus)/(1 - proportionPlus)) %>% as.matrix()
     }
     
